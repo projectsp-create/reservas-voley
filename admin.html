@@ -63,8 +63,8 @@
   .item .body{flex:1;min-width:0}.item .body .nm{font-weight:600;color:#fff}
   .item .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
   .dayhdr{font-family:'Barlow Condensed',sans-serif;font-size:16px;text-transform:uppercase;font-style:italic;letter-spacing:.6px;color:var(--neon);font-weight:700;margin:20px 0 2px}
-  .hor{display:grid;grid-template-columns:90px 1fr 1fr 74px;gap:8px;align-items:center;margin:6px 0}
-  .hor select{padding:8px}
+  .hor{display:grid;grid-template-columns:76px 1fr 1fr 62px;gap:6px;align-items:center;margin:6px 0}
+  .hor select{padding:8px 2px 8px 8px;font-size:14px;min-width:0}
   .chart{width:100%;height:auto;display:block}
   .login{max-width:360px;margin:12vh auto 0;padding:0 16px}
   .login h2{font-size:34px;font-weight:800;font-style:italic;text-transform:uppercase;color:#fff}
@@ -134,8 +134,8 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pesos=n=>(n<0?'-':'')+'$'+Math.abs(Math.round(n||0)).toLocaleString('es-CO');
 const pct=x=>(Math.round((x||0)*1000)/10).toLocaleString('es-CO')+'%';
-const hora=h=>((h%12)||12)+(h<12?' a. m.':' p. m.');
-const horaC=h=>((h%12)||12)+(h<12?'am':'pm');
+const hora=h=>((h%12)||12)+((h%24)<12?' a. m.':' p. m.');
+const horaC=h=>((h%12)||12)+((h%24)<12?'am':'pm');
 const pd=s=>{const p=s.split('-').map(Number);return new Date(Date.UTC(p[0],p[1]-1,p[2]));};
 const addD=(s,n)=>{const d=pd(s);d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);};
 const iso=s=>{const w=pd(s).getUTCDay();return w===0?7:w;};
@@ -194,7 +194,8 @@ async function cargar(){
     construir();pintar();
   }catch(e){if(RAW||!/autorizado|vencida/i.test(e.message))toast(e.message,true);if(!RAW&&!/autorizado|vencida/i.test(e.message))mostrarLogin(e.message);}
 }
-function horasDia(cfg,f){const h=cfg.horario[String(iso(f))];const o=[];if(!h||!(h[1]>h[0]))return o;for(let i=h[0];i<h[1];i++)o.push(i);return o;}
+let FEST=new Set();
+function horasDia(cfg,f){const h=(FEST.has(f)&&cfg.horario.F)?cfg.horario.F:cfg.horario[String(iso(f))];const o=[];if(!h||!(h[1]>h[0]))return o;for(let i=h[0];i<h[1];i++)o.push(i);return o;}
 function agrupar(res){
   const m={};res.forEach(r=>{
     if(!m[r.codigo])m[r.codigo]={codigo:r.codigo,fecha:r.fecha,cancha:r.cancha,horas:[],nombre:r.nombre,whatsapp:r.whatsapp||'',estado:r.estado,total:0,medio:r.medio||'',origen:r.origen,notas:r.notas||'',por:r.actualizado_por||'',creado:r.creado,uid:r.user_id||null};
@@ -210,7 +211,7 @@ function statsSemana(l,res,gas,cfg){
     web:new Set(vend.filter(r=>r.origen==='Web').map(r=>r.codigo)).size,presencial:new Set(vend.filter(r=>r.origen!=='Web').map(r=>r.codigo)).size};
 }
 function construir(){
-  const R=RAW,c=R.cfg;
+  const R=RAW,c=R.cfg;FEST=new Set(R.festivos||[]);
   const cfg={negocio:c.negocio,direccion:c.direccion,tarifa:c.tarifa,canchas:c.canchas,whatsappAdmin:c.whatsapp_admin,diasAnticipacion:c.dias_anticipacion,maxHorasPorReserva:c.max_horas,horario:c.horario,venceMin:c.vence_pendiente_min};
   const hoy=R.hoy;FECHA=FECHA||hoy;
   const res=R.reservas,gas=R.gastos,grupos=agrupar(res),lAct=lunesDe(hoy);
@@ -249,7 +250,7 @@ function vAgenda(){
     <div class="kpi"><div class="l">Ocupación semana</div><div class="v">${pct(s.ocupacion)}</div><div class="meter"><i style="width:${Math.min(100,(s.ocupacion||0)*100)}%"></i></div></div>
   </div>
   <div class="card">
-    <div class="datenav"><button class="btn btn-ghost btn-sm" onclick="irA(addD(FECHA,-1))">◀</button><div class="t">${D.fecha===D.hoy?'Hoy, ':''}${fLarga(D.fecha)}</div>
+    <div class="datenav"><button class="btn btn-ghost btn-sm" onclick="irA(addD(FECHA,-1))">◀</button><div class="t">${D.fecha===D.hoy?'Hoy, ':''}${fLarga(D.fecha)}${FEST.has(D.fecha)?' <span class="badge b-Cancelada" style="font-family:Inter;font-style:normal">Festivo</span>':''}</div>
       <input type="date" value="${D.fecha}" onchange="irA(this.value)"><button class="btn btn-ghost btn-sm" onclick="irA(addD(FECHA,1))">▶</button>
       ${D.fecha!==D.hoy?`<button class="btn btn-ghost btn-sm" onclick="irA(D.hoy)">Hoy</button>`:''}
       <button class="btn btn-primary btn-sm" onclick="modalNueva()">+ Reserva</button></div>`;
@@ -441,9 +442,9 @@ async function descargarInforme(lunes,btn){
 
 /* ---------- Ajustes ---------- */
 function vAjustes(){
-  const C=D.cfg,N=['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  const C=D.cfg,N={1:'Lunes',2:'Martes',3:'Miércoles',4:'Jueves',5:'Viernes',6:'Sábado',7:'Domingo',F:'Festivos'};
   const opts=sel=>Array.from({length:25},(_,i)=>`<option value="${i}" ${i===sel?'selected':''}>${i===0?'12am':i===24?'12am (fin)':horaC(i)}</option>`).join('');
-  let hor='';for(let d=1;d<=7;d++){const v=C.horario[String(d)]||[0,0],cerr=!(v[1]>v[0]);
+  let hor='';for(const d of ['1','2','3','4','5','6','7','F']){const v=C.horario[d]||(d==='F'?C.horario['7']:null)||[0,0],cerr=!(v[1]>v[0]);
     hor+=`<div class="hor"><b style="font-size:14px">${N[d]}</b><select id="hA${d}" ${cerr?'disabled':''}>${opts(cerr?15:v[0])}</select><select id="hB${d}" ${cerr?'disabled':''}>${opts(cerr?22:v[1])}</select>
     <label style="margin:0;font-weight:500;font-size:12px;display:flex;gap:4px;align-items:center"><input type="checkbox" id="hC${d}" ${cerr?'checked':''} onchange="$('hA${d}').disabled=$('hB${d}').disabled=this.checked">Cerrado</label></div>`;}
   const shareTxt=encodeURIComponent(`🏐 ¡Reserva tu cancha de vóley playa en ${C.negocio}! ${pesos(C.tarifa)} la hora. Elige tu horario aquí: ${D.urlPublica}`);
@@ -462,7 +463,7 @@ function vAjustes(){
     <label>WhatsApp que recibe los avisos de clientes</label><input type="tel" id="aWa" value="${esc(C.whatsappAdmin)}" placeholder="3101234567">
     <div class="row"><div><label>Días de anticipación</label><input type="number" id="aDias" value="${C.diasAnticipacion}" min="1" max="60"></div><div><label>Máx. horas por reserva web</label><input type="number" id="aMax" value="${C.maxHorasPorReserva}" min="1" max="8"></div></div>
     <label>Minutos para confirmar una reserva antes de que se libere sola (0 = nunca)</label><input type="number" id="aVence" value="${C.venceMin}" min="0" max="1440" step="15">
-    <h2 style="margin-top:22px">🕔 Horario</h2><div class="hor muted" style="font-size:12px"><span></span><span>Desde</span><span>Hasta</span><span></span></div>${hor}
+    <h2 style="margin-top:22px">🕔 Horario</h2><p class="muted" style="margin:4px 0 0">"Hasta" es la hora de cierre: la última reserva empieza una hora antes. Los festivos de Colombia se calculan solos.</p><div class="hor muted" style="font-size:12px"><span></span><span>Abre</span><span>Cierra</span><span></span></div>${hor}
     <button class="btn btn-primary full" style="margin-top:14px" id="aBtn" onclick="guardarAjustesUI()">Guardar ajustes</button></div>
   <div class="card"><h2>🔒 Mi contraseña</h2>
     <div class="row"><div><label>Nueva contraseña</label><input type="password" id="p1" autocomplete="new-password"></div><div><label>Repítela</label><input type="password" id="p2" autocomplete="new-password"></div></div>
@@ -471,7 +472,7 @@ function vAjustes(){
     <button class="btn btn-ghost full" onclick="cerrarSem(this)">Cerrar semanas pasadas ahora</button></div>`;}
 function copiar(id){const t=$(id).textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copiado ✓')).catch(()=>toast('Mantén presionado el texto para copiarlo'));}
 async function guardarAjustesUI(){
-  const hor={};for(let d=1;d<=7;d++)hor[d]=$('hC'+d).checked?[0,0]:[Number($('hA'+d).value),Number($('hB'+d).value)];
+  const hor={};for(const d of ['1','2','3','4','5','6','7','F'])hor[d]=$('hC'+d).checked?[0,0]:[Number($('hA'+d).value),Number($('hB'+d).value)];
   const b=$('aBtn');b.disabled=true;
   try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
   catch(e){toast(e.message,true);}finally{b.disabled=false;}}

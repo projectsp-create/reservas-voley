@@ -188,8 +188,8 @@ const S={info:null,cal:null,fecha:null,cancha:1,sel:[],sesion:null,perfil:null};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pesos=n=>'$'+Math.round(n||0).toLocaleString('es-CO');
-const hora=h=>((h%12)||12)+':00 '+(h<12?'a. m.':'p. m.');
-const horaC=h=>((h%12)||12)+(h<12?'am':'pm');
+const hora=h=>((h%12)||12)+':00 '+((h%24)<12?'a. m.':'p. m.');
+const horaC=h=>((h%12)||12)+((h%24)<12?'am':'pm');
 const pd=s=>{const p=s.split('-').map(Number);return new Date(Date.UTC(p[0],p[1]-1,p[2]));};
 const addD=(s,n)=>{const d=pd(s);d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);};
 const fLarga=s=>{const d=pd(s);return DIASL[d.getUTCDay()]+' '+d.getUTCDate()+' de '+MESES[d.getUTCMonth()];};
@@ -202,7 +202,7 @@ async function rpc(fn,args){
   return r.data;
 }
 function toast(m,err){const t=$('toast');t.textContent=m;t.className='toast show'+(err?' err':'');clearTimeout(t._t);t._t=setTimeout(()=>t.className='toast',4000);}
-function abierto(f){const h=S.info.horario[String(iso(f))];return h&&h[1]>h[0];}
+function abierto(f){if(S.cal&&S.cal[f])return S.cal[f].horas.length>0;const h=S.info.horario[String(iso(f))];return h&&h[1]>h[0];}
 function ver(v){['vReserva','vMis','vOk'].forEach(x=>$(x).classList.toggle('hidden',x!=='v'+v[0].toUpperCase()+v.slice(1)));
   $('bar').classList.toggle('hidden',v!=='reserva'||!S.sel.length);window.scrollTo(0,0);if(v==='mis')cargarMis();if(v==='reserva')pintarPaso3();}
 function abrirModal(h){$('modal').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)cerrarModal()"><div class="modal">${h}</div></div>`;}
@@ -216,7 +216,7 @@ async function refrescar(){try{const antes=S.info&&S.info.hoy;aplicarCal(await r
   if(S.info.hoy!==antes||$('fechas').innerHTML)pintarFechas();pintarSlots();}catch(e){}}
 function pintarFechas(){const I=S.info;let h='';
   for(let f=I.hoy;f<=I.max;f=addD(f,1)){const d=pd(f),ab=abierto(f),top=f===I.hoy?'Hoy':(f===addD(I.hoy,1)?'Mañana':DIAS[d.getUTCDay()]);
-    h+=`<button class="date ${f===S.fecha?'on':''} ${ab?'':'off'}" ${ab?`onclick="elegirFecha('${f}')"`:'disabled'}><div class="d1">${top}</div><div class="d2">${d.getUTCDate()}</div><div class="d3">${MESES[d.getUTCMonth()]}</div></button>`;}
+    h+=`<button class="date ${f===S.fecha?'on':''} ${ab?'':'off'}" ${ab?`onclick="elegirFecha('${f}')"`:'disabled'}><div class="d1">${top}</div><div class="d2">${d.getUTCDate()}</div><div class="d3">${S.cal&&S.cal[f]&&S.cal[f].festivo?'<span style="color:var(--hot);font-weight:700">festivo</span>':MESES[d.getUTCMonth()]}</div></button>`;}
   $('fechas').innerHTML=h;}
 function pintarTabs(){let h='';for(let c=1;c<=S.info.canchas;c++)h+=`<button class="tab ${c===S.cancha?'on':''}" onclick="elegirCancha(${c})">Cancha ${c}</button>`;$('tabsCancha').innerHTML=h;}
 function elegirFecha(f){S.fecha=f;S.sel=[];pintarFechas();pintarSlots();if(Date.now()-CAL_T>45000)refrescar();}
@@ -330,8 +330,8 @@ async function init(){
     let pend=null;try{pend=JSON.parse(sessionStorage.getItem('vp_pend')||'null');sessionStorage.removeItem('vp_pend');}catch(e){}
     if(pend&&S.cal[pend.fecha]){S.fecha=pend.fecha;S.cancha=pend.cancha;S.sel=pend.sel||[];}
     pintarFechas();pintarTabs();
-    const N=['','Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],grp={};
-    for(let d=1;d<=7;d++){const h=I.horario[d];if(h&&h[1]>h[0]){const k=hora(h[0])+' a '+hora(h[1]);(grp[k]=grp[k]||[]).push(N[d]);}}
+    const N={1:'Lun',2:'Mar',3:'Mié',4:'Jue',5:'Vie',6:'Sáb',7:'Dom',F:'Festivos'},grp={};
+    ['1','2','3','4','5','6','7','F'].forEach(d=>{const h=I.horario[d];if(h&&h[1]>h[0]){const k=hora(h[0])+' a '+hora(h[1])+' (última reserva '+hora(h[1]-1)+')';(grp[k]=grp[k]||[]).push(N[d]);}});
     $('horTxt').textContent='Horario: '+Object.entries(grp).map(([k,v])=>v.join(', ')+' · '+k).join('  |  ');
     $('cargando').classList.add('hidden');$('vReserva').classList.remove('hidden');
     pintarSlots();

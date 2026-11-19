@@ -154,6 +154,13 @@
       <div id="misFijos"></div>
       <div id="misProx"></div>
     </div>
+    <div class="card"><h2>📌 Pide tu horario fijo</h2>
+      <p class="muted" style="margin:6px 0 0">¿Juegas siempre el mismo día y hora? Pídelo y, si lo aprobamos, se te aparta solo cada semana.</p>
+      <div class="row"><div><label>Día</label><select id="sDia" onchange="horasSol()"></select></div><div><label>Cancha</label><select id="sCan"></select></div></div>
+      <div class="row"><div><label>Hora</label><select id="sHora" onchange="durSol()"></select></div><div><label>Duración</label><select id="sHoras"></select></div></div>
+      <label>Nota (opcional)</label><input type="text" id="sNotas" maxlength="120" placeholder="Ej. equipo Los Halcones">
+      <button class="btn btn-primary full" style="margin-top:14px" onclick="solicitarFijo(this)">Enviar solicitud</button>
+      <div id="misSol"></div></div>
     <div class="card"><h2>🕘 Historial</h2><div id="misHist"></div></div>
     <div class="card"><h2>✏️ Mis datos</h2>
       <label for="eNombre">Nombre</label><input type="text" id="eNombre" maxlength="60">
@@ -375,7 +382,7 @@ function exito(r){
     $('okWa').href='https://wa.me/'+S.info.whatsappAdmin+'?text='+encodeURIComponent(msg);$('okWa').classList.remove('hidden');}else $('okWa').classList.add('hidden');}
 
 /* ---------- Mis reservas ---------- */
-async function cargarMis(){
+async function cargarMis(mantenerAviso){
   if(!S.sesion){ver('reserva');loginGoogle();return;}
   $('misProx').innerHTML='<div class="empty"><span class="spinner"></span></div>';$('misHist').innerHTML='';
   $('misQuien').textContent=(S.perfil?S.perfil.nombre+' · ':'')+S.sesion.user.email;
@@ -387,6 +394,9 @@ async function cargarMis(){
     const hist=M.reservas.filter(g=>!prox.includes(g));
     const jugadas=M.reservas.filter(g=>!futura(g)&&['Confirmada','Pagada'].includes(g.estado));
     const DL=['','lunes','martes','miércoles','jueves','viernes','sábado','domingo'];
+    if(!$('sDia').innerHTML)initSol();
+    const aviso=mantenerAviso?($('misSol').querySelector('.btn-wa')||{}).outerHTML||'':'';
+    $('misSol').innerHTML=aviso+(M.solicitudes||[]).map(x=>`<div class="fijo-box" style="border-left-color:${x.estado==='Aprobada'?'var(--ok)':x.estado==='Pendiente'?'var(--warn)':'var(--bad)'}"><b>${DSEM[x.dia]} · ${rangoH(Array.from({length:x.horas},(_,i)=>x.hora+i))} · Cancha ${x.cancha}</b> <span class="badge b-${x.estado==='Aprobada'?'Pagada':x.estado==='Pendiente'?'Pendiente':'Cancelada'}">${x.estado}</span>${x.respuesta?`<div class="muted">💬 ${esc(x.respuesta)}</div>`:''}${x.estado==='Pendiente'?`<button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="cancelarSol('${x.id}',this)">Cancelar solicitud</button>`:''}</div>`).join('');
     $('misFijos').innerHTML=(M.fijos||[]).map(f=>`<div class="fijo-box">📌 <b>Tu horario fijo:</b> todos los <b>${DL[f.dia]}</b> · ${rangoH(Array.from({length:f.horas},(_,i)=>f.hora+i))} · Cancha ${f.cancha}<div class="muted">Se aparta solo cada semana${f.hasta?' hasta el '+fLarga(f.hasta):''}. Si un día no puedes ir, cancela solo ese día.</div></div>`).join('');
     $('misStats').innerHTML=`<div><b>${prox.length}</b><span>Próximas</span></div><div><b>${jugadas.reduce((a,g)=>a+g.horas.length,0)}</b><span>Horas jugadas</span></div><div><b>${M.reservas.length}</b><span>Reservas</span></div>`;
     const item=(g,cancelable)=>{const d=pd(g.fecha);return `<div class="mis-item"><div class="when"><div class="m">${DIAS[d.getUTCDay()]}</div><div class="d">${d.getUTCDate()}</div><div class="m">${MESES[d.getUTCMonth()]}</div></div>
@@ -396,6 +406,24 @@ async function cargarMis(){
     $('misProx').innerHTML=prox.length?prox.map(g=>item(g,true)).join(''):'<p class="muted center" style="padding:14px 0">No tienes reservas próximas. <a href="#" onclick="ver(\'reserva\');return false">¡Reserva una!</a></p>';
     $('misHist').innerHTML=hist.length?hist.map(g=>item(g,false)).join(''):'<p class="muted center" style="padding:14px 0">Aquí verás tus partidos anteriores.</p>';
   }catch(e){$('misProx').innerHTML='<p class="muted">'+esc(e.message)+'</p>';}}
+const DSEM=['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+function initSol(){
+  const H=S.info.horario;
+  $('sDia').innerHTML=[1,2,3,4,5,6,7].filter(d=>H[d]&&H[d][1]>H[d][0]).map(d=>`<option value="${d}">${DSEM[d]}</option>`).join('');
+  $('sCan').innerHTML=Array.from({length:S.info.canchas},(_,i)=>`<option value="${i+1}">Cancha ${i+1}</option>`).join('');horasSol();}
+function horasSol(){const h=S.info.horario[$('sDia').value]||[0,0],o=[];for(let x=h[0];x<h[1];x++)o.push(x);
+  $('sHora').innerHTML=o.map(x=>`<option value="${x}">${hora(x)}</option>`).join('');durSol();}
+function durSol(){const h=S.info.horario[$('sDia').value]||[0,0],x=Number($('sHora').value),mx=Math.min(S.info.maxHoras,h[1]-x);
+  $('sHoras').innerHTML=Array.from({length:Math.max(1,mx)},(_,i)=>`<option value="${i+1}">${i+1} hora${i?'s':''}</option>`).join('');}
+async function solicitarFijo(b){b.disabled=true;
+  try{await rpc('solicitar_fijo',{p_dia:Number($('sDia').value),p_hora:Number($('sHora').value),p_horas:Number($('sHoras').value),p_cancha:Number($('sCan').value),p_notas:$('sNotas').value});
+    toast('Solicitud enviada ✓ Te avisaremos por WhatsApp');$('sNotas').value='';
+    if(S.info.whatsappAdmin){const d=DSEM[$('sDia').value],msg=`Hola 👋, soy ${S.perfil?S.perfil.nombre:''}. Acabo de pedir horario fijo en ${S.info.negocio}: todos los ${d.toLowerCase()} a las ${hora(Number($('sHora').value))}, cancha ${$('sCan').value}. ¿Me lo apruebas?`;
+      $('misSol').insertAdjacentHTML('afterbegin',`<a class="btn btn-wa full" style="margin-top:10px" target="_blank" href="https://wa.me/${S.info.whatsappAdmin}?text=${encodeURIComponent(msg)}">💬 Avisar por WhatsApp</a>`);}
+    cargarMis(true);}
+  catch(e){toast(e.message,true);}finally{b.disabled=false;}}
+async function cancelarSol(id,b){if(b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='¿Seguro?';return;}
+  try{await rpc('cancelar_mi_solicitud',{p_id:id});toast('Solicitud cancelada');cargarMis();}catch(e){toast(e.message,true);}}
 async function cancelar(cod,btn){
   if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='Toca otra vez para cancelar';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Cancelar';},4000);return;}
   try{await rpc('cancelar_mi_reserva',{p_codigo:cod});toast('Reserva cancelada');refrescar();cargarMis();}catch(e){toast(e.message,true);}}

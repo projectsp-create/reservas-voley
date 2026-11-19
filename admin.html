@@ -234,9 +234,9 @@ function construir(){
     acumIngresos:suma(semanas,'ingresos'),acumGastos:Number(R.gastosTotal)||0};
   const base=location.href.split('#')[0].split('?')[0].replace(/admin\.html$/,'');
   D={cfg,hoy,fecha:FECHA,horasFecha:horasDia(cfg,FECHA),delDia,pendientes,proximas,semanas,gastos:gas,kpis,grupos,
-     categorias:CATEGORIAS,medios:MEDIOS,urlPublica:base,urlAdmin:base+'admin.html',yo:R.yo,admins:R.admins,informes:R.informes||[],jugadores:R.jugadores||0,bloqueados:R.bloqueados||[],jugadoresLista:R.jugadoresLista||[],fijos:R.fijos||[]};
+     categorias:CATEGORIAS,medios:MEDIOS,urlPublica:base,urlAdmin:base+'admin.html',yo:R.yo,admins:R.admins,informes:R.informes||[],jugadores:R.jugadores||0,bloqueados:R.bloqueados||[],jugadoresLista:R.jugadoresLista||[],fijos:R.fijos||[],solicitudes:R.solicitudesFijo||[],cuentasPend:R.cuentasPendientes||[]};
   $('tNeg').textContent=cfg.negocio;$('tYo').textContent=R.yo;
-  const c2=$('cntPend');c2.textContent=kpis.pendientes;c2.classList.toggle('hidden',!kpis.pendientes);
+  const nP=kpis.pendientes+(R.solicitudesFijo||[]).length;const c2=$('cntPend');c2.textContent=nP;c2.classList.toggle('hidden',!nP);
   const bf=document.querySelector('#nav button[data-v=fin]');bf.classList.toggle('hidden',!(puede('finanzas')||puede('gastos')));
   if(VISTA==='fin'&&bf.classList.contains('hidden'))VISTA='agenda';
   $('tYo').textContent=R.yo+(PERM.dueno?' · Dueño':' · Administrador');
@@ -373,7 +373,11 @@ async function guardarNueva(){
 
 /* ---------- Pendientes / Próximas ---------- */
 function vPend(){const L=D.pendientes;
-  $('v-pend').innerHTML=`<div class="card"><h2>🔔 Por confirmar</h2><p class="muted" style="margin:6px 0 0">Al confirmar se abre WhatsApp con el mensaje listo para el cliente: solo toca <b>Enviar</b>.</p>
+  const SOL=D.solicitudes.length?`<div class="card"><h2>📌 Solicitudes de horario fijo</h2><p class="muted" style="margin:6px 0 0">${puede('fijos')?'Al aprobar, el horario se aparta solo cada semana.':'Solo un administrador con permiso de horarios fijos puede responderlas.'}</p>
+    ${D.solicitudes.map(x=>{const ch=D.fijos.find(f=>f.dia===x.dia&&f.cancha===x.cancha&&f.hora<x.hora+x.horas&&x.hora<f.hora+f.horas);
+      return `<div class="item"><div class="body"><div class="nm">${esc(x.jugador)}</div><div class="muted">Todos los ${DIAS_L[x.dia].toLowerCase()} · ${rangoFijo(x)} · Cancha ${x.cancha} · 📱 ${x.whatsapp}</div>${x.notas?`<div class="muted">📝 ${esc(x.notas)}</div>`:''}${ch?`<div class="muted" style="color:var(--warn)">⚠️ Ya es fijo de ${esc(ch.jugador)}</div>`:''}
+      ${puede('fijos')?`<div class="acts"><button class="btn btn-wa btn-sm" onclick="responderSol('${x.id}',true,this)">✓ Aprobar y avisar</button><button class="btn btn-danger btn-sm" onclick="responderSol('${x.id}',false,this)">Rechazar</button></div>`:''}</div></div>`;}).join('')}</div>`:'';
+  $('v-pend').innerHTML=SOL+`<div class="card"><h2>🔔 Por confirmar</h2><p class="muted" style="margin:6px 0 0">Al confirmar se abre WhatsApp con el mensaje listo para el cliente: solo toca <b>Enviar</b>.</p>
    ${L.length?L.map(itemGrupo).join(''):'<p class="center muted" style="padding:26px 0">🎉 No hay solicitudes pendientes.</p>'}</div>`;}
 function vProx(){
   const L=D.proximas.filter(g=>FILTRO==='todas'||(FILTRO==='activas'?ACT.includes(g.estado):g.estado===FILTRO));
@@ -383,17 +387,52 @@ function vProx(){
   let dia='';L.forEach(g=>{if(g.fecha!==dia){dia=g.fecha;h+=`<div class="dayhdr">${g.fecha===D.hoy?'Hoy · ':''}${fLarga(g.fecha)}</div>`;}h+=itemGrupo(g);});
   $('v-prox').innerHTML=h+'</div>';}
 
+/* ---------- Solicitudes de fijo ---------- */
+function responderSol(id,ok,b){
+  const x=D.solicitudes.find(s=>s.id===id);if(!x)return;
+  abrirModal(`<h2>${ok?'Aprobar':'Rechazar'} horario fijo</h2><p class="muted">${esc(x.jugador)} · todos los ${DIAS_L[x.dia].toLowerCase()} · ${rangoFijo(x)} · Cancha ${x.cancha}</p>
+    ${ok?`<label>Precio por hora (vacío = tarifa ${pesos(D.cfg.tarifa)})</label><input type="number" id="rValor" min="0" step="1000">`:''}
+    <label>Mensaje para el jugador (opcional)</label><input type="text" id="rMsg" maxlength="200" placeholder="${ok?'¡Listo! Te esperamos cada semana':'Ese horario no está disponible, ¿te sirve otro?'}">
+    <div style="display:grid;gap:8px;margin-top:16px"><button class="btn ${ok?'btn-wa':'btn-danger'}" onclick="enviarRespuesta('${id}',${ok},this)">${ok?'✓ Aprobar y avisar por WhatsApp':'Rechazar y avisar por WhatsApp'}</button><button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button></div>`);}
+async function enviarRespuesta(id,ok,b){
+  const x=D.solicitudes.find(s=>s.id===id),msgTxt=$('rMsg').value.trim(),val=ok&&$('rValor').value!==''?Number($('rValor').value):null;
+  const win=window.open('about:blank','_blank');b.disabled=true;
+  try{await rpc('responder_solicitud',{p_id:id,p_aprobar:ok,p_respuesta:msgTxt,p_valor:val});
+    const txt=ok?`Hola ${x.jugador} 👋\n\n¡Tu horario fijo en *${D.cfg.negocio}* quedó *APROBADO*! ✅\n\n📌 Todos los ${DIAS_L[x.dia].toLowerCase()} · ${rangoFijo(x)} · Cancha ${x.cancha}\n💵 ${pesos(val!=null?val:D.cfg.tarifa)} por hora (se paga cada semana)\n\nSe te aparta solo. Si algún día no puedes venir, cancélalo en "Mis reservas".${msgTxt?'\n\n'+msgTxt:''}`
+      :`Hola ${x.jugador} 🙏\n\nTu solicitud de horario fijo (${DIAS_L[x.dia].toLowerCase()} ${rangoFijo(x)}, cancha ${x.cancha}) no pudo ser aprobada.${msgTxt?'\n\n'+msgTxt:''}\n\nPuedes pedir otro horario en "Mis reservas".`;
+    if(win)win.location.href='https://wa.me/57'+x.whatsapp+'?text='+encodeURIComponent(txt);
+    cerrarModal();toast(ok?'Horario fijo aprobado ✓':'Solicitud rechazada');await cargar();}
+  catch(e){if(win)win.close();toast(e.message,true);b.disabled=false;}}
+
+/* ---------- Cuentas pendientes ---------- */
+function cardCuentasPend(){
+  if(!D.cuentasPend.length)return '';
+  return `<div class="card"><h2>⏳ Cuentas sin completar (${D.cuentasPend.length})</h2><p class="muted" style="margin:6px 0 0">Personas que crearon cuenta pero todavía no pueden reservar.</p>
+   ${D.cuentasPend.map(u=>`<div class="item" style="padding:12px 0;align-items:center"><div class="body"><b style="word-break:break-all">${esc(u.nombre||u.email)}</b><div class="muted" style="word-break:break-all">${esc(u.email)} · ${u.proveedor==='google'?'Google':'Correo'} · ${fCorta(String(u.creado).slice(0,10))}</div>
+     <div class="muted" style="color:var(--warn)">${u.confirmada?'Le faltan sus datos (nombre y WhatsApp)':'No ha confirmado su correo (que revise spam)'}</div></div>
+     ${u.confirmada?`<button class="btn btn-navy btn-sm" onclick="modalCompletar('${u.id}')">Completar</button>`:(u.whatsapp?`<a class="btn btn-wa btn-sm" target="_blank" href="https://wa.me/57${esc(u.whatsapp)}?text=${encodeURIComponent('Hola 👋 para terminar tu registro en '+D.cfg.negocio+' abre el correo que te enviamos (revisa spam) y toca "Confirmar mi cuenta".')}">💬 Recordar</a>`:'')}</div>`).join('')}</div>`;}
+function modalCompletar(id){const u=D.cuentasPend.find(x=>x.id===id);
+  abrirModal(`<h2>Completar cuenta</h2><p class="muted">${esc(u.email)}</p>
+   <label>Nombre completo *</label><input type="text" id="cNom" maxlength="60" value="${esc(u.nombre||'')}">
+   <label>WhatsApp *</label><input type="tel" id="cTel" inputmode="numeric" maxlength="13" value="${esc(u.whatsapp||'')}">
+   <label>Dirección (opcional)</label><input type="text" id="cDir" maxlength="120">
+   <div style="display:grid;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="completarCuenta('${id}',this)">Guardar</button><button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button></div>`);}
+async function completarCuenta(id,b){b.disabled=true;
+  try{const r=await rpc('completar_cuenta',{p_user:id,p_nombre:$('cNom').value,p_whatsapp:$('cTel').value,p_direccion:$('cDir').value});toast('Cuenta completada ✓');await cargar();modalJugador(r.id);}
+  catch(e){toast(e.message,true);b.disabled=false;}}
+
 /* ---------- Jugadores ---------- */
 const DIAS_L=['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
 let BUSQ='';
 const rangoFijo=f=>rangoH(Array.from({length:f.horas},(_,i)=>f.hora+i));
 function vJug(){
   const q=BUSQ.toLowerCase().trim(),L=D.jugadoresLista.filter(j=>!q||(j.nombre+' '+j.whatsapp+' '+j.email).toLowerCase().includes(q));
-  let h=`<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">📌 Horarios fijos</h2><button class="btn btn-primary btn-sm" onclick="modalFijo()">+ Horario fijo</button></div>
+  let h=`<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">📌 Horarios fijos</h2>${puede('fijos')?'<button class="btn btn-primary btn-sm" onclick="modalFijo()">+ Horario fijo</button>':''}</div>
     <p class="muted" style="margin:6px 0 4px">Se apartan solos cada semana (14 días adelante), antes de que el público los vea.</p>
     ${D.fijos.length?D.fijos.map(f=>`<div class="item" style="padding:12px 0;align-items:center"><div class="body"><b>${esc(f.jugador)}</b><div class="muted">${DIAS_L[f.dia]} · ${rangoFijo(f)} · Cancha ${f.cancha}${f.valor!=null?' · '+pesos(f.valor)+'/h':''}${f.hasta?' · hasta '+fCorta(f.hasta):''}</div>
       ${f.choques.length?`<div class="muted" style="color:var(--warn)">⚠️ No se pudo apartar: ${f.choques.map(fCorta).join(', ')} (esa hora ya estaba ocupada)</div>`:''}</div>
       <button class="btn btn-ghost btn-sm" onclick="modalJugador('${f.jugador_id}')">Ver</button></div>`).join(''):'<p class="muted center" style="padding:14px 0">Aún no hay horarios fijos.</p>'}</div>
+  ${cardCuentasPend()}
   <div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">👥 Jugadores (${D.jugadoresLista.length})</h2><button class="btn btn-primary btn-sm" onclick="modalJugadorNuevo()">+ Nuevo jugador</button></div>
     <input type="text" id="busJug" placeholder="Buscar por nombre, WhatsApp o correo…" value="${esc(BUSQ)}" oninput="BUSQ=this.value;vJugLista()" style="margin-top:12px">
     <div id="jugLista"></div></div>`;
@@ -422,8 +461,8 @@ async function modalJugador(id){
    <p class="muted" style="margin:4px 0 0">${esc(j.origen)} · ${j.reservas} reservas · ${j.horas} horas jugadas</p>
    <div class="row" style="margin-top:10px"><a class="btn btn-wa btn-sm" target="_blank" href="https://wa.me/57${j.whatsapp}">💬 WhatsApp</a><button class="btn btn-primary btn-sm" onclick="cerrarModal();modalNueva(1,null,'${id}')">+ Reservar para él</button></div>
    <h2 style="margin-top:18px;font-size:18px">📌 Horarios fijos</h2>
-   ${fj.length?fj.map(f=>`<div class="item" style="padding:10px 0;align-items:center"><div class="body"><b>${DIAS_L[f.dia]} · ${rangoFijo(f)} · Cancha ${f.cancha}</b><div class="muted">desde ${fCorta(f.desde)}${f.hasta?' hasta '+fCorta(f.hasta):''}${f.choques.length?' · ⚠️ choque '+f.choques.map(fCorta).join(', '):''}</div></div><button class="btn btn-danger btn-sm" onclick="terminarFijo('${f.id}',this)">Terminar</button></div>`).join(''):'<p class="muted">No tiene horarios fijos.</p>'}
-   <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="modalFijo('${id}')">+ Agregar horario fijo</button>
+   ${fj.length?fj.map(f=>`<div class="item" style="padding:10px 0;align-items:center"><div class="body"><b>${DIAS_L[f.dia]} · ${rangoFijo(f)} · Cancha ${f.cancha}</b><div class="muted">desde ${fCorta(f.desde)}${f.hasta?' hasta '+fCorta(f.hasta):''}${f.choques.length?' · ⚠️ choque '+f.choques.map(fCorta).join(', '):''}</div></div>${puede('fijos')?`<button class="btn btn-danger btn-sm" onclick="terminarFijo('${f.id}',this)">Terminar</button>`:''}</div>`).join(''):'<p class="muted">No tiene horarios fijos.</p>'}
+   ${puede('fijos')?`<button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="modalFijo('${id}')">+ Agregar horario fijo</button>`:''}
    <h2 style="margin-top:18px;font-size:18px">✏️ Datos</h2>${formJugador(j)}
    <button class="btn btn-navy full" style="margin-top:12px" onclick="guardarJugadorUI('${id}',this)">Guardar datos</button>
    ${puede('bloquear')?`<button class="btn btn-ghost full" style="margin-top:8px" onclick="bloquearJug('${id}',${!j.bloqueado},this)">${j.bloqueado?'✅ Desbloquear':'🚫 Bloquear (no podrá reservar en línea)'}</button>`:''}
@@ -556,7 +595,7 @@ function vAjustes(){
     <button class="btn btn-primary full" style="margin-top:14px" id="aBtn" onclick="guardarAjustesUI()">Guardar ajustes</button></div>`}
   ${!puede('finanzas')?'':`<div class="card"><h2>🧹 Privacidad</h2><p class="muted">Cada lunes se cierra la semana anterior: se genera el informe descargable (dura 4 semanas) y se borran los datos de las reservas presenciales. Las reservas de jugadores con cuenta quedan en su historial personal.</p>
     <button class="btn btn-ghost full" onclick="cerrarSem(this)">Cerrar semanas pasadas ahora</button></div>`}`;}
-const PERMS=[['finanzas','💰 Ver finanzas e informes'],['gastos','🧾 Registrar y borrar gastos'],['ajustes','⚙️ Cambiar ajustes (tarifa, horario…)'],['bloquear','🚫 Bloquear jugadores']];
+const PERMS=[['finanzas','💰 Ver finanzas e informes'],['gastos','🧾 Registrar y borrar gastos'],['ajustes','⚙️ Cambiar ajustes (tarifa, horario…)'],['bloquear','🚫 Bloquear jugadores'],['fijos','📌 Crear y aprobar horarios fijos']];
 function cardAdmins(){
   const dueno=PERM.dueno;
   const fila=a=>{
@@ -570,7 +609,7 @@ function cardAdmins(){
     <p class="muted" style="margin:6px 0 4px">${dueno?'Eres el dueño: solo tú agregas, quitas y das permisos. Todos pueden ver la agenda, confirmar, cobrar y registrar reservas presenciales.':'Solo el dueño puede agregar, quitar o cambiar permisos de los administradores.'}</p>
     ${D.admins.map(fila).join('')}
     ${dueno?`<label style="margin-top:14px">Agregar administrador (correo de Google)</label><input type="text" id="nuevoAdm" inputmode="email" placeholder="socio@gmail.com">
-      <div class="hchk" style="margin-top:10px">${PERMS.map(([k,t])=>`<label><input type="checkbox" class="pm-nuevo" data-k="${k}" ${k!=='ajustes'?'checked':''}>${t}</label>`).join('')}</div>
+      <div class="hchk" style="margin-top:10px">${PERMS.map(([k,t])=>`<label><input type="checkbox" class="pm-nuevo" data-k="${k}" ${k!=='ajustes'&&k!=='fijos'?'checked':''}>${t}</label>`).join('')}</div>
       <button class="btn btn-primary full" style="margin-top:12px" onclick="agregarAdmin()">Agregar administrador</button>`:''}
     ${!dueno?`<p class="muted" style="margin-top:10px">Tus permisos: ${PERMS.filter(([k])=>puede(k)).map(([,t])=>t).join(' · ')||'solo agenda y reservas'}</p>`:''}</div>`;}
 const leerPermisos=cls=>{const o={};document.querySelectorAll('.'+cls).forEach(i=>o[i.dataset.k]=i.checked);return o;};

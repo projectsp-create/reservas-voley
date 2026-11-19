@@ -131,7 +131,7 @@
         <label for="pNombre">Nombre completo</label><input type="text" id="pNombre" maxlength="60" required>
         <label for="pTel">WhatsApp</label><input type="tel" id="pTel" inputmode="numeric" maxlength="13" placeholder="3101234567" required>
         <label for="pDir">Dirección (opcional)</label><input type="text" id="pDir" maxlength="120" placeholder="Barrio, calle…">
-        <label class="check"><input type="checkbox" id="pAcepta"> <span>Autorizo el tratamiento de mis datos (nombre, correo, WhatsApp y dirección) para gestionar mis reservas y mi historial, conforme a la Ley 1581 de 2012 y la <a href="privacidad.html" target="_blank" style="color:var(--neon)">política de tratamiento de datos</a>. Puedo eliminar mi cuenta y mis datos cuando quiera desde "Mis reservas".</span></label>
+        <label class="check"><input type="checkbox" id="pAcepta"> <span>Autorizo el tratamiento de mis datos (nombre, correo, WhatsApp y dirección) para gestionar mis reservas y mi historial (mi nombre abreviado puede verse en el calendario; puedo ocultarlo en "Mis datos"), conforme a la Ley 1581 de 2012 y la <a href="privacidad.html" target="_blank" style="color:var(--neon)">política de tratamiento de datos</a>. Puedo eliminar mi cuenta y mis datos cuando quiera desde "Mis reservas".</span></label>
         <button class="btn btn-primary full" style="margin-top:14px" id="btnPerfil" type="submit">Guardar y continuar</button>
       </form>
       <!-- confirmar -->
@@ -166,6 +166,7 @@
       <label for="eNombre">Nombre</label><input type="text" id="eNombre" maxlength="60">
       <label for="eTel">WhatsApp</label><input type="tel" id="eTel" inputmode="numeric" maxlength="13">
       <label for="eDir">Dirección</label><input type="text" id="eDir" maxlength="120">
+      <label class="check"><input type="checkbox" id="eMostrar" onchange="cambiarPrivacidad(this)"> <span>Mostrar mi nombre abreviado (ej. "Laura G.") en el calendario público cuando tenga una cancha reservada.</span></label>
       <button class="btn btn-navy full" style="margin-top:14px" onclick="editarPerfil()">Guardar cambios</button>
       <button class="btn btn-ghost full" style="margin-top:10px" onclick="salir()">Cerrar sesión</button>
       <button class="btn btn-danger full" style="margin-top:10px" onclick="borrarCuenta(this)">Eliminar mi cuenta y mis datos</button>
@@ -240,7 +241,8 @@ function pintarSlots(){
   if(!D.horas.length){$('slots').innerHTML='<div class="empty">Este día no hay atención.</div>';actualizarBarra();return;}
   let h='<div class="slots">';
   D.horas.forEach(x=>{const st=D.slots[S.cancha+'-'+x],sel=S.sel.includes(x);
-    const sub=st==='libre'?pesos(S.info.tarifa):(st==='ocupado'?'Ocupado':'Ya pasó');
+    const q=(D.quien||{})[S.cancha+'-'+x];
+    const sub=st==='libre'?pesos(S.info.tarifa):(st==='ocupado'?(q?(q.f?'📌 ':'')+esc(q.n):'Ocupado'):'Ya pasó');
     if(st!=='libre'&&sel)S.sel=S.sel.filter(y=>y!==x);
     h+=`<button class="slot ${st} ${sel&&st==='libre'?'sel':''}" ${st==='libre'?`onclick="toggle(${x})"`:'disabled'}><div class="t">${hora(x)}</div><div class="s">${sub}</div></button>`;});
   $('slots').innerHTML=h+'</div>';actualizarBarra();}
@@ -279,7 +281,7 @@ function loginHTML(p){
     <label>Dirección (opcional)</label><input type="text" id="${p}Dir" maxlength="120" placeholder="Barrio, calle…">
     <label>Correo</label><input type="text" id="${p}Mail" inputmode="email" autocomplete="email" placeholder="tucorreo@hotmail.com">
     <label>Contraseña (mínimo 8 caracteres)</label><input type="password" id="${p}Pass" autocomplete="new-password">
-    <label class="check"><input type="checkbox" id="${p}Acepta"> <span>Autorizo el tratamiento de mis datos (nombre, correo, WhatsApp y dirección) para gestionar mis reservas y mi historial, conforme a la Ley 1581 de 2012 y la <a href="privacidad.html" target="_blank" style="color:var(--neon)">política de tratamiento de datos</a>.</span></label>
+    <label class="check"><input type="checkbox" id="${p}Acepta"> <span>Autorizo el tratamiento de mis datos (nombre, correo, WhatsApp y dirección) para gestionar mis reservas y mi historial (mi nombre abreviado puede verse en el calendario; puedo ocultarlo en "Mis datos"), conforme a la Ley 1581 de 2012 y la <a href="privacidad.html" target="_blank" style="color:var(--neon)">política de tratamiento de datos</a>.</span></label>
     <button class="btn btn-primary full" style="margin-top:14px" onclick="crearCuenta('${p}',this)">Crear cuenta</button>`}
   <div id="${p}Aviso"></div>`;}
 function pintarLogin(){const b=$('boxLogin');if(b&&!b.classList.contains('hidden'))b.innerHTML=loginHTML('b');const m=$('mLogin');if(m)m.innerHTML=loginHTML('m');}
@@ -386,7 +388,7 @@ async function cargarMis(mantenerAviso){
   if(!S.sesion){ver('reserva');loginGoogle();return;}
   $('misProx').innerHTML='<div class="empty"><span class="spinner"></span></div>';$('misHist').innerHTML='';
   $('misQuien').textContent=(S.perfil?S.perfil.nombre+' · ':'')+S.sesion.user.email;
-  if(S.perfil){$('eNombre').value=S.perfil.nombre;$('eTel').value=S.perfil.whatsapp;$('eDir').value=S.perfil.direccion||'';}
+  if(S.perfil){$('eNombre').value=S.perfil.nombre;$('eTel').value=S.perfil.whatsapp;$('eDir').value=S.perfil.direccion||'';$('eMostrar').checked=S.perfil.mostrar_nombre!==false;}
   try{
     const M=await rpc('mis_reservas'),hoy=M.hoy,ahora=M.ahora;
     const futura=g=>g.fecha>hoy||(g.fecha===hoy&&g.horas[g.horas.length-1]>=ahora);
@@ -427,6 +429,7 @@ async function cancelarSol(id,b){if(b.dataset.ok!=='1'){b.dataset.ok='1';b.textC
 async function cancelar(cod,btn){
   if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='Toca otra vez para cancelar';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Cancelar';},4000);return;}
   try{await rpc('cancelar_mi_reserva',{p_codigo:cod});toast('Reserva cancelada');refrescar();cargarMis();}catch(e){toast(e.message,true);}}
+async function cambiarPrivacidad(c){try{await rpc('cambiar_privacidad',{p_mostrar:c.checked});if(S.perfil)S.perfil.mostrar_nombre=c.checked;toast(c.checked?'Tu nombre se mostrará abreviado':'Tu nombre ya no se mostrará');refrescar();}catch(e){c.checked=!c.checked;toast(e.message,true);}}
 async function editarPerfil(){try{const p=await rpc('guardar_perfil',{p_nombre:$('eNombre').value,p_whatsapp:$('eTel').value,p_acepta:true,p_direccion:$('eDir').value});S.perfil=p.perfil;pintarUser();toast('Datos actualizados ✓');}catch(e){toast(e.message,true);}}
 async function borrarCuenta(btn){
   if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='¿Seguro? Se cancelan tus reservas próximas. Toca otra vez';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Eliminar mi cuenta y mis datos';},5000);return;}

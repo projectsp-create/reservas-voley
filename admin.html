@@ -214,7 +214,7 @@ function statsSemana(l,res,gas,cfg){
 }
 function construir(){
   const R=RAW,c=R.cfg;FEST=new Set(R.festivos||[]);PERM=R.rol||{dueno:false,permisos:{}};
-  const cfg={negocio:c.negocio,direccion:c.direccion,tarifa:c.tarifa,canchas:c.canchas,whatsappAdmin:c.whatsapp_admin,diasAnticipacion:c.dias_anticipacion,maxHorasPorReserva:c.max_horas,horario:c.horario,venceMin:c.vence_pendiente_min};
+  const cfg={negocio:c.negocio,direccion:c.direccion,tarifa:c.tarifa,canchas:c.canchas,whatsappAdmin:c.whatsapp_admin,diasAnticipacion:c.dias_anticipacion,maxHorasPorReserva:c.max_horas,horario:c.horario,venceMin:c.vence_pendiente_min,mostrarNombres:c.mostrar_nombres!==false};
   const hoy=R.hoy;FECHA=FECHA||hoy;
   const res=R.reservas,gas=R.gastos,grupos=agrupar(res),lAct=lunesDe(hoy);
   const delDia=grupos.filter(g=>g.fecha===FECHA);
@@ -591,6 +591,7 @@ function vAjustes(){
     <label>WhatsApp que recibe los avisos de clientes</label><input type="tel" id="aWa" value="${esc(C.whatsappAdmin)}" placeholder="3101234567">
     <div class="row"><div><label>Días de anticipación</label><input type="number" id="aDias" value="${C.diasAnticipacion}" min="1" max="60"></div><div><label>Máx. horas por reserva web</label><input type="number" id="aMax" value="${C.maxHorasPorReserva}" min="1" max="8"></div></div>
     <label>Minutos para confirmar una reserva antes de que se libere sola (0 = nunca)</label><input type="number" id="aVence" value="${C.venceMin}" min="0" max="1440" step="15">
+    <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="aNombres" ${C.mostrarNombres?'checked':''} style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Mostrar el nombre abreviado del jugador (ej. "Meyer B.") en las horas ocupadas del calendario público. Cada jugador puede ocultarlo desde su cuenta.</span></label>
     <h2 style="margin-top:22px">🕔 Horario</h2><p class="muted" style="margin:4px 0 0">"Hasta" es la hora de cierre: la última reserva empieza una hora antes. Los festivos de Colombia se calculan solos.</p><div class="hor muted" style="font-size:12px"><span></span><span>Abre</span><span>Cierra</span><span></span></div>${hor}
     <button class="btn btn-primary full" style="margin-top:14px" id="aBtn" onclick="guardarAjustesUI()">Guardar ajustes</button></div>`}
   ${!puede('finanzas')?'':`<div class="card"><h2>🧹 Privacidad</h2><p class="muted">Cada lunes se cierra la semana anterior: se genera el informe descargable (dura 4 semanas) y se borran los datos de las reservas presenciales. Las reservas de jugadores con cuenta quedan en su historial personal.</p>
@@ -618,7 +619,7 @@ function copiar(id){const t=$(id).textContent;(navigator.clipboard?navigator.cli
 async function guardarAjustesUI(){
   const hor={};for(const d of ['1','2','3','4','5','6','7','F'])hor[d]=$('hC'+d).checked?[0,0]:[Number($('hA'+d).value),Number($('hB'+d).value)];
   const b=$('aBtn');b.disabled=true;
-  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
+  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,mostrarNombres:$('aNombres').checked,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
   catch(e){toast(e.message,true);}finally{b.disabled=false;}}
 async function agregarAdmin(){try{await rpc('agregar_admin',{p_email:$('nuevoAdm').value,p_permisos:leerPermisos('pm-nuevo')});toast('Administrador agregado ✓');await cargar();}catch(e){toast(e.message,true);}}
 async function quitarAdmin(email,btn){if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='¿Seguro?';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Quitar';},3000);return;}

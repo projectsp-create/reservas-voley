@@ -76,6 +76,8 @@
   .hchk input{accent-color:var(--neon)}
   .hchk label.dis{opacity:.35;cursor:not-allowed}
   .hor label{text-transform:none;letter-spacing:0}
+  .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#fff;color:#1F1F1F;border:0;border-radius:12px;padding:13px 16px;font-weight:600;cursor:pointer;font-size:15px}
+  .gbtn:hover{background:#F2F2F2}.gbtn svg{width:20px;height:20px}
 </style>
 </head>
 <body>
@@ -85,6 +87,8 @@
   <div class="center"><svg style="width:72px;height:72px;margin:0 auto 14px;display:block;filter:drop-shadow(0 0 18px rgba(198,244,50,.35))" viewBox="-26 -26 52 52" aria-hidden="true"><rect x="-26" y="-26" width="52" height="52" rx="14" fill="#C6F432"/><circle r="15" fill="none" stroke="#0E1116" stroke-width="2.6"/><path d="M-15 0 C-5 -4 5 -4 15 0 M-4 -14.5 C3 -7 3 7 -4 14.5 M4 -14.5 C12 -5 13 5 9 11.5" stroke="#0E1116" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
   <h2>Panel del administrador</h2><p class="muted" id="loginSub">Entra con tu correo y contraseña</p></div>
   <div class="card" id="boxLogin">
+    <button class="gbtn" id="btnGoogle"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg> Entrar con Google</button>
+    <p class="muted center" style="margin:14px 0 0">o con correo y contraseña</p>
     <label for="email">Correo</label><input type="text" id="email" inputmode="email" autocomplete="username" placeholder="tucorreo@gmail.com">
     <label for="pass">Contraseña</label><input type="password" id="pass" autocomplete="current-password" placeholder="••••••••">
     <button class="btn btn-primary full" style="margin-top:16px" id="btnLogin">Entrar</button>
@@ -164,7 +168,8 @@ async function entrar(){
     $('pass').value='';await cargar();}
   catch(e){toast(e.message,true);}finally{b.disabled=false;}
 }
-$('btnLogin').onclick=entrar;$('pass').onkeydown=e=>{if(e.key==='Enter')entrar();};
+$('btnLogin').onclick=entrar;
+$('btnGoogle').onclick=async()=>{const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});if(error)toast(error.message,true);};$('pass').onkeydown=e=>{if(e.key==='Enter')entrar();};
 $('btnOlvide').onclick=async()=>{
   const email=$('email').value.trim();if(!email){toast('Escribe tu correo primero',true);return;}
   const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.href.split('#')[0].split('?')[0]});
@@ -177,7 +182,7 @@ $('btnNueva').onclick=async()=>{
   if(error){toast(error.message,true);return;}toast('Contraseña guardada ✓');RECUPERANDO=false;history.replaceState(null,'',location.pathname);await cargar();
 };
 let RECUPERANDO=false;
-sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY'){RECUPERANDO=true;$('cargando').classList.add('hidden');$('vApp').classList.add('hidden');$('vLogin').classList.remove('hidden');$('boxLogin').classList.add('hidden');$('boxNueva').classList.remove('hidden');$('loginSub').textContent='Recuperar contraseña';}});
+sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_IN'&&!RAW&&!RECUPERANDO)cargar();if(ev==='PASSWORD_RECOVERY'){RECUPERANDO=true;$('cargando').classList.add('hidden');$('vApp').classList.add('hidden');$('vLogin').classList.remove('hidden');$('boxLogin').classList.add('hidden');$('boxNueva').classList.remove('hidden');$('loginSub').textContent='Recuperar contraseña';}});
 async function salir(){try{await sb.auth.signOut();}catch(e){}mostrarLogin();}
 
 /* ---------- Datos ---------- */
@@ -192,7 +197,7 @@ async function cargar(){
 function horasDia(cfg,f){const h=cfg.horario[String(iso(f))];const o=[];if(!h||!(h[1]>h[0]))return o;for(let i=h[0];i<h[1];i++)o.push(i);return o;}
 function agrupar(res){
   const m={};res.forEach(r=>{
-    if(!m[r.codigo])m[r.codigo]={codigo:r.codigo,fecha:r.fecha,cancha:r.cancha,horas:[],nombre:r.nombre,whatsapp:r.whatsapp||'',estado:r.estado,total:0,medio:r.medio||'',origen:r.origen,notas:r.notas||'',por:r.actualizado_por||'',creado:r.creado};
+    if(!m[r.codigo])m[r.codigo]={codigo:r.codigo,fecha:r.fecha,cancha:r.cancha,horas:[],nombre:r.nombre,whatsapp:r.whatsapp||'',estado:r.estado,total:0,medio:r.medio||'',origen:r.origen,notas:r.notas||'',por:r.actualizado_por||'',creado:r.creado,uid:r.user_id||null};
     m[r.codigo].horas.push(r.hora);m[r.codigo].total+=Number(r.valor)||0;});
   return Object.values(m).map(g=>{g.horas.sort((a,b)=>a-b);return g;});
 }
@@ -206,7 +211,7 @@ function statsSemana(l,res,gas,cfg){
 }
 function construir(){
   const R=RAW,c=R.cfg;
-  const cfg={negocio:c.negocio,direccion:c.direccion,tarifa:c.tarifa,canchas:c.canchas,whatsappAdmin:c.whatsapp_admin,diasAnticipacion:c.dias_anticipacion,maxHorasPorReserva:c.max_horas,horario:c.horario};
+  const cfg={negocio:c.negocio,direccion:c.direccion,tarifa:c.tarifa,canchas:c.canchas,whatsappAdmin:c.whatsapp_admin,diasAnticipacion:c.dias_anticipacion,maxHorasPorReserva:c.max_horas,horario:c.horario,venceMin:c.vence_pendiente_min};
   const hoy=R.hoy;FECHA=FECHA||hoy;
   const res=R.reservas,gas=R.gastos,grupos=agrupar(res),lAct=lunesDe(hoy);
   const delDia=grupos.filter(g=>g.fecha===FECHA);
@@ -226,7 +231,7 @@ function construir(){
     acumIngresos:suma(semanas,'ingresos'),acumGastos:Number(R.gastosTotal)||0};
   const base=location.href.split('#')[0].split('?')[0].replace(/admin\.html$/,'');
   D={cfg,hoy,fecha:FECHA,horasFecha:horasDia(cfg,FECHA),delDia,pendientes,proximas,semanas,gastos:gas,kpis,grupos,
-     categorias:CATEGORIAS,medios:MEDIOS,urlPublica:base,urlAdmin:base+'admin.html',yo:R.yo,admins:R.admins};
+     categorias:CATEGORIAS,medios:MEDIOS,urlPublica:base,urlAdmin:base+'admin.html',yo:R.yo,admins:R.admins,informes:R.informes||[],jugadores:R.jugadores||0,bloqueados:R.bloqueados||[]};
   $('tNeg').textContent=cfg.negocio;$('tYo').textContent=R.yo;
   const c2=$('cntPend');c2.textContent=kpis.pendientes;c2.classList.toggle('hidden',!kpis.pendientes);
 }
@@ -266,8 +271,9 @@ function vAgenda(){
 /* ---------- Tarjetas ---------- */
 function itemGrupo(g){const d=pd(g.fecha);
   return `<div class="item"><div class="when"><div class="m">${DCORTO[d.getUTCDay()]}</div><div class="d">${d.getUTCDate()}</div><div class="m">${MESES[d.getUTCMonth()]}</div></div>
-   <div class="body"><div class="nm">${esc(g.nombre)} <span class="badge b-${g.estado}">${g.estado}</span></div>
+   <div class="body"><div class="nm">${esc(g.nombre)} <span class="badge b-${g.estado}">${g.estado}</span>${g.uid&&D.bloqueados.includes(g.uid)?' <span class="badge b-Cancelada">Bloqueado</span>':''}</div>
    <div class="muted">Cancha ${g.cancha} · ${rangoH(g.horas)} · ${pesos(g.total)}${g.whatsapp?' · 📱 '+g.whatsapp:''}</div>
+   ${g.estado==='Pendiente'&&D.cfg.venceMin>0?(()=>{const m=Math.max(0,Math.round(D.cfg.venceMin-(Date.now()-new Date(g.creado).getTime())/60000));return `<div class="muted" style="color:var(--warn)">⏳ Se libera sola en ${m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'} si no la confirmas</div>`;})():''}
    <div class="muted">Código ${g.codigo}${g.origen==='Admin'?' · presencial':''}${g.medio?' · '+esc(g.medio):''}${g.por&&g.por!=='cliente'?' · por '+esc(g.por.split('@')[0]):''}</div>
    <div class="acts">${botones(g,true)}</div></div></div>`;}
 function botones(g,cortos){
@@ -296,9 +302,16 @@ function wa(cod,tipo){const g=buscar(cod);if(!g||!g.whatsapp)return;window.open(
 
 /* ---------- Acciones ---------- */
 async function accion(cod,estado,msg,medio){
-  const g=buscar(cod);if(msg&&g&&g.whatsapp)wa(cod,msg);
+  const g=buscar(cod);if(!g)return;
+  // Abre la ventana en el mismo toque (si no, el navegador la bloquea) y solo pone el mensaje si el cambio se guardó
+  const win=(msg&&g.whatsapp)?window.open('about:blank','_blank'):null;
   cerrarModal();toast('Guardando…');
-  try{await rpc('cambiar_estado',{p_codigo:cod,p_estado:estado,p_medio:medio||''});toast('Reserva '+estado.toLowerCase()+' ✓');await cargar();}catch(e){toast(e.message,true);}}
+  try{
+    await rpc('cambiar_estado',{p_codigo:cod,p_estado:estado,p_medio:medio||'',p_desde:g.estado});
+    if(win){g.medio=medio||g.medio;win.location.href='https://wa.me/57'+g.whatsapp+'?text='+encodeURIComponent(mensaje(g,msg));}
+    toast('Reserva '+estado.toLowerCase()+' ✓');await cargar();
+  }catch(e){if(win)win.close();toast(e.message,true);if(/cambió mientras/.test(e.message))await cargar();}
+}
 
 /* ---------- Modales ---------- */
 function abrirModal(html){$('modal').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)cerrarModal()"><div class="modal">${html}</div></div>`;}
@@ -306,13 +319,15 @@ function cerrarModal(){$('modal').innerHTML='';}
 function modalGrupo(cod){const g=buscar(cod);if(!g)return;
   abrirModal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>${esc(g.nombre)}</h2><span class="badge b-${g.estado}">${g.estado}</span></div>
    <div class="kv"><b>Código</b><span>${g.codigo}</span><b>Día</b><span>${fLarga(g.fecha)}</span><b>Cancha</b><span>${g.cancha}</span><b>Horas</b><span>${rangoH(g.horas)}</span><b>Total</b><span>${pesos(g.total)}</span>
-   <b>WhatsApp</b><span>${g.whatsapp?`<a href="https://wa.me/57${g.whatsapp}" target="_blank">${g.whatsapp}</a>`:'—'}</span><b>Origen</b><span>${g.origen==='Web'?'Página web':'Presencial'}</span>${g.medio?`<b>Pago</b><span>${esc(g.medio)}</span>`:''}${g.notas?`<b>Notas</b><span>${esc(g.notas)}</span>`:''}${g.por?`<b>Último cambio</b><span>${esc(g.por)}</span>`:''}</div>
-   <div style="display:grid;gap:8px">${botones(g,false)}<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button></div>`);}
+   <b>WhatsApp</b><span>${g.whatsapp?`<a href="https://wa.me/57${g.whatsapp}" target="_blank">${g.whatsapp}</a>`:'—'}</span><b>Origen</b><span>${g.origen==='Web'?'Página web':'Presencial'}</span>${g.uid?`<b>Cuenta</b><span>${D.bloqueados.includes(g.uid)?'🚫 Jugador bloqueado':'✔ Jugador registrado (Google)'}</span>`:''}${g.medio?`<b>Pago</b><span>${esc(g.medio)}</span>`:''}${g.notas?`<b>Notas</b><span>${esc(g.notas)}</span>`:''}${g.por?`<b>Último cambio</b><span>${esc(g.por)}</span>`:''}</div>
+   <div style="display:grid;gap:8px">${botones(g,false)}${g.uid?`<button class="btn btn-ghost" onclick="bloquear('${g.codigo}',${!D.bloqueados.includes(g.uid)},this)">${D.bloqueados.includes(g.uid)?'✅ Desbloquear jugador':'🚫 Bloquear jugador (no podrá reservar en línea)'}</button>`:''}<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button></div>`);}
+async function bloquear(cod,si,btn){if(si&&btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='Toca otra vez para bloquearlo';return;}
+  try{await rpc('bloquear_jugador',{p_codigo:cod,p_bloquear:si});cerrarModal();toast(si?'Jugador bloqueado':'Jugador desbloqueado');await cargar();}catch(e){toast(e.message,true);}}
 function modalPago(cod){const g=buscar(cod);
   abrirModal(`<h2>Registrar pago</h2><p class="muted">${esc(g.nombre)} · ${pesos(g.total)}</p>
    <label>Medio de pago</label><select id="mMedio">${MEDIOS.map(m=>`<option>${m}</option>`).join('')}</select>
    <div style="display:grid;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="accion('${cod}','Pagada',null,$('mMedio').value)">Guardar pago</button>
-    ${g.whatsapp?`<button class="btn btn-wa" onclick="const m=$('mMedio').value;buscar('${cod}').medio=m;accion('${cod}','Pagada','recibo',m)">Guardar y enviar recibo</button>`:''}
+    ${g.whatsapp?`<button class="btn btn-wa" onclick="accion('${cod}','Pagada','recibo',$('mMedio').value)">Guardar y enviar recibo</button>`:''}
     <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button></div>`);}
 function modalNueva(cancha,hr){
   abrirModal(`<h2>Nueva reserva</h2><p class="muted">Para clientes que reservan en persona o por llamada.</p>
@@ -360,10 +375,13 @@ function vFin(){
     <div class="kpi ${s.gastos>0?'neg':''}"><div class="l">Gastos semana</div><div class="v">${pesos(s.gastos)}</div></div>
     <div class="kpi"><div class="l">Por cobrar (total)</div><div class="v">${pesos(K.porCobrarTotal)}</div><div class="s">Confirmadas sin pago</div></div>
     <div class="kpi"><div class="l">Acumulado ingresos</div><div class="v">${pesos(K.acumIngresos)}</div><div class="s">Gastos: ${pesos(K.acumGastos)}</div></div>
-    <div class="kpi ${K.acumIngresos-K.acumGastos<0?'neg':''}"><div class="l">Acumulado utilidad</div><div class="v">${pesos(K.acumIngresos-K.acumGastos)}</div></div></div>`;
+    <div class="kpi ${K.acumIngresos-K.acumGastos<0?'neg':''}"><div class="l">Acumulado utilidad</div><div class="v">${pesos(K.acumIngresos-K.acumGastos)}</div></div>
+    <div class="kpi"><div class="l">Jugadores registrados</div><div class="v">${D.jugadores}</div><div class="s">${D.bloqueados.length} bloqueado(s)</div></div></div>`;
+  h+=`<div class="card"><h2>📑 Informes semanales</h2><p class="muted" style="margin:6px 0 4px">Cada lunes se genera el informe de la semana que terminó, con el detalle de todas las reservas. Descárgalo: a las 4 semanas se borra solo (los totales quedan en el resumen).</p>
+   ${D.informes.length?D.informes.map(x=>{const dias=Math.max(0,Math.ceil((new Date(x.expira)-Date.now())/86400000));return `<div class="item" style="padding:12px 0;align-items:center"><div class="body"><b>Semana ${fCorta(x.lunes)} – ${fCorta(addD(x.lunes,6))}</b><div class="muted">${x.n} reservas · se borra en ${dias} día${dias===1?'':'s'}</div></div><button class="btn btn-primary btn-sm" onclick="descargarInforme('${x.lunes}',this)">📥 Descargar</button></div>`;}).join(''):'<p class="muted center" style="padding:16px 0">El primer informe aparece el próximo lunes.</p>'}</div>`;
   h+=`<div class="card"><h2>Ingresos vs. gastos por semana</h2>${grafica(S.slice(-8))}</div>`;
   h+=`<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">Resumen semanal</h2><button class="btn btn-ghost btn-sm" onclick="exportar(this)">📥 Descargar Excel</button></div>
-   <p class="muted" style="margin:6px 0 10px">Cada lunes las semanas terminadas se cierran: quedan los totales y se borran nombres y teléfonos.</p><div class="scroll-x"><table>
+   <p class="muted" style="margin:6px 0 10px">Totales de cada semana (se guardan siempre).</p><div class="scroll-x"><table>
    <tr><th>Semana</th><th class="num">Horas</th><th class="num">Ocup.</th><th class="num">Ingresos</th><th class="num">Gastos</th><th class="num">Utilidad</th><th>Estado</th></tr>
    ${S.slice().reverse().map(w=>`<tr><td>${fCorta(w.lunes)} – ${fCorta(w.domingo)}</td><td class="num">${w.vendidas}/${w.ofertadas}</td><td class="num">${pct(w.ocupacion)}</td><td class="num">${pesos(w.ingresos)}</td><td class="num">${pesos(w.gastos)}</td><td class="num" style="font-weight:600;color:${w.utilidad<0?'var(--bad)':'var(--neon)'}">${pesos(w.utilidad)}</td><td>${w.actual?'<span class="badge b-Confirmada">En curso</span>':(w.cerrada?'<span class="badge b-Pagada">Cerrada</span>':'<span class="badge b-Pendiente">Por cerrar</span>')}</td></tr>`).join('')}
    <tr><td><b>Total</b></td><td class="num"><b>${suma(S,'vendidas')}</b></td><td></td><td class="num"><b>${pesos(suma(S,'ingresos'))}</b></td><td class="num"><b>${pesos(suma(S,'gastos'))}</b></td><td class="num"><b>${pesos(suma(S,'utilidad'))}</b></td><td></td></tr></table></div></div>`;
@@ -405,6 +423,22 @@ async function exportar(btn){
     XLSX.writeFile(wb,'VoleyPlaya_'+D.hoy+'.xlsx');toast('Excel descargado ✓');
   }catch(e){toast(e.message,true);}finally{btn.disabled=false;}}
 
+async function descargarInforme(lunes,btn){
+  btn.disabled=true;
+  try{
+    const I=await rpc('informe_semana',{p_lunes:lunes});
+    if(!window.XLSX)await cargarScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+    const wb=XLSX.utils.book_new(),R=I.resumen||{};
+    const ing=R.ingresos||0,gas=(I.gastos||[]).reduce((a,g)=>a+g.valor,0);
+    const res=[{'Concepto':'Semana','Valor':fCorta(lunes)+' – '+fCorta(addD(lunes,6))},{'Concepto':'Horas ofertadas','Valor':R.ofertadas||0},{'Concepto':'Horas vendidas','Valor':R.vendidas||0},
+      {'Concepto':'% Ocupación','Valor':R.ofertadas?Math.round(R.vendidas/R.ofertadas*1000)/10+'%':'0%'},{'Concepto':'Ingresos recaudados','Valor':ing},{'Concepto':'Quedó por cobrar','Valor':R.por_cobrar||0},
+      {'Concepto':'Gastos','Valor':gas},{'Concepto':'Utilidad','Valor':ing-gas},{'Concepto':'Reservas web','Valor':R.web||0},{'Concepto':'Reservas presenciales','Valor':R.presencial||0}];
+    const det=(I.detalle||[]).map(r=>({'Código':r.codigo,'Fecha':r.fecha,'Hora':hora(r.hora),'Cancha':r.cancha,'Nombre':r.nombre,'WhatsApp':r.whatsapp,'Estado':r.estado,'Valor':r.valor,'Medio de pago':r.medio,'Origen':r.origen==='Web'?'Página web':'Presencial','Cuenta Google':r.cuenta?'Sí':'No','Notas':r.notas,'Último cambio por':r.por}));
+    const g=(I.gastos||[]).map(x=>({'Fecha':x.fecha,'Categoría':x.categoria,'Descripción':x.descripcion,'Valor':x.valor,'Medio de pago':x.medio,'Registrado por':x.creado_por}));
+    [['Resumen',res],['Reservas',det],['Gastos',g]].forEach(([n,rows])=>{const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{'Sin datos':''}]);ws['!cols']=Object.keys(rows[0]||{a:1}).map(k=>({wch:Math.max(14,k.length+2)}));XLSX.utils.book_append_sheet(wb,ws,n);});
+    XLSX.writeFile(wb,'Informe_VoleyPlaya_'+lunes+'.xlsx');toast('Informe descargado ✓');
+  }catch(e){toast(e.message,true);}finally{btn.disabled=false;}}
+
 /* ---------- Ajustes ---------- */
 function vAjustes(){
   const C=D.cfg,N=['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
@@ -418,7 +452,7 @@ function vAjustes(){
     <label>Página pública de reservas (compártela)</label><div class="linkbox"><span id="lPub">${esc(D.urlPublica)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lPub')">Copiar</button></div>
     <a class="btn btn-wa full" style="margin-top:10px" target="_blank" href="https://wa.me/?text=${shareTxt}">Compartir por WhatsApp</a>
     <label>Panel de administradores</label><div class="linkbox"><span id="lAdm">${esc(D.urlAdmin)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lAdm')">Copiar</button></div></div>
-  <div class="card"><h2>👥 Administradores</h2><p class="muted" style="margin:6px 0 4px">Cada uno entra con su correo. En Supabase > Authentication > Users también debes crearle su usuario.</p>
+  <div class="card"><h2>👥 Administradores</h2><p class="muted" style="margin:6px 0 4px">Cada uno entra con "Entrar con Google" usando el correo que agregues aquí.</p>
     ${D.admins.map(a=>`<div class="item" style="padding:10px 0;align-items:center"><div class="body"><b>${esc(a)}</b>${a===D.yo?' <span class="badge b-Pagada">Tú</span>':''}</div>${a!==D.yo?`<button class="btn btn-danger btn-sm" onclick="quitarAdmin('${esc(a)}',this)">Quitar</button>`:''}</div>`).join('')}
     <div class="row" style="margin-top:8px;align-items:flex-end"><div style="flex:3"><label>Agregar correo</label><input type="text" id="nuevoAdm" inputmode="email" placeholder="socio@gmail.com"></div><div style="flex:1"><button class="btn btn-navy full" onclick="agregarAdmin()">Agregar</button></div></div></div>
   <div class="card"><h2>🏖️ Negocio</h2>
@@ -427,18 +461,19 @@ function vAjustes(){
     <div class="row"><div><label>Tarifa por hora</label><input type="number" id="aTar" value="${C.tarifa}" min="0" step="1000"></div><div><label>Canchas</label><input type="number" id="aCan" value="${C.canchas}" min="1" max="8"></div></div>
     <label>WhatsApp que recibe los avisos de clientes</label><input type="tel" id="aWa" value="${esc(C.whatsappAdmin)}" placeholder="3101234567">
     <div class="row"><div><label>Días de anticipación</label><input type="number" id="aDias" value="${C.diasAnticipacion}" min="1" max="60"></div><div><label>Máx. horas por reserva web</label><input type="number" id="aMax" value="${C.maxHorasPorReserva}" min="1" max="8"></div></div>
+    <label>Minutos para confirmar una reserva antes de que se libere sola (0 = nunca)</label><input type="number" id="aVence" value="${C.venceMin}" min="0" max="1440" step="15">
     <h2 style="margin-top:22px">🕔 Horario</h2><div class="hor muted" style="font-size:12px"><span></span><span>Desde</span><span>Hasta</span><span></span></div>${hor}
     <button class="btn btn-primary full" style="margin-top:14px" id="aBtn" onclick="guardarAjustesUI()">Guardar ajustes</button></div>
   <div class="card"><h2>🔒 Mi contraseña</h2>
     <div class="row"><div><label>Nueva contraseña</label><input type="password" id="p1" autocomplete="new-password"></div><div><label>Repítela</label><input type="password" id="p2" autocomplete="new-password"></div></div>
     <button class="btn btn-navy full" style="margin-top:14px" onclick="cambiarClave()">Cambiar contraseña</button></div>
-  <div class="card"><h2>🧹 Privacidad</h2><p class="muted">Cada lunes el sistema cierra las semanas terminadas: guarda los totales y borra nombres y teléfonos.</p>
+  <div class="card"><h2>🧹 Privacidad</h2><p class="muted">Cada lunes se cierra la semana anterior: se genera el informe descargable (dura 4 semanas) y se borran los datos de las reservas presenciales. Las reservas de jugadores con cuenta quedan en su historial personal.</p>
     <button class="btn btn-ghost full" onclick="cerrarSem(this)">Cerrar semanas pasadas ahora</button></div>`;}
 function copiar(id){const t=$(id).textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copiado ✓')).catch(()=>toast('Mantén presionado el texto para copiarlo'));}
 async function guardarAjustesUI(){
   const hor={};for(let d=1;d<=7;d++)hor[d]=$('hC'+d).checked?[0,0]:[Number($('hA'+d).value),Number($('hB'+d).value)];
   const b=$('aBtn');b.disabled=true;
-  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
+  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
   catch(e){toast(e.message,true);}finally{b.disabled=false;}}
 async function agregarAdmin(){try{await rpc('agregar_admin',{p_email:$('nuevoAdm').value});toast('Administrador agregado ✓');await cargar();}catch(e){toast(e.message,true);}}
 async function quitarAdmin(email,btn){if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='¿Seguro?';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Quitar';},3000);return;}

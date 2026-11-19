@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0E1116">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-26 -26 52 52'%3E%3Crect x='-26' y='-26' width='52' height='52' rx='14' fill='%23C6F432'/%3E%3Ccircle r='15' fill='none' stroke='%230E1116' stroke-width='2.6'/%3E%3Cpath d='M-15 0 C-5 -4 5 -4 15 0 M-4 -14.5 C3 -7 3 7 -4 14.5 M4 -14.5 C12 -5 13 5 9 11.5' stroke='%230E1116' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,700;1,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilos.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<title>Reserva tu cancha · Vóley Playa</title>
+<style>
+  .dates{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .dates::-webkit-scrollbar{display:none}
+  .date{flex:0 0 auto;width:70px;border:1.5px solid var(--line-2);background:var(--bg-2);border-radius:14px;padding:9px 4px;text-align:center;cursor:pointer;scroll-snap-align:start;color:var(--ink);transition:border-color .2s}
+  .date:hover{border-color:var(--neon)}
+  .date .d1{font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700;letter-spacing:.6px}
+  .date .d2{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:#fff;line-height:1}
+  .date .d3{font-size:11px;color:var(--muted);text-transform:uppercase}
+  .date.on{background:var(--neon);border-color:var(--neon);box-shadow:0 6px 20px var(--neon-glow)}.date.on *{color:var(--neon-ink)!important}
+  .date.off{opacity:.25;cursor:not-allowed}
+  .tabs{display:flex;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;margin:14px 0}
+  .tab{flex:1;border:0;background:transparent;padding:11px;border-radius:9px;font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;font-style:italic;text-transform:uppercase;color:var(--muted);cursor:pointer;letter-spacing:.4px}
+  .tab.on{background:var(--card-3);color:var(--neon);box-shadow:inset 0 -2px 0 var(--neon)}
+  .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+  .slot{border:1.5px solid var(--line-2);background:var(--bg-2);border-radius:12px;padding:12px;cursor:pointer;text-align:left;position:relative;color:var(--ink);transition:border-color .15s,background .15s}
+  .slot:hover{border-color:var(--neon)}
+  .slot .t{font-family:'Barlow Condensed',sans-serif;font-weight:700;color:#fff;font-size:22px;line-height:1.05}
+  .slot .s{font-size:12px;color:var(--ok);font-weight:600;margin-top:2px}
+  .slot.ocupado,.slot.pasado{background:transparent;cursor:not-allowed;border-style:dashed;border-color:var(--line)}
+  .slot.ocupado .t,.slot.pasado .t{color:var(--dim);text-decoration:line-through}
+  .slot.ocupado .s{color:var(--bad)}.slot.pasado .s{color:var(--dim)}
+  .slot.sel{border-color:var(--neon);background:rgba(198,244,50,.1);box-shadow:0 0 0 3px var(--neon-glow)}
+  .slot.sel .t{color:var(--neon)}
+  .slot.sel:after{content:"✓";position:absolute;right:10px;top:10px;width:22px;height:22px;border-radius:50%;background:var(--neon);color:var(--neon-ink);font-size:13px;font-weight:800;display:grid;place-items:center}
+  .bar{position:sticky;bottom:0;background:rgba(14,17,22,.92);backdrop-filter:blur(10px);border-top:1px solid var(--line-2);padding:12px 16px;display:flex;align-items:center;gap:12px;z-index:10}
+  .bar .tot{flex:1}.bar .tot b{font-family:'Barlow Condensed',sans-serif;font-size:28px;color:var(--neon);line-height:1}
+  .ok-ico{width:78px;height:78px;border-radius:50%;background:var(--neon);color:var(--neon-ink);display:grid;place-items:center;font-size:40px;font-weight:800;margin:6px auto 14px;box-shadow:0 0 0 10px rgba(198,244,50,.12),0 0 40px var(--neon-glow)}
+  .code{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:800;font-style:italic;letter-spacing:4px;color:var(--neon);background:var(--bg-2);border:1.5px dashed var(--neon);border-radius:14px;padding:4px 20px;display:inline-block;margin:6px 0}
+  .check{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);margin-top:16px;font-weight:400;text-transform:none;letter-spacing:0}
+  .check input{width:20px;height:20px;margin-top:1px;accent-color:var(--neon);flex:none}
+  .trap{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  .empty{padding:24px;text-align:center;color:var(--muted)}
+  #resumen{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:14px}
+</style>
+</head>
+<body>
+<header class="hero">
+  <svg class="art" viewBox="0 0 400 260" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="fade" x1="0" x2="1"><stop offset="0" stop-color="#C6F432" stop-opacity="0"/><stop offset="1" stop-color="#C6F432" stop-opacity=".55"/></linearGradient>
+      <radialGradient id="spot" cx="78%" cy="30%" r="60%"><stop offset="0" stop-color="#C6F432" stop-opacity=".18"/><stop offset="1" stop-color="#C6F432" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="400" height="260" fill="url(#spot)"/>
+    <g stroke="url(#fade)" stroke-width="2" fill="none">
+      <path d="M150 250 L250 120 L400 120 L400 250 Z"/>
+      <path d="M200 250 L282 120"/><path d="M200 185 L400 185"/>
+    </g>
+    <g stroke="#C6F432" stroke-opacity=".5">
+      <line x1="262" y1="118" x2="262" y2="196" stroke-width="3"/><line x1="394" y1="118" x2="394" y2="196" stroke-width="3"/>
+      <path d="M262 124 L394 124 M262 146 L394 146" stroke-width="2"/>
+      <path d="M274 124 V146 M288 124 V146 M302 124 V146 M316 124 V146 M330 124 V146 M344 124 V146 M358 124 V146 M372 124 V146 M386 124 V146" stroke-width="1" stroke-opacity=".35"/>
+    </g>
+    <g transform="translate(352 84) rotate(-18)" opacity=".85">
+      <circle r="20" fill="#C6F432"/>
+      <path d="M-20 0 C-7 -5 7 -5 20 0 M-5 -19 C4 -9 4 9 -5 19 M5 -19 C16 -7 18 7 13 15" stroke="#0E1116" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    </g>
+    <g stroke="#C6F432" stroke-opacity=".35" stroke-width="2" stroke-linecap="round"><path d="M324 74 l-16 6 M326 86 l-20 2 M324 98 l-14 -2"/></g>
+  </svg>
+  <div class="wrap">
+    <div class="brand">
+      <svg class="logo" viewBox="-26 -26 52 52" aria-hidden="true"><rect x="-26" y="-26" width="52" height="52" rx="14" fill="#C6F432"/><circle r="15" fill="none" stroke="#0E1116" stroke-width="2.6"/><path d="M-15 0 C-5 -4 5 -4 15 0 M-4 -14.5 C3 -7 3 7 -4 14.5 M4 -14.5 C12 -5 13 5 9 11.5" stroke="#0E1116" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+      <div><h1 id="neg">Vóley Playa</h1><p id="dir">Reserva tu cancha en segundos</p></div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+      <span class="chip neon" id="chipTarifa">$ — / hora</span><span class="chip" id="chipCanchas">— canchas</span><span class="chip">⚡ Reserva en línea</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="app" style="margin-top:-44px;position:relative;z-index:2">
+  <div class="card center" id="cargando"><span class="spinner"></span><p class="muted">Cargando horarios…</p></div>
+
+  <section id="vReserva" class="hidden">
+    <div class="card">
+      <h2><span class="step">1</span>Elige el día</h2>
+      <div class="dates" id="fechas" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">2</span>Elige cancha y hora</h2>
+      <div class="tabs" id="tabsCancha"></div>
+      <div id="slots"></div>
+      <div class="legend"><span><i style="background:var(--bg-2);border:1.5px solid var(--line-2)"></i>Libre</span><span><i style="background:rgba(198,244,50,.25);border:1.5px solid var(--neon)"></i>Tu selección</span><span><i style="border:1.5px dashed var(--line-2)"></i>Ocupado</span></div>
+    </div>
+
+    <div class="card hidden" id="formCard">
+      <h2><span class="step">3</span>Tus datos</h2>
+      <form id="form" autocomplete="on">
+        <label for="nombre">Nombre completo</label>
+        <input type="text" id="nombre" maxlength="60" placeholder="Ej. Laura Gómez" required>
+        <label for="tel">WhatsApp</label>
+        <input type="tel" id="tel" inputmode="numeric" maxlength="13" placeholder="3101234567" required>
+        <div class="trap"><label>Web</label><input type="text" id="web" tabindex="-1" autocomplete="off"></div>
+        <label class="check"><input type="checkbox" id="acepta"> <span>Autorizo el tratamiento de mis datos (nombre y WhatsApp) solo para gestionar esta reserva, conforme a la Ley 1581 de 2012. Se eliminan automáticamente una semana después del juego.</span></label>
+        <div id="resumen" class="kv"></div>
+        <button class="btn btn-primary full" id="btnEnviar" type="submit">Confirmar reserva</button>
+        <p class="muted center" style="margin:10px 0 0">Tu reserva queda <b>pendiente</b> hasta que el administrador la confirme por WhatsApp.</p>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>🔎 ¿Ya reservaste?</h2>
+      <p class="muted" style="margin:6px 0 0">Consulta el estado o cancela con tu código.</p>
+      <div class="row" style="margin-top:6px">
+        <div><label for="qCod">Código</label><input type="text" id="qCod" placeholder="VPAB12" maxlength="8" style="text-transform:uppercase"></div>
+        <div><label for="qTel">WhatsApp</label><input type="tel" id="qTel" inputmode="numeric" placeholder="3101234567"></div>
+      </div>
+      <button class="btn btn-ghost full" style="margin-top:12px" onclick="consultar()">Consultar</button>
+      <div id="qRes"></div>
+    </div>
+    <p class="muted center" style="margin:22px 0 90px" id="horTxt"></p>
+  </section>
+
+  <section id="vOk" class="hidden">
+    <div class="card center">
+      <div class="ok-ico">✓</div>
+      <h2 style="justify-content:center;font-size:34px">¡Reserva recibida!</h2>
+      <p class="muted">Guarda tu código:</p>
+      <div class="code" id="okCod"></div>
+      <div class="kv" id="okDet" style="text-align:left;max-width:340px;margin:14px auto"></div>
+      <p class="muted">Te confirmaremos por WhatsApp. Si quieres agilizarlo, avísanos:</p>
+      <a class="btn btn-wa full" id="okWa" target="_blank" rel="noopener">💬 Enviar mi reserva por WhatsApp</a>
+      <button class="btn btn-ghost full" style="margin-top:10px" onclick="location.reload()">Hacer otra reserva</button>
+    </div>
+  </section>
+</main>
+
+<div class="bar hidden" id="bar">
+  <div class="tot"><div class="muted" id="barTxt">0 horas</div><b id="barTot">$0</b></div>
+  <button class="btn btn-primary" id="btnCont">Continuar</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'], DIASL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const S={info:null,fecha:null,cancha:1,sel:[],disp:null};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pesos=n=>'$'+Math.round(n||0).toLocaleString('es-CO');
+const hora=h=>((h%12)||12)+':00 '+(h<12?'a. m.':'p. m.');
+const pd=s=>{const p=s.split('-').map(Number);return new Date(Date.UTC(p[0],p[1]-1,p[2]));};
+const addD=(s,n)=>{const d=pd(s);d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);};
+const dow=s=>pd(s).getUTCDay();
+const fLarga=s=>{const d=pd(s);return DIASL[d.getUTCDay()]+' '+d.getUTCDate()+' de '+MESES[d.getUTCMonth()];};
+const iso=s=>{const w=dow(s);return w===0?7:w;};
+const sb=window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_KEY,{auth:{persistSession:false}});
+async function rpc(fn,args){
+  let r;try{r=await sb.rpc(fn,args||{});}catch(e){throw new Error('Sin conexión. Revisa tu internet e intenta de nuevo.');}
+  if(r.error){const m=r.error.message||'';throw new Error(/fetch|network|Failed/i.test(m)?'Sin conexión. Revisa tu internet e intenta de nuevo.':m);}
+  return r.data;
+}
+function toast(m,err){const t=$('toast');t.textContent=m;t.className='toast show'+(err?' err':'');clearTimeout(t._t);t._t=setTimeout(()=>t.className='toast',3800);}
+function abierto(f){const h=S.info.horario[String(iso(f))];return h&&h[1]>h[0];}
+
+let CAL_T=0;
+async function init(){
+  try{
+    let C=null;try{const c=JSON.parse(localStorage.getItem('vp_cal')||'null');const hoyCO=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Bogota'}).format(new Date());if(c&&c.info&&c.info.hoy===hoyCO)C=c;}catch(e){}
+    if(C){aplicarCal(C);refrescar();}            // pinta al instante lo último conocido y actualiza en segundo plano
+    else{C=await rpc('calendario');aplicarCal(C);}
+    const I=S.info;
+    {const w=I.negocio.trim().split(' ');const last=w.length>1?w.pop():'';$('neg').innerHTML=esc(w.join(' '))+(last?' <em>'+esc(last)+'</em>':'');}
+    $('dir').textContent=(I.direccion?I.direccion+' · ':'')+'Reserva tu cancha en segundos';
+    $('chipTarifa').textContent=pesos(I.tarifa)+' / hora'; $('chipCanchas').textContent='🏐 '+I.canchas+(I.canchas>1?' canchas':' cancha');
+    let f=I.hoy; while(f<=I.max&&!abierto(f)) f=addD(f,1);
+    S.fecha=f; pintarFechas(); pintarTabs();
+    const N=['','Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],grp={};
+    for(let d=1;d<=7;d++){const h=I.horario[d];if(h&&h[1]>h[0]){const k=hora(h[0])+' a '+hora(h[1]);(grp[k]=grp[k]||[]).push(N[d]);}}
+    $('horTxt').textContent='Horario: '+Object.entries(grp).map(([k,v])=>v.join(', ')+' · '+k).join('  |  ');
+    $('cargando').classList.add('hidden'); $('vReserva').classList.remove('hidden');
+    pintarSlots();
+  }catch(e){$('cargando').innerHTML='<p>😕 '+esc(e.message)+'</p><button class="btn btn-ghost" onclick="location.reload()">Reintentar</button>';}
+}
+function aplicarCal(C){S.info=C.info;S.cal=C.dias;CAL_T=Date.now();try{localStorage.setItem('vp_cal',JSON.stringify(C));}catch(e){}}
+async function refrescar(){try{const antes=S.info&&S.info.hoy;aplicarCal(await rpc('calendario'));
+  if(!S.cal[S.fecha]||!abierto(S.fecha)){let f=S.info.hoy;while(f<=S.info.max&&!abierto(f))f=addD(f,1);S.fecha=f;S.sel=[];}
+  if(S.info.hoy!==antes||$('fechas').innerHTML)pintarFechas();pintarSlots();}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-CAL_T>45000)refrescar();});
+setInterval(()=>{if(!document.hidden&&!$('vReserva').classList.contains('hidden'))refrescar();},60000);
+function pintarFechas(){
+  const I=S.info;let h='';
+  for(let f=I.hoy;f<=I.max;f=addD(f,1)){
+    const d=pd(f),ab=abierto(f);
+    const top=f===I.hoy?'Hoy':(f===addD(I.hoy,1)?'Mañana':DIAS[d.getUTCDay()]);
+    h+=`<button class="date ${f===S.fecha?'on':''} ${ab?'':'off'}" ${ab?`onclick="elegirFecha('${f}')"`:'disabled'}><div class="d1">${top}</div><div class="d2">${d.getUTCDate()}</div><div class="d3">${MESES[d.getUTCMonth()]}</div></button>`;
+  }
+  $('fechas').innerHTML=h;
+}
+function pintarTabs(){
+  let h='';for(let c=1;c<=S.info.canchas;c++) h+=`<button class="tab ${c===S.cancha?'on':''}" onclick="elegirCancha(${c})">Cancha ${c}</button>`;
+  $('tabsCancha').innerHTML=h;
+}
+function elegirFecha(f){S.fecha=f;S.sel=[];pintarFechas();pintarSlots();if(Date.now()-CAL_T>45000)refrescar();}
+function elegirCancha(c){S.cancha=c;S.sel=[];pintarTabs();pintarSlots();}
+function pintarSlots(){
+  const D=S.cal&&S.cal[S.fecha];if(!D){actualizarBarra();return;}const tarifa=S.info.tarifa;
+  if(!D.horas.length){$('slots').innerHTML='<div class="empty">Este día no hay atención.</div>';return;}
+  let h='<div class="slots">';
+  D.horas.forEach(x=>{
+    const st=D.slots[S.cancha+'-'+x],sel=S.sel.includes(x);
+    const sub=st==='libre'?pesos(tarifa):(st==='ocupado'?'Ocupado':'Ya pasó');
+    h+=`<button class="slot ${st} ${sel?'sel':''}" ${st==='libre'?`onclick="toggle(${x})"`:'disabled'}><div class="t">${hora(x)}</div><div class="s">${sub}</div></button>`;
+  });
+  $('slots').innerHTML=h+'</div>';actualizarBarra();
+}
+function toggle(x){
+  const i=S.sel.indexOf(x);
+  if(i>=0)S.sel.splice(i,1);
+  else{if(S.sel.length>=S.info.maxHoras){toast('Máximo '+S.info.maxHoras+' horas por reserva');return;}S.sel.push(x);}
+  S.sel.sort((a,b)=>a-b);pintarSlots();
+}
+function actualizarBarra(){
+  const n=S.sel.length;$('bar').classList.toggle('hidden',!n);
+  if(!n){$('formCard').classList.add('hidden');return;}
+  $('barTxt').textContent=`${n} hora${n>1?'s':''} · Cancha ${S.cancha}`;$('barTot').textContent=pesos(n*S.info.tarifa);
+  $('resumen').innerHTML=`<b>Día</b><span>${fLarga(S.fecha)}</span><b>Cancha</b><span>${S.cancha}</span><b>Horas</b><span>${S.sel.map(x=>hora(x)+' – '+hora(x+1)).join('<br>')}</span><b>Total</b><span><b style="color:var(--neon)">${pesos(n*S.info.tarifa)}</b></span>`;
+}
+$('btnCont').onclick=()=>{$('formCard').classList.remove('hidden');$('formCard').scrollIntoView({behavior:'smooth'});setTimeout(()=>$('nombre').focus(),400);};
+$('form').onsubmit=async ev=>{
+  ev.preventDefault();
+  if(!$('acepta').checked){toast('Debes autorizar el tratamiento de datos',true);return;}
+  const b=$('btnEnviar');b.disabled=true;b.innerHTML='<span class="spinner" style="border-top-color:var(--neon-ink)"></span> Reservando…';
+  try{
+    const r=await rpc('crear_reserva',{p_fecha:S.fecha,p_cancha:S.cancha,p_horas:S.sel,p_nombre:$('nombre').value,p_whatsapp:$('tel').value,p_acepta:true,p_web:$('web').value});refrescar();
+    exito(r);
+  }catch(e){toast(e.message,true);if(/reserv|disponible/.test(e.message)){S.sel=[];refrescar();}}
+  finally{b.disabled=false;b.textContent='Confirmar reserva';}
+};
+function exito(r){
+  $('vReserva').classList.add('hidden');$('bar').classList.add('hidden');$('vOk').classList.remove('hidden');window.scrollTo(0,0);
+  $('okCod').textContent=r.codigo;
+  const hs=r.horas.map(x=>hora(x)+' – '+hora(x+1)).join(', ');
+  $('okDet').innerHTML=`<b>Día</b><span>${fLarga(r.fecha)}</span><b>Cancha</b><span>${r.cancha}</span><b>Horas</b><span>${hs}</span><b>Total</b><span>${pesos(r.total)}</span><b>Estado</b><span><span class="badge b-Pendiente">Pendiente</span></span>`;
+  if(S.info.whatsappAdmin){
+    const msg=`Hola 👋, acabo de reservar en ${S.info.negocio}.\n\n🎫 Código: ${r.codigo}\n👤 ${r.nombre}\n📅 ${fLarga(r.fecha)}\n🏐 Cancha ${r.cancha}\n🕔 ${hs}\n💵 ${pesos(r.total)}\n\n¿Me confirmas, por favor?`;
+    $('okWa').href='https://wa.me/'+S.info.whatsappAdmin+'?text='+encodeURIComponent(msg);
+  }else $('okWa').classList.add('hidden');
+}
+async function consultar(cancelar){
+  const box=$('qRes');box.innerHTML='<div class="empty"><span class="spinner"></span></div>';
+  try{
+    const g=await rpc(cancelar?'cancelar_reserva_cliente':'consultar_reserva',{p_codigo:$('qCod').value,p_whatsapp:$('qTel').value});if(cancelar)refrescar();
+    const puede=['Pendiente','Confirmada'].includes(g.estado);
+    box.innerHTML=`<div class="kv" style="margin-top:14px"><b>Código</b><span>${esc(g.codigo)}</span><b>Estado</b><span><span class="badge b-${esc(g.estado)}">${esc(g.estado)}</span></span><b>Día</b><span>${fLarga(g.fecha)}</span><b>Cancha</b><span>${g.cancha}</span><b>Horas</b><span>${g.horas.map(hora).join(', ')}</span><b>Total</b><span>${pesos(g.total)}</span></div>`+(puede?`<button class="btn btn-danger full" onclick="if(this.dataset.ok){consultar(true)}else{this.dataset.ok=1;this.textContent='Toca de nuevo para confirmar la cancelación'}">Cancelar reserva</button>`:'');
+    if(cancelar)toast('Reserva cancelada');
+  }catch(e){box.innerHTML='<p class="muted" style="color:var(--bad)">'+esc(e.message)+'</p>';}
+}
+init();
+</script>
+</body>
+</html>

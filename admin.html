@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0E1116">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-26 -26 52 52'%3E%3Crect x='-26' y='-26' width='52' height='52' rx='14' fill='%23C6F432'/%3E%3Ccircle r='15' fill='none' stroke='%230E1116' stroke-width='2.6'/%3E%3Cpath d='M-15 0 C-5 -4 5 -4 15 0 M-4 -14.5 C3 -7 3 7 -4 14.5 M4 -14.5 C12 -5 13 5 9 11.5' stroke='%230E1116' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,700;1,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilos.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<title>Panel · Vóley Playa</title>
+<meta name="robots" content="noindex">
+<style>
+  .top{background:rgba(14,17,22,.94);backdrop-filter:blur(10px);color:#fff;position:sticky;top:0;z-index:20;border-bottom:1px solid var(--line)}
+  .top .wrap{display:flex;align-items:center;gap:12px;padding-top:12px;padding-bottom:10px}
+  .top .logo{width:38px;height:38px;flex:none;filter:drop-shadow(0 0 10px var(--neon-glow))}
+  .top h1{font-size:22px;font-weight:800;font-style:italic;text-transform:uppercase;flex:1;min-width:0;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .top h1 small{display:block;font-family:'Inter',sans-serif;font-style:normal;text-transform:none;font-size:11px;color:var(--muted);font-weight:500;letter-spacing:0;margin-top:2px}
+  .top .salir{background:transparent;color:var(--muted);border:1px solid var(--line-2);border-radius:10px;padding:7px 12px;font-size:13px;cursor:pointer}
+  .top .salir:hover{color:#fff;border-color:var(--muted)}
+  nav{display:flex;gap:4px;overflow-x:auto;padding:0 12px 10px;max-width:980px;margin:0 auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  nav button{flex:0 0 auto;border:0;background:transparent;color:var(--muted);padding:8px 13px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer}
+  nav button:hover{color:#fff}
+  nav button.on{background:var(--neon);color:var(--neon-ink)}
+  nav .cnt{background:var(--hot);color:#fff;border-radius:999px;font-size:11px;padding:1px 7px;margin-left:6px;font-weight:700}
+  nav button.on .cnt{background:var(--neon-ink);color:var(--neon)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
+  .kpi{background:var(--card);border-radius:16px;padding:14px 15px;border:1px solid var(--line);position:relative;overflow:hidden}
+  .kpi .l{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+  .kpi .v{font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:800;color:#fff;margin-top:4px;line-height:1;font-variant-numeric:tabular-nums}
+  .kpi .s{font-size:12px;color:var(--muted);margin-top:4px}
+  .kpi.hl{background:var(--neon);border-color:var(--neon);box-shadow:0 8px 28px var(--neon-glow)}
+  .kpi.hl .l,.kpi.hl .s{color:rgba(14,17,22,.65)}.kpi.hl .v{color:var(--neon-ink)}
+  .kpi.hl .meter{background:rgba(14,17,22,.15)}.kpi.hl .meter i{background:var(--neon-ink)}
+  .kpi.or .v{color:var(--neon)}.kpi.neg .v{color:var(--bad)}
+  .meter{height:6px;background:var(--card-3);border-radius:9px;margin-top:10px;overflow:hidden}.meter i{display:block;height:100%;background:var(--neon);border-radius:9px}
+  .datenav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .datenav .t{flex:1;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-style:italic;text-transform:uppercase;color:#fff;font-size:21px;min-width:150px}
+  .datenav input{width:auto;padding:8px 10px}
+  .grid{width:100%;border-collapse:separate;border-spacing:6px;margin:6px -6px 0;table-layout:fixed}
+  .grid th{background:transparent;border:0;color:var(--neon);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;font-style:italic;padding:2px 4px;text-align:center;letter-spacing:.5px}
+  .grid th.h{width:70px}
+  .grid td{padding:0;border:0;background:transparent!important}
+  .grid .hr{font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);text-align:right;padding-right:4px;font-weight:700;white-space:nowrap}
+  .cell{border-radius:12px;padding:9px 11px;min-height:56px;cursor:pointer;border:1.5px dashed var(--line-2);background:transparent;display:flex;flex-direction:column;justify-content:center;transition:transform .05s,border-color .15s}
+  .cell:active{transform:scale(.98)}
+  .cell.libre{color:var(--dim);font-size:13px;align-items:center;font-weight:600}
+  .cell.libre:hover{border-color:var(--neon);color:var(--neon);border-style:solid}
+  .cell.Pendiente{background:var(--warn-bg);border:1.5px solid rgba(255,194,75,.35);box-shadow:inset 3px 0 0 var(--warn)}
+  .cell.Confirmada{background:var(--info-bg);border:1.5px solid rgba(90,176,255,.35);box-shadow:inset 3px 0 0 var(--info)}
+  .cell.Pagada{background:var(--ok-bg);border:1.5px solid rgba(61,220,132,.35);box-shadow:inset 3px 0 0 var(--ok)}
+  .cell .n{font-weight:600;font-size:13px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cell .e{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
+  .cell.Pendiente .e{color:var(--warn)}.cell.Confirmada .e{color:var(--info)}.cell.Pagada .e{color:var(--ok)}
+  .item{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line)}
+  .item:last-child{border-bottom:0}
+  .item .when{flex:0 0 62px;text-align:center;background:var(--bg-2);border:1px solid var(--line-2);border-radius:12px;padding:6px 4px}
+  .item .when .d{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:var(--neon);line-height:1}.item .when .m{font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:.5px}
+  .item .body{flex:1;min-width:0}.item .body .nm{font-weight:600;color:#fff}
+  .item .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .dayhdr{font-family:'Barlow Condensed',sans-serif;font-size:16px;text-transform:uppercase;font-style:italic;letter-spacing:.6px;color:var(--neon);font-weight:700;margin:20px 0 2px}
+  .hor{display:grid;grid-template-columns:90px 1fr 1fr 74px;gap:8px;align-items:center;margin:6px 0}
+  .hor select{padding:8px}
+  .chart{width:100%;height:auto;display:block}
+  .login{max-width:360px;margin:12vh auto 0;padding:0 16px}
+  .login h2{font-size:34px;font-weight:800;font-style:italic;text-transform:uppercase;color:#fff}
+  .pin{font-size:30px!important;letter-spacing:12px;text-align:center}
+  .linkbox{display:flex;gap:8px;align-items:center;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12px;word-break:break-all;color:var(--muted)}
+  .linkbox span{flex:1}
+  .hchk{display:flex;flex-wrap:wrap;gap:6px}
+  .hchk label{margin:0;display:flex;align-items:center;gap:6px;border:1.5px solid var(--line-2);border-radius:10px;padding:7px 10px;font-weight:600;cursor:pointer;color:var(--ink);text-transform:none;letter-spacing:0;font-size:13px}
+  .hchk input{accent-color:var(--neon)}
+  .hchk label.dis{opacity:.35;cursor:not-allowed}
+  .hor label{text-transform:none;letter-spacing:0}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<section id="vLogin" class="login hidden">
+  <div class="center"><svg style="width:72px;height:72px;margin:0 auto 14px;display:block;filter:drop-shadow(0 0 18px rgba(198,244,50,.35))" viewBox="-26 -26 52 52" aria-hidden="true"><rect x="-26" y="-26" width="52" height="52" rx="14" fill="#C6F432"/><circle r="15" fill="none" stroke="#0E1116" stroke-width="2.6"/><path d="M-15 0 C-5 -4 5 -4 15 0 M-4 -14.5 C3 -7 3 7 -4 14.5 M4 -14.5 C12 -5 13 5 9 11.5" stroke="#0E1116" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+  <h2>Panel del administrador</h2><p class="muted" id="loginSub">Entra con tu correo y contraseña</p></div>
+  <div class="card" id="boxLogin">
+    <label for="email">Correo</label><input type="text" id="email" inputmode="email" autocomplete="username" placeholder="tucorreo@gmail.com">
+    <label for="pass">Contraseña</label><input type="password" id="pass" autocomplete="current-password" placeholder="••••••••">
+    <button class="btn btn-primary full" style="margin-top:16px" id="btnLogin">Entrar</button>
+    <button class="btn btn-ghost full" style="margin-top:10px;border:0" id="btnOlvide">¿Olvidaste tu contraseña?</button>
+  </div>
+  <div class="card hidden" id="boxNueva">
+    <p class="muted" style="margin:0">Escribe tu nueva contraseña.</p>
+    <label for="np1">Nueva contraseña</label><input type="password" id="np1" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
+    <label for="np2">Repítela</label><input type="password" id="np2" autocomplete="new-password">
+    <button class="btn btn-primary full" style="margin-top:16px" id="btnNueva">Guardar contraseña</button>
+  </div>
+</section>
+
+<!-- APP -->
+<section id="vApp" class="hidden">
+  <header class="top">
+    <div class="wrap"><svg class="logo" viewBox="-26 -26 52 52" aria-hidden="true"><rect x="-26" y="-26" width="52" height="52" rx="14" fill="#C6F432"/><circle r="15" fill="none" stroke="#0E1116" stroke-width="2.6"/><path d="M-15 0 C-5 -4 5 -4 15 0 M-4 -14.5 C3 -7 3 7 -4 14.5 M4 -14.5 C12 -5 13 5 9 11.5" stroke="#0E1116" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg><h1><span id="tNeg">Panel</span><small id="tYo">Panel del administrador</small></h1><button class="salir" onclick="salir()">Salir</button></div>
+    <nav id="nav">
+      <button data-v="agenda" class="on">📅 Agenda</button>
+      <button data-v="pend">🔔 Pendientes<span class="cnt hidden" id="cntPend"></span></button>
+      <button data-v="prox">📋 Próximas</button>
+      <button data-v="fin">💰 Finanzas</button>
+      <button data-v="ajustes">⚙️ Ajustes</button>
+    </nav>
+  </header>
+  <main class="wrap" style="padding-bottom:40px">
+    <div id="v-agenda"></div><div id="v-pend" class="hidden"></div><div id="v-prox" class="hidden"></div>
+    <div id="v-fin" class="hidden"></div><div id="v-ajustes" class="hidden"></div>
+  </main>
+</section>
+
+<div id="cargando" class="center" style="padding:30vh 0"><span class="spinner"></span></div>
+<div id="modal"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],DCORTO=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const CATEGORIAS=['Mantenimiento arena','Redes y balones','Energía / iluminación','Agua','Personal / aseo','Publicidad','Arriendo','Impuestos y permisos','Otros'];
+const MEDIOS=['Efectivo','Nequi','Daviplata','Transferencia','Otro'];
+const ACT=['Pendiente','Confirmada','Pagada'],VEND=['Confirmada','Pagada'];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pesos=n=>(n<0?'-':'')+'$'+Math.abs(Math.round(n||0)).toLocaleString('es-CO');
+const pct=x=>(Math.round((x||0)*1000)/10).toLocaleString('es-CO')+'%';
+const hora=h=>((h%12)||12)+(h<12?' a. m.':' p. m.');
+const horaC=h=>((h%12)||12)+(h<12?'am':'pm');
+const pd=s=>{const p=s.split('-').map(Number);return new Date(Date.UTC(p[0],p[1]-1,p[2]));};
+const addD=(s,n)=>{const d=pd(s);d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);};
+const iso=s=>{const w=pd(s).getUTCDay();return w===0?7:w;};
+const lunesDe=s=>addD(s,1-iso(s));
+const fLarga=s=>{const d=pd(s);return DIAS[d.getUTCDay()]+' '+d.getUTCDate()+' de '+MESES[d.getUTCMonth()];};
+const fCorta=s=>{const d=pd(s);return d.getUTCDate()+' '+MESES[d.getUTCMonth()];};
+const suma=(a,k)=>a.reduce((t,x)=>t+(Number(x[k])||0),0);
+const rangoH=hs=>{const out=[];let a=hs[0],b=hs[0];for(let i=1;i<=hs.length;i++){if(hs[i]===b+1){b=hs[i];continue;}out.push(horaC(a)+'–'+horaC(b+1));a=b=hs[i];}return out.join(', ');};
+
+/* ---------- Supabase ---------- */
+const sb=window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_KEY);
+async function rpc(fn,args){
+  let r;try{r=await sb.rpc(fn,args||{});}catch(e){throw new Error('Sin conexión. Intenta de nuevo.');}
+  if(r.error){const m=r.error.message||'';
+    if(m==='NO_AUTORIZADO'){await sb.auth.signOut();mostrarLogin('Ese correo no está autorizado como administrador. Pídele a otro administrador que te agregue.');throw new Error('No autorizado');}
+    if(/JWT|token/i.test(m)){await sb.auth.signOut();mostrarLogin('Tu sesión venció. Ingresa de nuevo.');throw new Error('Sesión vencida');}
+    throw new Error(/fetch|network|Failed/i.test(m)?'Sin conexión. Intenta de nuevo.':m);}
+  return r.data;
+}
+function toast(m,err){const t=$('toast');t.textContent=m;t.className='toast show'+(err?' err':'');clearTimeout(t._t);t._t=setTimeout(()=>t.className='toast',3500);}
+
+let RAW=null,D=null,VISTA='agenda',FECHA=null,FILTRO='activas';
+
+/* ---------- Login ---------- */
+function mostrarLogin(msg){RAW=D=null;$('vApp').classList.add('hidden');$('cargando').classList.add('hidden');$('vLogin').classList.remove('hidden');$('boxLogin').classList.remove('hidden');$('boxNueva').classList.add('hidden');$('loginSub').textContent=msg||'Entra con tu correo y contraseña';cerrarModal();}
+async function entrar(){
+  const b=$('btnLogin');b.disabled=true;
+  try{const {error}=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('pass').value});
+    if(error)throw new Error(/Invalid login/i.test(error.message)?'Correo o contraseña incorrectos.':error.message);
+    $('pass').value='';await cargar();}
+  catch(e){toast(e.message,true);}finally{b.disabled=false;}
+}
+$('btnLogin').onclick=entrar;$('pass').onkeydown=e=>{if(e.key==='Enter')entrar();};
+$('btnOlvide').onclick=async()=>{
+  const email=$('email').value.trim();if(!email){toast('Escribe tu correo primero',true);return;}
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.href.split('#')[0].split('?')[0]});
+  toast(error?error.message:'Te enviamos un correo para cambiar la contraseña ✉️',!!error);
+};
+$('btnNueva').onclick=async()=>{
+  const a=$('np1').value,b=$('np2').value;
+  if(a.length<8){toast('Mínimo 8 caracteres',true);return;}if(a!==b){toast('Las contraseñas no coinciden',true);return;}
+  const {error}=await sb.auth.updateUser({password:a});
+  if(error){toast(error.message,true);return;}toast('Contraseña guardada ✓');RECUPERANDO=false;history.replaceState(null,'',location.pathname);await cargar();
+};
+let RECUPERANDO=false;
+sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY'){RECUPERANDO=true;$('cargando').classList.add('hidden');$('vApp').classList.add('hidden');$('vLogin').classList.remove('hidden');$('boxLogin').classList.add('hidden');$('boxNueva').classList.remove('hidden');$('loginSub').textContent='Recuperar contraseña';}});
+async function salir(){try{await sb.auth.signOut();}catch(e){}mostrarLogin();}
+
+/* ---------- Datos ---------- */
+async function cargar(){
+  if(RECUPERANDO)return;
+  try{
+    RAW=await rpc('panel_admin');
+    $('vLogin').classList.add('hidden');$('cargando').classList.add('hidden');$('vApp').classList.remove('hidden');
+    construir();pintar();
+  }catch(e){if(RAW||!/autorizado|vencida/i.test(e.message))toast(e.message,true);if(!RAW&&!/autorizado|vencida/i.test(e.message))mostrarLogin(e.message);}
+}
+function horasDia(cfg,f){const h=cfg.horario[String(iso(f))];const o=[];if(!h||!(h[1]>h[0]))return o;for(let i=h[0];i<h[1];i++)o.push(i);return o;}
+function agrupar(res){
+  const m={};res.forEach(r=>{
+    if(!m[r.codigo])m[r.codigo]={codigo:r.codigo,fecha:r.fecha,cancha:r.cancha,horas:[],nombre:r.nombre,whatsapp:r.whatsapp||'',estado:r.estado,total:0,medio:r.medio||'',origen:r.origen,notas:r.notas||'',por:r.actualizado_por||'',creado:r.creado};
+    m[r.codigo].horas.push(r.hora);m[r.codigo].total+=Number(r.valor)||0;});
+  return Object.values(m).map(g=>{g.horas.sort((a,b)=>a-b);return g;});
+}
+const orden=(a,b)=>a.fecha!==b.fecha?(a.fecha<b.fecha?-1:1):(a.horas[0]-b.horas[0]||a.cancha-b.cancha);
+function statsSemana(l,res,gas,cfg){
+  const dom=addD(l,6);let of=0;for(let i=0;i<7;i++)of+=horasDia(cfg,addD(l,i)).length*cfg.canchas;
+  const rs=res.filter(r=>r.fecha>=l&&r.fecha<=dom),vend=rs.filter(r=>VEND.includes(r.estado));
+  const ing=suma(rs.filter(r=>r.estado==='Pagada'),'valor');
+  return {lunes:l,domingo:dom,ofertadas:of,vendidas:vend.length,ingresos:ing,porCobrar:suma(rs.filter(r=>r.estado==='Confirmada'),'valor'),
+    web:new Set(vend.filter(r=>r.origen==='Web').map(r=>r.codigo)).size,presencial:new Set(vend.filter(r=>r.origen!=='Web').map(r=>r.codigo)).size};
+}
+function construir(){
+  const R=RAW,c=R.cfg;
+  const cfg={negocio:c.negocio,direccion:c.direccion,tarifa:c.tarifa,canchas:c.canchas,whatsappAdmin:c.whatsapp_admin,diasAnticipacion:c.dias_anticipacion,maxHorasPorReserva:c.max_horas,horario:c.horario};
+  const hoy=R.hoy;FECHA=FECHA||hoy;
+  const res=R.reservas,gas=R.gastos,grupos=agrupar(res),lAct=lunesDe(hoy);
+  const delDia=grupos.filter(g=>g.fecha===FECHA);
+  const pendientes=grupos.filter(g=>g.estado==='Pendiente'&&g.fecha>=hoy).sort(orden);
+  const hasta=addD(hoy,13),proximas=grupos.filter(g=>g.fecha>=hoy&&g.fecha<=hasta).sort(orden);
+  const sem={};
+  R.resumen.forEach(s=>sem[s.lunes]={lunes:s.lunes,domingo:s.domingo,ofertadas:s.ofertadas,vendidas:s.vendidas,ingresos:s.ingresos,porCobrar:s.por_cobrar,web:s.web,presencial:s.presencial,cerrada:true});
+  const vivas=[...new Set(res.filter(r=>r.fecha<=addD(lAct,6)).map(r=>lunesDe(r.fecha)))].concat([lAct]);
+  vivas.forEach(l=>{const s=statsSemana(l,res,gas,cfg);const p=sem[l];
+    sem[l]=p?{...s,ofertadas:p.ofertadas||s.ofertadas,vendidas:p.vendidas+s.vendidas,ingresos:p.ingresos+s.ingresos,porCobrar:p.porCobrar+s.porCobrar,web:p.web+s.web,presencial:p.presencial+s.presencial,cerrada:true}:s;});
+  const semanas=Object.keys(sem).sort().map(l=>{const s=sem[l];s.ocupacion=s.ofertadas?s.vendidas/s.ofertadas:0;
+    s.gastos=suma(gas.filter(g=>g.fecha>=l&&g.fecha<=s.domingo),'valor');s.utilidad=s.ingresos-s.gastos;s.actual=l===lAct;return s;});
+  const rHoy=res.filter(r=>r.fecha===hoy);
+  const kpis={hoy:{ofertadas:horasDia(cfg,hoy).length*cfg.canchas,vendidas:rHoy.filter(r=>VEND.includes(r.estado)).length,
+      ingresos:suma(rHoy.filter(r=>r.estado==='Pagada'),'valor'),porCobrar:suma(rHoy.filter(r=>r.estado==='Confirmada'),'valor')},
+    semana:semanas.find(s=>s.actual),pendientes:pendientes.length,porCobrarTotal:suma(res.filter(r=>r.estado==='Confirmada'),'valor'),
+    acumIngresos:suma(semanas,'ingresos'),acumGastos:Number(R.gastosTotal)||0};
+  const base=location.href.split('#')[0].split('?')[0].replace(/admin\.html$/,'');
+  D={cfg,hoy,fecha:FECHA,horasFecha:horasDia(cfg,FECHA),delDia,pendientes,proximas,semanas,gastos:gas,kpis,grupos,
+     categorias:CATEGORIAS,medios:MEDIOS,urlPublica:base,urlAdmin:base+'admin.html',yo:R.yo,admins:R.admins};
+  $('tNeg').textContent=cfg.negocio;$('tYo').textContent=R.yo;
+  const c2=$('cntPend');c2.textContent=kpis.pendientes;c2.classList.toggle('hidden',!kpis.pendientes);
+}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{VISTA=b.dataset.v;document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x===b));pintar();window.scrollTo(0,0);});
+function pintar(){['agenda','pend','prox','fin','ajustes'].forEach(v=>$('v-'+v).classList.toggle('hidden',v!==VISTA));({agenda:vAgenda,pend:vPend,prox:vProx,fin:vFin,ajustes:vAjustes})[VISTA]();}
+function irA(f){if(!f)return;FECHA=f;construir();pintar();}
+
+/* ---------- Agenda ---------- */
+function vAgenda(){
+  const K=D.kpis,s=K.semana||{};
+  let h=`<div class="kpis">
+    <div class="kpi hl"><div class="l">Hoy · horas vendidas</div><div class="v">${K.hoy.vendidas} / ${K.hoy.ofertadas}</div><div class="meter"><i style="width:${K.hoy.ofertadas?Math.min(100,K.hoy.vendidas/K.hoy.ofertadas*100):0}%"></i></div></div>
+    <div class="kpi or"><div class="l">Recaudado hoy</div><div class="v">${pesos(K.hoy.ingresos)}</div><div class="s">Por cobrar hoy: ${pesos(K.hoy.porCobrar)}</div></div>
+    <div class="kpi"><div class="l">Ingresos semana</div><div class="v">${pesos(s.ingresos)}</div><div class="s">Utilidad: ${pesos(s.utilidad)}</div></div>
+    <div class="kpi"><div class="l">Ocupación semana</div><div class="v">${pct(s.ocupacion)}</div><div class="meter"><i style="width:${Math.min(100,(s.ocupacion||0)*100)}%"></i></div></div>
+  </div>
+  <div class="card">
+    <div class="datenav"><button class="btn btn-ghost btn-sm" onclick="irA(addD(FECHA,-1))">◀</button><div class="t">${D.fecha===D.hoy?'Hoy, ':''}${fLarga(D.fecha)}</div>
+      <input type="date" value="${D.fecha}" onchange="irA(this.value)"><button class="btn btn-ghost btn-sm" onclick="irA(addD(FECHA,1))">▶</button>
+      ${D.fecha!==D.hoy?`<button class="btn btn-ghost btn-sm" onclick="irA(D.hoy)">Hoy</button>`:''}
+      <button class="btn btn-primary btn-sm" onclick="modalNueva()">+ Reserva</button></div>`;
+  if(!D.horasFecha.length){$('v-agenda').innerHTML=h+'<p class="muted center" style="padding:20px">Este día no hay atención según el horario.</p></div>';return;}
+  const map={};D.delDia.filter(g=>ACT.includes(g.estado)).forEach(g=>g.horas.forEach(x=>map[g.cancha+'-'+x]=g));
+  h+=`<div class="scroll-x"><table class="grid"><tr><th class="h"></th>${Array.from({length:D.cfg.canchas},(_,i)=>`<th>Cancha ${i+1}</th>`).join('')}</tr>`;
+  D.horasFecha.forEach(x=>{
+    h+=`<tr><td class="hr">${hora(x)}</td>`;
+    for(let c=1;c<=D.cfg.canchas;c++){const g=map[c+'-'+x];
+      h+=g?`<td><div class="cell ${g.estado}" onclick="modalGrupo('${g.codigo}')"><div class="n">${esc(g.nombre)}</div><div class="e">${g.estado}${g.origen==='Admin'?' · presencial':''}</div></div></td>`
+          :`<td><div class="cell libre" onclick="modalNueva(${c},${x})">+ Libre</div></td>`;}
+    h+='</tr>';});
+  h+=`</table></div><div class="legend"><span><i style="background:var(--warn)"></i>Pendiente</span><span><i style="background:var(--info)"></i>Confirmada (por cobrar)</span><span><i style="background:var(--ok)"></i>Pagada</span></div></div>`;
+  const canc=D.delDia.filter(g=>!ACT.includes(g.estado));
+  if(canc.length)h+=`<div class="card"><h2>Canceladas / rechazadas</h2>${canc.map(itemGrupo).join('')}</div>`;
+  $('v-agenda').innerHTML=h;
+}
+
+/* ---------- Tarjetas ---------- */
+function itemGrupo(g){const d=pd(g.fecha);
+  return `<div class="item"><div class="when"><div class="m">${DCORTO[d.getUTCDay()]}</div><div class="d">${d.getUTCDate()}</div><div class="m">${MESES[d.getUTCMonth()]}</div></div>
+   <div class="body"><div class="nm">${esc(g.nombre)} <span class="badge b-${g.estado}">${g.estado}</span></div>
+   <div class="muted">Cancha ${g.cancha} · ${rangoH(g.horas)} · ${pesos(g.total)}${g.whatsapp?' · 📱 '+g.whatsapp:''}</div>
+   <div class="muted">Código ${g.codigo}${g.origen==='Admin'?' · presencial':''}${g.medio?' · '+esc(g.medio):''}${g.por&&g.por!=='cliente'?' · por '+esc(g.por.split('@')[0]):''}</div>
+   <div class="acts">${botones(g,true)}</div></div></div>`;}
+function botones(g,cortos){
+  const b=[],c=`'${g.codigo}'`,sm=cortos?' btn-sm':'';
+  if(g.estado==='Pendiente'){b.push(`<button class="btn btn-wa${sm}" onclick="accion(${c},'Confirmada','confirmar')">✓ Confirmar${g.whatsapp?' y avisar':''}</button>`);
+    b.push(`<button class="btn btn-danger${sm}" onclick="accion(${c},'Rechazada','rechazar')">Rechazar</button>`);}
+  if(g.estado==='Confirmada'){b.push(`<button class="btn btn-navy${sm}" onclick="modalPago(${c})">💵 Registrar pago</button>`);
+    if(g.whatsapp)b.push(`<button class="btn btn-ghost${sm}" onclick="wa(${c},'recordar')">💬 Recordar</button>`);
+    b.push(`<button class="btn btn-danger${sm}" onclick="accion(${c},'Cancelada','cancelar')">Cancelar</button>`);}
+  if(g.estado==='Pagada'){if(g.whatsapp)b.push(`<button class="btn btn-ghost${sm}" onclick="wa(${c},'recibo')">💬 Enviar recibo</button>`);
+    b.push(`<button class="btn btn-ghost${sm}" onclick="accion(${c},'Confirmada')">Deshacer pago</button>`);}
+  if(g.estado==='Cancelada'||g.estado==='Rechazada')b.push(`<button class="btn btn-ghost${sm}" onclick="accion(${c},'Confirmada')">Reactivar</button>`);
+  return b.join('');}
+const buscar=cod=>D.grupos.find(g=>g.codigo===cod);
+
+/* ---------- WhatsApp ---------- */
+function mensaje(g,tipo){
+  const C=D.cfg,link=D.urlPublica?'\n\nReserva o consulta aquí: '+D.urlPublica:'';
+  const det=`🎫 Código: *${g.codigo}*\n📅 ${fLarga(g.fecha)}\n🏐 Cancha ${g.cancha}\n🕔 ${rangoH(g.horas)}\n💵 Total: ${pesos(g.total)}`;
+  if(tipo==='confirmar')return `Hola ${g.nombre} 👋\n\nTu reserva en *${C.negocio}* quedó *CONFIRMADA* ✅\n\n${det}${C.direccion?'\n📍 '+C.direccion:''}\n\n¡Te esperamos! Si no puedes asistir, avísanos por aquí.${link}`;
+  if(tipo==='rechazar')return `Hola ${g.nombre} 🙏\n\nLo sentimos, tu solicitud *${g.codigo}* para el ${fLarga(g.fecha)} (${rangoH(g.horas)}) no pudo ser confirmada en *${C.negocio}*.\n\nPuedes elegir otro horario.${link}`;
+  if(tipo==='cancelar')return `Hola ${g.nombre}, te informamos que tu reserva *${g.codigo}* del ${fLarga(g.fecha)} (${rangoH(g.horas)}) fue *cancelada*. Cualquier duda, escríbenos.${link}`;
+  if(tipo==='recordar')return `Hola ${g.nombre} 👋 te recordamos tu reserva en *${C.negocio}*:\n\n${det}\n\n¡Nos vemos en la cancha! 🏐`;
+  if(tipo==='recibo')return `Hola ${g.nombre} ✅ recibimos tu pago de *${pesos(g.total)}*${g.medio?' ('+g.medio+')':''} por la reserva *${g.codigo}* del ${fLarga(g.fecha)}.\n\n¡Gracias por jugar en *${C.negocio}*! 🏐`;}
+function wa(cod,tipo){const g=buscar(cod);if(!g||!g.whatsapp)return;window.open('https://wa.me/57'+g.whatsapp+'?text='+encodeURIComponent(mensaje(g,tipo)),'_blank');}
+
+/* ---------- Acciones ---------- */
+async function accion(cod,estado,msg,medio){
+  const g=buscar(cod);if(msg&&g&&g.whatsapp)wa(cod,msg);
+  cerrarModal();toast('Guardando…');
+  try{await rpc('cambiar_estado',{p_codigo:cod,p_estado:estado,p_medio:medio||''});toast('Reserva '+estado.toLowerCase()+' ✓');await cargar();}catch(e){toast(e.message,true);}}
+
+/* ---------- Modales ---------- */
+function abrirModal(html){$('modal').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)cerrarModal()"><div class="modal">${html}</div></div>`;}
+function cerrarModal(){$('modal').innerHTML='';}
+function modalGrupo(cod){const g=buscar(cod);if(!g)return;
+  abrirModal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>${esc(g.nombre)}</h2><span class="badge b-${g.estado}">${g.estado}</span></div>
+   <div class="kv"><b>Código</b><span>${g.codigo}</span><b>Día</b><span>${fLarga(g.fecha)}</span><b>Cancha</b><span>${g.cancha}</span><b>Horas</b><span>${rangoH(g.horas)}</span><b>Total</b><span>${pesos(g.total)}</span>
+   <b>WhatsApp</b><span>${g.whatsapp?`<a href="https://wa.me/57${g.whatsapp}" target="_blank">${g.whatsapp}</a>`:'—'}</span><b>Origen</b><span>${g.origen==='Web'?'Página web':'Presencial'}</span>${g.medio?`<b>Pago</b><span>${esc(g.medio)}</span>`:''}${g.notas?`<b>Notas</b><span>${esc(g.notas)}</span>`:''}${g.por?`<b>Último cambio</b><span>${esc(g.por)}</span>`:''}</div>
+   <div style="display:grid;gap:8px">${botones(g,false)}<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button></div>`);}
+function modalPago(cod){const g=buscar(cod);
+  abrirModal(`<h2>Registrar pago</h2><p class="muted">${esc(g.nombre)} · ${pesos(g.total)}</p>
+   <label>Medio de pago</label><select id="mMedio">${MEDIOS.map(m=>`<option>${m}</option>`).join('')}</select>
+   <div style="display:grid;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="accion('${cod}','Pagada',null,$('mMedio').value)">Guardar pago</button>
+    ${g.whatsapp?`<button class="btn btn-wa" onclick="const m=$('mMedio').value;buscar('${cod}').medio=m;accion('${cod}','Pagada','recibo',m)">Guardar y enviar recibo</button>`:''}
+    <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button></div>`);}
+function modalNueva(cancha,hr){
+  abrirModal(`<h2>Nueva reserva</h2><p class="muted">Para clientes que reservan en persona o por llamada.</p>
+   <div class="row"><div><label>Fecha</label><input type="date" id="nFecha" value="${D.fecha}" onchange="horasNueva()"></div>
+   <div><label>Cancha</label><select id="nCancha" onchange="horasNueva()">${Array.from({length:D.cfg.canchas},(_,i)=>`<option value="${i+1}" ${cancha===i+1?'selected':''}>Cancha ${i+1}</option>`).join('')}</select></div></div>
+   <label>Horas</label><div class="hchk" id="nHoras"></div>
+   <label>Nombre</label><input type="text" id="nNombre" maxlength="60" placeholder="Cliente presencial">
+   <label>WhatsApp (opcional)</label><input type="tel" id="nTel" inputmode="numeric" placeholder="3101234567">
+   <div class="row"><div><label>Estado</label><select id="nEstado" onchange="$('nMedioBox').classList.toggle('hidden',this.value!=='Pagada')"><option>Confirmada</option><option selected>Pagada</option></select></div>
+   <div id="nMedioBox"><label>Medio de pago</label><select id="nMedio">${MEDIOS.map(m=>`<option>${m}</option>`).join('')}</select></div></div>
+   <div class="row"><div><label>Valor por hora</label><input type="number" id="nValor" value="${D.cfg.tarifa}" min="0" step="1000"></div><div><label>Notas</label><input type="text" id="nNotas" maxlength="120"></div></div>
+   <div style="display:grid;gap:8px;margin-top:16px"><button class="btn btn-primary" id="nGuardar" onclick="guardarNueva()">Guardar reserva</button><button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button></div>`);
+  horasNueva(hr);}
+function horasNueva(pre){
+  const f=$('nFecha').value,c=Number($('nCancha').value),box=$('nHoras');if(!f)return;
+  const horas=horasDia(D.cfg,f),ocup={};
+  D.grupos.filter(g=>g.fecha===f&&g.cancha===c&&ACT.includes(g.estado)).forEach(g=>g.horas.forEach(x=>ocup[x]=1));
+  box.innerHTML=horas.length?horas.map(x=>`<label class="${ocup[x]?'dis':''}"><input type="checkbox" value="${x}" ${ocup[x]?'disabled':''} ${x===pre&&!ocup[x]?'checked':''}>${hora(x)}</label>`).join(''):'<span class="muted">Día sin atención.</span>';}
+async function guardarNueva(){
+  const horas=[...document.querySelectorAll('#nHoras input:checked')].map(i=>Number(i.value));
+  if(!horas.length){toast('Elige al menos una hora',true);return;}
+  const b=$('nGuardar');b.disabled=true;const f=$('nFecha').value;
+  try{await rpc('nueva_reserva_admin',{p_fecha:f,p_cancha:Number($('nCancha').value),p_horas:horas,p_nombre:$('nNombre').value,p_whatsapp:$('nTel').value,p_estado:$('nEstado').value,p_medio:$('nMedio').value,p_valor:$('nValor').value===''?null:Number($('nValor').value),p_notas:$('nNotas').value});
+    cerrarModal();toast('Reserva guardada ✓');FECHA=f;await cargar();}
+  catch(e){toast(e.message,true);b.disabled=false;}}
+
+/* ---------- Pendientes / Próximas ---------- */
+function vPend(){const L=D.pendientes;
+  $('v-pend').innerHTML=`<div class="card"><h2>🔔 Por confirmar</h2><p class="muted" style="margin:6px 0 0">Al confirmar se abre WhatsApp con el mensaje listo para el cliente: solo toca <b>Enviar</b>.</p>
+   ${L.length?L.map(itemGrupo).join(''):'<p class="center muted" style="padding:26px 0">🎉 No hay solicitudes pendientes.</p>'}</div>`;}
+function vProx(){
+  const L=D.proximas.filter(g=>FILTRO==='todas'||(FILTRO==='activas'?ACT.includes(g.estado):g.estado===FILTRO));
+  let h=`<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">📋 Próximos 14 días</h2>
+    <select style="width:auto" onchange="FILTRO=this.value;vProx()">${[['activas','Activas'],['Pendiente','Pendientes'],['Confirmada','Por cobrar'],['Pagada','Pagadas'],['Cancelada','Canceladas'],['todas','Todas']].map(([v,t])=>`<option value="${v}" ${FILTRO===v?'selected':''}>${t}</option>`).join('')}</select></div>`;
+  if(!L.length)h+='<p class="center muted" style="padding:26px 0">No hay reservas con este filtro.</p>';
+  let dia='';L.forEach(g=>{if(g.fecha!==dia){dia=g.fecha;h+=`<div class="dayhdr">${g.fecha===D.hoy?'Hoy · ':''}${fLarga(g.fecha)}</div>`;}h+=itemGrupo(g);});
+  $('v-prox').innerHTML=h+'</div>';}
+
+/* ---------- Finanzas ---------- */
+function vFin(){
+  const K=D.kpis,s=K.semana||{},S=D.semanas;
+  let h=`<div class="kpis">
+    <div class="kpi hl"><div class="l">Utilidad esta semana</div><div class="v">${pesos(s.utilidad)}</div><div class="s">${fCorta(s.lunes)} – ${fCorta(s.domingo)}</div></div>
+    <div class="kpi or"><div class="l">Ingresos semana</div><div class="v">${pesos(s.ingresos)}</div><div class="s">${s.vendidas||0} horas vendidas</div></div>
+    <div class="kpi ${s.gastos>0?'neg':''}"><div class="l">Gastos semana</div><div class="v">${pesos(s.gastos)}</div></div>
+    <div class="kpi"><div class="l">Por cobrar (total)</div><div class="v">${pesos(K.porCobrarTotal)}</div><div class="s">Confirmadas sin pago</div></div>
+    <div class="kpi"><div class="l">Acumulado ingresos</div><div class="v">${pesos(K.acumIngresos)}</div><div class="s">Gastos: ${pesos(K.acumGastos)}</div></div>
+    <div class="kpi ${K.acumIngresos-K.acumGastos<0?'neg':''}"><div class="l">Acumulado utilidad</div><div class="v">${pesos(K.acumIngresos-K.acumGastos)}</div></div></div>`;
+  h+=`<div class="card"><h2>Ingresos vs. gastos por semana</h2>${grafica(S.slice(-8))}</div>`;
+  h+=`<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">Resumen semanal</h2><button class="btn btn-ghost btn-sm" onclick="exportar(this)">📥 Descargar Excel</button></div>
+   <p class="muted" style="margin:6px 0 10px">Cada lunes las semanas terminadas se cierran: quedan los totales y se borran nombres y teléfonos.</p><div class="scroll-x"><table>
+   <tr><th>Semana</th><th class="num">Horas</th><th class="num">Ocup.</th><th class="num">Ingresos</th><th class="num">Gastos</th><th class="num">Utilidad</th><th>Estado</th></tr>
+   ${S.slice().reverse().map(w=>`<tr><td>${fCorta(w.lunes)} – ${fCorta(w.domingo)}</td><td class="num">${w.vendidas}/${w.ofertadas}</td><td class="num">${pct(w.ocupacion)}</td><td class="num">${pesos(w.ingresos)}</td><td class="num">${pesos(w.gastos)}</td><td class="num" style="font-weight:600;color:${w.utilidad<0?'var(--bad)':'var(--neon)'}">${pesos(w.utilidad)}</td><td>${w.actual?'<span class="badge b-Confirmada">En curso</span>':(w.cerrada?'<span class="badge b-Pagada">Cerrada</span>':'<span class="badge b-Pendiente">Por cerrar</span>')}</td></tr>`).join('')}
+   <tr><td><b>Total</b></td><td class="num"><b>${suma(S,'vendidas')}</b></td><td></td><td class="num"><b>${pesos(suma(S,'ingresos'))}</b></td><td class="num"><b>${pesos(suma(S,'gastos'))}</b></td><td class="num"><b>${pesos(suma(S,'utilidad'))}</b></td><td></td></tr></table></div></div>`;
+  h+=`<div class="card"><h2>➕ Registrar gasto</h2>
+   <div class="row"><div><label>Fecha</label><input type="date" id="gFecha" value="${D.hoy}"></div><div><label>Valor</label><input type="number" id="gValor" min="0" step="1000" placeholder="50000"></div></div>
+   <div class="row"><div><label>Categoría</label><select id="gCat">${CATEGORIAS.map(c=>`<option>${c}</option>`).join('')}</select></div><div><label>Medio de pago</label><select id="gMedio">${MEDIOS.map(m=>`<option>${m}</option>`).join('')}</select></div></div>
+   <label>Descripción</label><input type="text" id="gDesc" maxlength="120" placeholder="Ej. 2 balones Mikasa">
+   <button class="btn btn-primary full" style="margin-top:14px" id="gBtn" onclick="guardarGasto()">Guardar gasto</button></div>`;
+  h+=`<div class="card"><h2>Gastos registrados</h2>${D.gastos.length?`<div class="scroll-x"><table><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th class="num">Valor</th><th>Por</th><th></th></tr>
+   ${D.gastos.map(g=>`<tr><td>${fCorta(g.fecha)}</td><td>${esc(g.categoria)}</td><td>${esc(g.descripcion)}</td><td class="num">${pesos(g.valor)}</td><td class="muted">${esc((g.creado_por||'').split('@')[0])}</td><td><button class="btn btn-danger btn-sm" onclick="borrarGasto('${g.id}',this)">✕</button></td></tr>`).join('')}</table></div>`:'<p class="muted center" style="padding:20px 0">Aún no hay gastos.</p>'}</div>`;
+  $('v-fin').innerHTML=h;}
+function grafica(W){
+  if(!W.length)return '<p class="muted">Sin datos todavía.</p>';
+  const w=480,h=240,pl=44,pb=38,pt=14,max=Math.max(1,...W.map(x=>Math.max(x.ingresos,x.gastos)));
+  const step=Math.pow(10,Math.floor(Math.log10(max))),top=Math.ceil(max/step)*step,gw=(w-pl-10)/W.length,bw=Math.min(26,gw/3),y=v=>pt+(h-pt-pb)*(1-v/top);
+  let s=`<svg class="chart" viewBox="0 0 ${w} ${h}" font-family="Inter,Arial" font-size="13">`;
+  for(let i=0;i<=4;i++){const v=top*i/4;s+=`<line x1="${pl}" x2="${w-10}" y1="${y(v)}" y2="${y(v)}" stroke="#262D39"/><text x="${pl-8}" y="${y(v)+4}" text-anchor="end" fill="#8C96A5">${v>=1000?Math.round(v/1000)+'k':v}</text>`;}
+  W.forEach((x,i)=>{const cx=pl+gw*i+gw/2;
+    s+=`<rect x="${cx-bw-2}" y="${y(x.ingresos)}" width="${bw}" height="${y(0)-y(x.ingresos)}" rx="4" fill="#C6F432"><title>Ingresos ${pesos(x.ingresos)}</title></rect>`;
+    s+=`<rect x="${cx+2}" y="${y(x.gastos)}" width="${bw}" height="${y(0)-y(x.gastos)}" rx="4" fill="#FF6B3D"><title>Gastos ${pesos(x.gastos)}</title></rect>`;
+    s+=`<text x="${cx}" y="${h-14}" text-anchor="middle" fill="#8C96A5">${fCorta(x.lunes)}</text>`;});
+  return s+`<rect x="${pl}" y="${h-9}" width="10" height="8" rx="2" fill="#C6F432"/><text x="${pl+14}" y="${h-2}" fill="#EEF2F6">Ingresos</text><rect x="${pl+90}" y="${h-9}" width="10" height="8" rx="2" fill="#FF6B3D"/><text x="${pl+104}" y="${h-2}" fill="#EEF2F6">Gastos</text></svg>`;}
+async function guardarGasto(){const b=$('gBtn');b.disabled=true;
+  try{await rpc('agregar_gasto',{p_fecha:$('gFecha').value,p_categoria:$('gCat').value,p_descripcion:$('gDesc').value,p_valor:Math.round(Number($('gValor').value))||0,p_medio:$('gMedio').value});toast('Gasto guardado ✓');await cargar();}
+  catch(e){toast(e.message,true);b.disabled=false;}}
+async function borrarGasto(id,btn){
+  if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='¿Borrar?';setTimeout(()=>{btn.dataset.ok='';btn.textContent='✕';},3000);return;}
+  try{await rpc('eliminar_gasto',{p_id:id});toast('Gasto eliminado');await cargar();}catch(e){toast(e.message,true);}}
+function cargarScript(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>ko(new Error('No se pudo cargar el exportador'));document.head.appendChild(s);});}
+async function exportar(btn){
+  btn.disabled=true;
+  try{
+    if(!window.XLSX)await cargarScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+    const wb=XLSX.utils.book_new();
+    const sem=D.semanas.map(s=>({'Semana (lunes)':s.lunes,'Hasta':s.domingo,'Horas ofertadas':s.ofertadas,'Horas vendidas':s.vendidas,'% Ocupación':Math.round(s.ocupacion*1000)/10,'Ingresos':s.ingresos,'Gastos':s.gastos,'Utilidad':s.utilidad,'Reservas web':s.web,'Reservas presenciales':s.presencial,'Estado':s.actual?'En curso':'Cerrada'}));
+    const res=RAW.reservas.map(r=>({'Código':r.codigo,'Fecha':r.fecha,'Hora':hora(r.hora),'Cancha':r.cancha,'Nombre':r.nombre,'WhatsApp':r.whatsapp||'','Estado':r.estado,'Valor':r.valor,'Medio de pago':r.medio,'Origen':r.origen==='Web'?'Página web':'Presencial','Notas':r.notas,'Último cambio por':r.actualizado_por}));
+    const gas=D.gastos.map(g=>({'Fecha':g.fecha,'Categoría':g.categoria,'Descripción':g.descripcion,'Valor':g.valor,'Medio de pago':g.medio,'Registrado por':g.creado_por}));
+    [['Resumen semanal',sem],['Reservas actuales',res],['Gastos',gas]].forEach(([n,rows])=>{const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{'Sin datos':''}]);ws['!cols']=Object.keys(rows[0]||{a:1}).map(k=>({wch:Math.max(12,k.length+2)}));XLSX.utils.book_append_sheet(wb,ws,n);});
+    XLSX.writeFile(wb,'VoleyPlaya_'+D.hoy+'.xlsx');toast('Excel descargado ✓');
+  }catch(e){toast(e.message,true);}finally{btn.disabled=false;}}
+
+/* ---------- Ajustes ---------- */
+function vAjustes(){
+  const C=D.cfg,N=['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  const opts=sel=>Array.from({length:25},(_,i)=>`<option value="${i}" ${i===sel?'selected':''}>${i===0?'12am':i===24?'12am (fin)':horaC(i)}</option>`).join('');
+  let hor='';for(let d=1;d<=7;d++){const v=C.horario[String(d)]||[0,0],cerr=!(v[1]>v[0]);
+    hor+=`<div class="hor"><b style="font-size:14px">${N[d]}</b><select id="hA${d}" ${cerr?'disabled':''}>${opts(cerr?15:v[0])}</select><select id="hB${d}" ${cerr?'disabled':''}>${opts(cerr?22:v[1])}</select>
+    <label style="margin:0;font-weight:500;font-size:12px;display:flex;gap:4px;align-items:center"><input type="checkbox" id="hC${d}" ${cerr?'checked':''} onchange="$('hA${d}').disabled=$('hB${d}').disabled=this.checked">Cerrado</label></div>`;}
+  const shareTxt=encodeURIComponent(`🏐 ¡Reserva tu cancha de vóley playa en ${C.negocio}! ${pesos(C.tarifa)} la hora. Elige tu horario aquí: ${D.urlPublica}`);
+  $('v-ajustes').innerHTML=`
+  <div class="card"><h2>🔗 Links</h2>
+    <label>Página pública de reservas (compártela)</label><div class="linkbox"><span id="lPub">${esc(D.urlPublica)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lPub')">Copiar</button></div>
+    <a class="btn btn-wa full" style="margin-top:10px" target="_blank" href="https://wa.me/?text=${shareTxt}">Compartir por WhatsApp</a>
+    <label>Panel de administradores</label><div class="linkbox"><span id="lAdm">${esc(D.urlAdmin)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lAdm')">Copiar</button></div></div>
+  <div class="card"><h2>👥 Administradores</h2><p class="muted" style="margin:6px 0 4px">Cada uno entra con su correo. En Supabase > Authentication > Users también debes crearle su usuario.</p>
+    ${D.admins.map(a=>`<div class="item" style="padding:10px 0;align-items:center"><div class="body"><b>${esc(a)}</b>${a===D.yo?' <span class="badge b-Pagada">Tú</span>':''}</div>${a!==D.yo?`<button class="btn btn-danger btn-sm" onclick="quitarAdmin('${esc(a)}',this)">Quitar</button>`:''}</div>`).join('')}
+    <div class="row" style="margin-top:8px;align-items:flex-end"><div style="flex:3"><label>Agregar correo</label><input type="text" id="nuevoAdm" inputmode="email" placeholder="socio@gmail.com"></div><div style="flex:1"><button class="btn btn-navy full" onclick="agregarAdmin()">Agregar</button></div></div></div>
+  <div class="card"><h2>🏖️ Negocio</h2>
+    <label>Nombre</label><input type="text" id="aNeg" value="${esc(C.negocio)}" maxlength="60">
+    <label>Dirección / referencia</label><input type="text" id="aDir" value="${esc(C.direccion)}" maxlength="100">
+    <div class="row"><div><label>Tarifa por hora</label><input type="number" id="aTar" value="${C.tarifa}" min="0" step="1000"></div><div><label>Canchas</label><input type="number" id="aCan" value="${C.canchas}" min="1" max="8"></div></div>
+    <label>WhatsApp que recibe los avisos de clientes</label><input type="tel" id="aWa" value="${esc(C.whatsappAdmin)}" placeholder="3101234567">
+    <div class="row"><div><label>Días de anticipación</label><input type="number" id="aDias" value="${C.diasAnticipacion}" min="1" max="60"></div><div><label>Máx. horas por reserva web</label><input type="number" id="aMax" value="${C.maxHorasPorReserva}" min="1" max="8"></div></div>
+    <h2 style="margin-top:22px">🕔 Horario</h2><div class="hor muted" style="font-size:12px"><span></span><span>Desde</span><span>Hasta</span><span></span></div>${hor}
+    <button class="btn btn-primary full" style="margin-top:14px" id="aBtn" onclick="guardarAjustesUI()">Guardar ajustes</button></div>
+  <div class="card"><h2>🔒 Mi contraseña</h2>
+    <div class="row"><div><label>Nueva contraseña</label><input type="password" id="p1" autocomplete="new-password"></div><div><label>Repítela</label><input type="password" id="p2" autocomplete="new-password"></div></div>
+    <button class="btn btn-navy full" style="margin-top:14px" onclick="cambiarClave()">Cambiar contraseña</button></div>
+  <div class="card"><h2>🧹 Privacidad</h2><p class="muted">Cada lunes el sistema cierra las semanas terminadas: guarda los totales y borra nombres y teléfonos.</p>
+    <button class="btn btn-ghost full" onclick="cerrarSem(this)">Cerrar semanas pasadas ahora</button></div>`;}
+function copiar(id){const t=$(id).textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copiado ✓')).catch(()=>toast('Mantén presionado el texto para copiarlo'));}
+async function guardarAjustesUI(){
+  const hor={};for(let d=1;d<=7;d++)hor[d]=$('hC'+d).checked?[0,0]:[Number($('hA'+d).value),Number($('hB'+d).value)];
+  const b=$('aBtn');b.disabled=true;
+  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
+  catch(e){toast(e.message,true);}finally{b.disabled=false;}}
+async function agregarAdmin(){try{await rpc('agregar_admin',{p_email:$('nuevoAdm').value});toast('Administrador agregado ✓');await cargar();}catch(e){toast(e.message,true);}}
+async function quitarAdmin(email,btn){if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='¿Seguro?';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Quitar';},3000);return;}
+  try{await rpc('quitar_admin',{p_email:email});toast('Administrador quitado');await cargar();}catch(e){toast(e.message,true);}}
+async function cambiarClave(){const a=$('p1').value,b=$('p2').value;
+  if(a.length<8){toast('Mínimo 8 caracteres',true);return;}if(a!==b){toast('No coinciden',true);return;}
+  const {error}=await sb.auth.updateUser({password:a});toast(error?error.message:'Contraseña actualizada ✓',!!error);if(!error)$('p1').value=$('p2').value='';}
+async function cerrarSem(b){b.disabled=true;try{const r=await rpc('cerrar_semanas');toast(r.eliminadas?`Listo: ${r.cerradas} semana(s) cerrada(s), ${r.eliminadas} registros borrados`:'No hay semanas pasadas por cerrar');await cargar();}catch(e){toast(e.message,true);}finally{b.disabled=false;}}
+
+/* ---------- Inicio ---------- */
+(async()=>{
+  if(/type=recovery/.test(location.hash))return;              // lo maneja onAuthStateChange
+  const {data}=await sb.auth.getSession();
+  if(data&&data.session)cargar();else mostrarLogin();
+})();
+setInterval(()=>{if(RAW&&!$('modal').innerHTML&&!document.hidden&&!document.activeElement.matches('input,select,textarea'))cargar();},60000);
+</script>
+</body>
+</html>

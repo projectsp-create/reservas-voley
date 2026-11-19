@@ -194,7 +194,8 @@ async function cargar(){
     construir();pintar();
   }catch(e){if(RAW||!/autorizado|vencida/i.test(e.message))toast(e.message,true);if(!RAW&&!/autorizado|vencida/i.test(e.message))mostrarLogin(e.message);}
 }
-let FEST=new Set();
+let FEST=new Set(),PERM={dueno:false,permisos:{}};
+const puede=p=>PERM.dueno||!!(PERM.permisos&&PERM.permisos[p]);
 function horasDia(cfg,f){const h=(FEST.has(f)&&cfg.horario.F)?cfg.horario.F:cfg.horario[String(iso(f))];const o=[];if(!h||!(h[1]>h[0]))return o;for(let i=h[0];i<h[1];i++)o.push(i);return o;}
 function agrupar(res){
   const m={};res.forEach(r=>{
@@ -211,7 +212,7 @@ function statsSemana(l,res,gas,cfg){
     web:new Set(vend.filter(r=>r.origen==='Web').map(r=>r.codigo)).size,presencial:new Set(vend.filter(r=>r.origen!=='Web').map(r=>r.codigo)).size};
 }
 function construir(){
-  const R=RAW,c=R.cfg;FEST=new Set(R.festivos||[]);
+  const R=RAW,c=R.cfg;FEST=new Set(R.festivos||[]);PERM=R.rol||{dueno:false,permisos:{}};
   const cfg={negocio:c.negocio,direccion:c.direccion,tarifa:c.tarifa,canchas:c.canchas,whatsappAdmin:c.whatsapp_admin,diasAnticipacion:c.dias_anticipacion,maxHorasPorReserva:c.max_horas,horario:c.horario,venceMin:c.vence_pendiente_min};
   const hoy=R.hoy;FECHA=FECHA||hoy;
   const res=R.reservas,gas=R.gastos,grupos=agrupar(res),lAct=lunesDe(hoy);
@@ -235,6 +236,9 @@ function construir(){
      categorias:CATEGORIAS,medios:MEDIOS,urlPublica:base,urlAdmin:base+'admin.html',yo:R.yo,admins:R.admins,informes:R.informes||[],jugadores:R.jugadores||0,bloqueados:R.bloqueados||[]};
   $('tNeg').textContent=cfg.negocio;$('tYo').textContent=R.yo;
   const c2=$('cntPend');c2.textContent=kpis.pendientes;c2.classList.toggle('hidden',!kpis.pendientes);
+  const bf=document.querySelector('#nav button[data-v=fin]');bf.classList.toggle('hidden',!(puede('finanzas')||puede('gastos')));
+  if(VISTA==='fin'&&bf.classList.contains('hidden'))VISTA='agenda';
+  $('tYo').textContent=R.yo+(PERM.dueno?' · Dueño':' · Administrador');
 }
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{VISTA=b.dataset.v;document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x===b));pintar();window.scrollTo(0,0);});
 function pintar(){['agenda','pend','prox','fin','ajustes'].forEach(v=>$('v-'+v).classList.toggle('hidden',v!==VISTA));({agenda:vAgenda,pend:vPend,prox:vProx,fin:vFin,ajustes:vAjustes})[VISTA]();}
@@ -245,8 +249,10 @@ function vAgenda(){
   const K=D.kpis,s=K.semana||{};
   let h=`<div class="kpis">
     <div class="kpi hl"><div class="l">Hoy · horas vendidas</div><div class="v">${K.hoy.vendidas} / ${K.hoy.ofertadas}</div><div class="meter"><i style="width:${K.hoy.ofertadas?Math.min(100,K.hoy.vendidas/K.hoy.ofertadas*100):0}%"></i></div></div>
-    <div class="kpi or"><div class="l">Recaudado hoy</div><div class="v">${pesos(K.hoy.ingresos)}</div><div class="s">Por cobrar hoy: ${pesos(K.hoy.porCobrar)}</div></div>
-    <div class="kpi"><div class="l">Ingresos semana</div><div class="v">${pesos(s.ingresos)}</div><div class="s">Utilidad: ${pesos(s.utilidad)}</div></div>
+    ${puede('finanzas')?`<div class="kpi or"><div class="l">Recaudado hoy</div><div class="v">${pesos(K.hoy.ingresos)}</div><div class="s">Por cobrar hoy: ${pesos(K.hoy.porCobrar)}</div></div>
+    <div class="kpi"><div class="l">Ingresos semana</div><div class="v">${pesos(s.ingresos)}</div><div class="s">Utilidad: ${pesos(s.utilidad)}</div></div>`
+    :`<div class="kpi or"><div class="l">Por confirmar</div><div class="v">${K.pendientes}</div><div class="s">Solicitudes pendientes</div></div>
+    <div class="kpi"><div class="l">Horas vendidas semana</div><div class="v">${s.vendidas||0}</div><div class="s">de ${s.ofertadas||0} disponibles</div></div>`}
     <div class="kpi"><div class="l">Ocupación semana</div><div class="v">${pct(s.ocupacion)}</div><div class="meter"><i style="width:${Math.min(100,(s.ocupacion||0)*100)}%"></i></div></div>
   </div>
   <div class="card">
@@ -321,7 +327,7 @@ function modalGrupo(cod){const g=buscar(cod);if(!g)return;
   abrirModal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>${esc(g.nombre)}</h2><span class="badge b-${g.estado}">${g.estado}</span></div>
    <div class="kv"><b>Código</b><span>${g.codigo}</span><b>Día</b><span>${fLarga(g.fecha)}</span><b>Cancha</b><span>${g.cancha}</span><b>Horas</b><span>${rangoH(g.horas)}</span><b>Total</b><span>${pesos(g.total)}</span>
    <b>WhatsApp</b><span>${g.whatsapp?`<a href="https://wa.me/57${g.whatsapp}" target="_blank">${g.whatsapp}</a>`:'—'}</span><b>Origen</b><span>${g.origen==='Web'?'Página web':'Presencial'}</span>${g.uid?`<b>Cuenta</b><span>${D.bloqueados.includes(g.uid)?'🚫 Jugador bloqueado':'✔ Jugador registrado (Google)'}</span>`:''}${g.medio?`<b>Pago</b><span>${esc(g.medio)}</span>`:''}${g.notas?`<b>Notas</b><span>${esc(g.notas)}</span>`:''}${g.por?`<b>Último cambio</b><span>${esc(g.por)}</span>`:''}</div>
-   <div style="display:grid;gap:8px">${botones(g,false)}${g.uid?`<button class="btn btn-ghost" onclick="bloquear('${g.codigo}',${!D.bloqueados.includes(g.uid)},this)">${D.bloqueados.includes(g.uid)?'✅ Desbloquear jugador':'🚫 Bloquear jugador (no podrá reservar en línea)'}</button>`:''}<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button></div>`);}
+   <div style="display:grid;gap:8px">${botones(g,false)}${g.uid&&puede('bloquear')?`<button class="btn btn-ghost" onclick="bloquear('${g.codigo}',${!D.bloqueados.includes(g.uid)},this)">${D.bloqueados.includes(g.uid)?'✅ Desbloquear jugador':'🚫 Bloquear jugador (no podrá reservar en línea)'}</button>`:''}<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button></div>`);}
 async function bloquear(cod,si,btn){if(si&&btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='Toca otra vez para bloquearlo';return;}
   try{await rpc('bloquear_jugador',{p_codigo:cod,p_bloquear:si});cerrarModal();toast(si?'Jugador bloqueado':'Jugador desbloqueado');await cargar();}catch(e){toast(e.message,true);}}
 function modalPago(cod){const g=buscar(cod);
@@ -370,7 +376,8 @@ function vProx(){
 /* ---------- Finanzas ---------- */
 function vFin(){
   const K=D.kpis,s=K.semana||{},S=D.semanas;
-  let h=`<div class="kpis">
+  const F=puede('finanzas'),G=puede('gastos');
+  let h=!F?'':`<div class="kpis">
     <div class="kpi hl"><div class="l">Utilidad esta semana</div><div class="v">${pesos(s.utilidad)}</div><div class="s">${fCorta(s.lunes)} – ${fCorta(s.domingo)}</div></div>
     <div class="kpi or"><div class="l">Ingresos semana</div><div class="v">${pesos(s.ingresos)}</div><div class="s">${s.vendidas||0} horas vendidas</div></div>
     <div class="kpi ${s.gastos>0?'neg':''}"><div class="l">Gastos semana</div><div class="v">${pesos(s.gastos)}</div></div>
@@ -378,21 +385,21 @@ function vFin(){
     <div class="kpi"><div class="l">Acumulado ingresos</div><div class="v">${pesos(K.acumIngresos)}</div><div class="s">Gastos: ${pesos(K.acumGastos)}</div></div>
     <div class="kpi ${K.acumIngresos-K.acumGastos<0?'neg':''}"><div class="l">Acumulado utilidad</div><div class="v">${pesos(K.acumIngresos-K.acumGastos)}</div></div>
     <div class="kpi"><div class="l">Jugadores registrados</div><div class="v">${D.jugadores}</div><div class="s">${D.bloqueados.length} bloqueado(s)</div></div></div>`;
-  h+=`<div class="card"><h2>📑 Informes semanales</h2><p class="muted" style="margin:6px 0 4px">Cada lunes se genera el informe de la semana que terminó, con el detalle de todas las reservas. Descárgalo: a las 4 semanas se borra solo (los totales quedan en el resumen).</p>
+  if(F)h+=`<div class="card"><h2>📑 Informes semanales</h2><p class="muted" style="margin:6px 0 4px">Cada lunes se genera el informe de la semana que terminó, con el detalle de todas las reservas. Descárgalo: a las 4 semanas se borra solo (los totales quedan en el resumen).</p>
    ${D.informes.length?D.informes.map(x=>{const dias=Math.max(0,Math.ceil((new Date(x.expira)-Date.now())/86400000));return `<div class="item" style="padding:12px 0;align-items:center"><div class="body"><b>Semana ${fCorta(x.lunes)} – ${fCorta(addD(x.lunes,6))}</b><div class="muted">${x.n} reservas · se borra en ${dias} día${dias===1?'':'s'}</div></div><button class="btn btn-primary btn-sm" onclick="descargarInforme('${x.lunes}',this)">📥 Descargar</button></div>`;}).join(''):'<p class="muted center" style="padding:16px 0">El primer informe aparece el próximo lunes.</p>'}</div>`;
-  h+=`<div class="card"><h2>Ingresos vs. gastos por semana</h2>${grafica(S.slice(-8))}</div>`;
-  h+=`<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">Resumen semanal</h2><button class="btn btn-ghost btn-sm" onclick="exportar(this)">📥 Descargar Excel</button></div>
+  if(F)h+=`<div class="card"><h2>Ingresos vs. gastos por semana</h2>${grafica(S.slice(-8))}</div>`;
+  if(F)h+=`<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">Resumen semanal</h2><button class="btn btn-ghost btn-sm" onclick="exportar(this)">📥 Descargar Excel</button></div>
    <p class="muted" style="margin:6px 0 10px">Totales de cada semana (se guardan siempre).</p><div class="scroll-x"><table>
    <tr><th>Semana</th><th class="num">Horas</th><th class="num">Ocup.</th><th class="num">Ingresos</th><th class="num">Gastos</th><th class="num">Utilidad</th><th>Estado</th></tr>
    ${S.slice().reverse().map(w=>`<tr><td>${fCorta(w.lunes)} – ${fCorta(w.domingo)}</td><td class="num">${w.vendidas}/${w.ofertadas}</td><td class="num">${pct(w.ocupacion)}</td><td class="num">${pesos(w.ingresos)}</td><td class="num">${pesos(w.gastos)}</td><td class="num" style="font-weight:600;color:${w.utilidad<0?'var(--bad)':'var(--neon)'}">${pesos(w.utilidad)}</td><td>${w.actual?'<span class="badge b-Confirmada">En curso</span>':(w.cerrada?'<span class="badge b-Pagada">Cerrada</span>':'<span class="badge b-Pendiente">Por cerrar</span>')}</td></tr>`).join('')}
    <tr><td><b>Total</b></td><td class="num"><b>${suma(S,'vendidas')}</b></td><td></td><td class="num"><b>${pesos(suma(S,'ingresos'))}</b></td><td class="num"><b>${pesos(suma(S,'gastos'))}</b></td><td class="num"><b>${pesos(suma(S,'utilidad'))}</b></td><td></td></tr></table></div></div>`;
-  h+=`<div class="card"><h2>➕ Registrar gasto</h2>
+  if(G)h+=`<div class="card"><h2>➕ Registrar gasto</h2>
    <div class="row"><div><label>Fecha</label><input type="date" id="gFecha" value="${D.hoy}"></div><div><label>Valor</label><input type="number" id="gValor" min="0" step="1000" placeholder="50000"></div></div>
    <div class="row"><div><label>Categoría</label><select id="gCat">${CATEGORIAS.map(c=>`<option>${c}</option>`).join('')}</select></div><div><label>Medio de pago</label><select id="gMedio">${MEDIOS.map(m=>`<option>${m}</option>`).join('')}</select></div></div>
    <label>Descripción</label><input type="text" id="gDesc" maxlength="120" placeholder="Ej. 2 balones Mikasa">
    <button class="btn btn-primary full" style="margin-top:14px" id="gBtn" onclick="guardarGasto()">Guardar gasto</button></div>`;
-  h+=`<div class="card"><h2>Gastos registrados</h2>${D.gastos.length?`<div class="scroll-x"><table><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th class="num">Valor</th><th>Por</th><th></th></tr>
-   ${D.gastos.map(g=>`<tr><td>${fCorta(g.fecha)}</td><td>${esc(g.categoria)}</td><td>${esc(g.descripcion)}</td><td class="num">${pesos(g.valor)}</td><td class="muted">${esc((g.creado_por||'').split('@')[0])}</td><td><button class="btn btn-danger btn-sm" onclick="borrarGasto('${g.id}',this)">✕</button></td></tr>`).join('')}</table></div>`:'<p class="muted center" style="padding:20px 0">Aún no hay gastos.</p>'}</div>`;
+  if(G||F)h+=`<div class="card"><h2>Gastos registrados</h2>${D.gastos.length?`<div class="scroll-x"><table><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th class="num">Valor</th><th>Por</th><th></th></tr>
+   ${D.gastos.map(g=>`<tr><td>${fCorta(g.fecha)}</td><td>${esc(g.categoria)}</td><td>${esc(g.descripcion)}</td><td class="num">${pesos(g.valor)}</td><td class="muted">${esc((g.creado_por||'').split('@')[0])}</td><td>${G?`<button class="btn btn-danger btn-sm" onclick="borrarGasto('${g.id}',this)">✕</button>`:''}</td></tr>`).join('')}</table></div>`:'<p class="muted center" style="padding:20px 0">Aún no hay gastos.</p>'}</div>`;
   $('v-fin').innerHTML=h;}
 function grafica(W){
   if(!W.length)return '<p class="muted">Sin datos todavía.</p>';
@@ -453,10 +460,9 @@ function vAjustes(){
     <label>Página pública de reservas (compártela)</label><div class="linkbox"><span id="lPub">${esc(D.urlPublica)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lPub')">Copiar</button></div>
     <a class="btn btn-wa full" style="margin-top:10px" target="_blank" href="https://wa.me/?text=${shareTxt}">Compartir por WhatsApp</a>
     <label>Panel de administradores</label><div class="linkbox"><span id="lAdm">${esc(D.urlAdmin)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lAdm')">Copiar</button></div></div>
-  <div class="card"><h2>👥 Administradores</h2><p class="muted" style="margin:6px 0 4px">Cada uno entra con "Entrar con Google" usando el correo que agregues aquí.</p>
-    ${D.admins.map(a=>`<div class="item" style="padding:10px 0;align-items:center"><div class="body"><b>${esc(a)}</b>${a===D.yo?' <span class="badge b-Pagada">Tú</span>':''}</div>${a!==D.yo?`<button class="btn btn-danger btn-sm" onclick="quitarAdmin('${esc(a)}',this)">Quitar</button>`:''}</div>`).join('')}
-    <div class="row" style="margin-top:8px;align-items:flex-end"><div style="flex:3"><label>Agregar correo</label><input type="text" id="nuevoAdm" inputmode="email" placeholder="socio@gmail.com"></div><div style="flex:1"><button class="btn btn-navy full" onclick="agregarAdmin()">Agregar</button></div></div></div>
-  <div class="card"><h2>🏖️ Negocio</h2>
+  ${cardAdmins()}
+  ${puede('ajustes')?``:`<div class="card"><p class="muted center" style="margin:0">🔒 Los ajustes del negocio (tarifa, horario…) solo los cambia quien tenga ese permiso.</p></div>`}
+  ${!puede('ajustes')?'':`<div class="card"><h2>🏖️ Negocio</h2>
     <label>Nombre</label><input type="text" id="aNeg" value="${esc(C.negocio)}" maxlength="60">
     <label>Dirección / referencia</label><input type="text" id="aDir" value="${esc(C.direccion)}" maxlength="100">
     <div class="row"><div><label>Tarifa por hora</label><input type="number" id="aTar" value="${C.tarifa}" min="0" step="1000"></div><div><label>Canchas</label><input type="number" id="aCan" value="${C.canchas}" min="1" max="8"></div></div>
@@ -464,19 +470,35 @@ function vAjustes(){
     <div class="row"><div><label>Días de anticipación</label><input type="number" id="aDias" value="${C.diasAnticipacion}" min="1" max="60"></div><div><label>Máx. horas por reserva web</label><input type="number" id="aMax" value="${C.maxHorasPorReserva}" min="1" max="8"></div></div>
     <label>Minutos para confirmar una reserva antes de que se libere sola (0 = nunca)</label><input type="number" id="aVence" value="${C.venceMin}" min="0" max="1440" step="15">
     <h2 style="margin-top:22px">🕔 Horario</h2><p class="muted" style="margin:4px 0 0">"Hasta" es la hora de cierre: la última reserva empieza una hora antes. Los festivos de Colombia se calculan solos.</p><div class="hor muted" style="font-size:12px"><span></span><span>Abre</span><span>Cierra</span><span></span></div>${hor}
-    <button class="btn btn-primary full" style="margin-top:14px" id="aBtn" onclick="guardarAjustesUI()">Guardar ajustes</button></div>
-  <div class="card"><h2>🔒 Mi contraseña</h2>
-    <div class="row"><div><label>Nueva contraseña</label><input type="password" id="p1" autocomplete="new-password"></div><div><label>Repítela</label><input type="password" id="p2" autocomplete="new-password"></div></div>
-    <button class="btn btn-navy full" style="margin-top:14px" onclick="cambiarClave()">Cambiar contraseña</button></div>
-  <div class="card"><h2>🧹 Privacidad</h2><p class="muted">Cada lunes se cierra la semana anterior: se genera el informe descargable (dura 4 semanas) y se borran los datos de las reservas presenciales. Las reservas de jugadores con cuenta quedan en su historial personal.</p>
-    <button class="btn btn-ghost full" onclick="cerrarSem(this)">Cerrar semanas pasadas ahora</button></div>`;}
+    <button class="btn btn-primary full" style="margin-top:14px" id="aBtn" onclick="guardarAjustesUI()">Guardar ajustes</button></div>`}
+  ${!puede('finanzas')?'':`<div class="card"><h2>🧹 Privacidad</h2><p class="muted">Cada lunes se cierra la semana anterior: se genera el informe descargable (dura 4 semanas) y se borran los datos de las reservas presenciales. Las reservas de jugadores con cuenta quedan en su historial personal.</p>
+    <button class="btn btn-ghost full" onclick="cerrarSem(this)">Cerrar semanas pasadas ahora</button></div>`}`;}
+const PERMS=[['finanzas','💰 Ver finanzas e informes'],['gastos','🧾 Registrar y borrar gastos'],['ajustes','⚙️ Cambiar ajustes (tarifa, horario…)'],['bloquear','🚫 Bloquear jugadores']];
+function cardAdmins(){
+  const dueno=PERM.dueno;
+  const fila=a=>{
+    const yo=a.email===D.yo, tag=a.dueno?'<span class="badge b-Pagada">Dueño</span>':'<span class="badge b-Confirmada">Administrador</span>';
+    let h=`<div class="item" style="padding:12px 0;display:block"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="flex:1;word-break:break-all">${esc(a.email)}</b>${tag}${yo?' <span class="badge b-Pendiente">Tú</span>':''}</div>`;
+    if(dueno&&!a.dueno){const id=btoa(a.email).replace(/=/g,'');
+      h+=`<div class="hchk" style="margin-top:10px">${PERMS.map(([k,t])=>`<label><input type="checkbox" class="pm-${id}" data-k="${k}" ${a.permisos&&a.permisos[k]?'checked':''}>${t}</label>`).join('')}</div>
+        <div class="row" style="margin-top:10px"><button class="btn btn-navy btn-sm" onclick="guardarPermisos('${esc(a.email)}','${id}',this)">Guardar permisos</button><button class="btn btn-danger btn-sm" onclick="quitarAdmin('${esc(a.email)}',this)">Quitar</button></div>`;}
+    return h+'</div>';};
+  return `<div class="card"><h2>👥 Administradores</h2>
+    <p class="muted" style="margin:6px 0 4px">${dueno?'Eres el dueño: solo tú agregas, quitas y das permisos. Todos pueden ver la agenda, confirmar, cobrar y registrar reservas presenciales.':'Solo el dueño puede agregar, quitar o cambiar permisos de los administradores.'}</p>
+    ${D.admins.map(fila).join('')}
+    ${dueno?`<label style="margin-top:14px">Agregar administrador (correo de Google)</label><input type="text" id="nuevoAdm" inputmode="email" placeholder="socio@gmail.com">
+      <div class="hchk" style="margin-top:10px">${PERMS.map(([k,t])=>`<label><input type="checkbox" class="pm-nuevo" data-k="${k}" ${k!=='ajustes'?'checked':''}>${t}</label>`).join('')}</div>
+      <button class="btn btn-primary full" style="margin-top:12px" onclick="agregarAdmin()">Agregar administrador</button>`:''}
+    ${!dueno?`<p class="muted" style="margin-top:10px">Tus permisos: ${PERMS.filter(([k])=>puede(k)).map(([,t])=>t).join(' · ')||'solo agenda y reservas'}</p>`:''}</div>`;}
+const leerPermisos=cls=>{const o={};document.querySelectorAll('.'+cls).forEach(i=>o[i.dataset.k]=i.checked);return o;};
+async function guardarPermisos(email,id,btn){btn.disabled=true;try{await rpc('cambiar_permisos',{p_email:email,p_permisos:leerPermisos('pm-'+id)});toast('Permisos guardados ✓');await cargar();}catch(e){toast(e.message,true);}finally{btn.disabled=false;}}
 function copiar(id){const t=$(id).textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copiado ✓')).catch(()=>toast('Mantén presionado el texto para copiarlo'));}
 async function guardarAjustesUI(){
   const hor={};for(const d of ['1','2','3','4','5','6','7','F'])hor[d]=$('hC'+d).checked?[0,0]:[Number($('hA'+d).value),Number($('hB'+d).value)];
   const b=$('aBtn');b.disabled=true;
   try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
   catch(e){toast(e.message,true);}finally{b.disabled=false;}}
-async function agregarAdmin(){try{await rpc('agregar_admin',{p_email:$('nuevoAdm').value});toast('Administrador agregado ✓');await cargar();}catch(e){toast(e.message,true);}}
+async function agregarAdmin(){try{await rpc('agregar_admin',{p_email:$('nuevoAdm').value,p_permisos:leerPermisos('pm-nuevo')});toast('Administrador agregado ✓');await cargar();}catch(e){toast(e.message,true);}}
 async function quitarAdmin(email,btn){if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='¿Seguro?';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Quitar';},3000);return;}
   try{await rpc('quitar_admin',{p_email:email});toast('Administrador quitado');await cargar();}catch(e){toast(e.message,true);}}
 async function cambiarClave(){const a=$('p1').value,b=$('p2').value;

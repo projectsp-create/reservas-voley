@@ -110,12 +110,13 @@
       <button data-v="agenda" class="on">📅 Agenda</button>
       <button data-v="pend">🔔 Pendientes<span class="cnt hidden" id="cntPend"></span></button>
       <button data-v="prox">📋 Próximas</button>
+      <button data-v="jug">👥 Jugadores</button>
       <button data-v="fin">💰 Finanzas</button>
       <button data-v="ajustes">⚙️ Ajustes</button>
     </nav>
   </header>
   <main class="wrap" style="padding-bottom:40px">
-    <div id="v-agenda"></div><div id="v-pend" class="hidden"></div><div id="v-prox" class="hidden"></div>
+    <div id="v-agenda"></div><div id="v-pend" class="hidden"></div><div id="v-prox" class="hidden"></div><div id="v-jug" class="hidden"></div>
     <div id="v-fin" class="hidden"></div><div id="v-ajustes" class="hidden"></div>
   </main>
 </section>
@@ -199,7 +200,7 @@ const puede=p=>PERM.dueno||!!(PERM.permisos&&PERM.permisos[p]);
 function horasDia(cfg,f){const h=(FEST.has(f)&&cfg.horario.F)?cfg.horario.F:cfg.horario[String(iso(f))];const o=[];if(!h||!(h[1]>h[0]))return o;for(let i=h[0];i<h[1];i++)o.push(i);return o;}
 function agrupar(res){
   const m={};res.forEach(r=>{
-    if(!m[r.codigo])m[r.codigo]={codigo:r.codigo,fecha:r.fecha,cancha:r.cancha,horas:[],nombre:r.nombre,whatsapp:r.whatsapp||'',estado:r.estado,total:0,medio:r.medio||'',origen:r.origen,notas:r.notas||'',por:r.actualizado_por||'',creado:r.creado,uid:r.user_id||null};
+    if(!m[r.codigo])m[r.codigo]={codigo:r.codigo,fecha:r.fecha,cancha:r.cancha,horas:[],nombre:r.nombre,whatsapp:r.whatsapp||'',estado:r.estado,total:0,medio:r.medio||'',origen:r.origen,notas:r.notas||'',por:r.actualizado_por||'',creado:r.creado,uid:r.user_id||null,jid:r.jugador_id||null,fijo:!!r.fijo_id};
     m[r.codigo].horas.push(r.hora);m[r.codigo].total+=Number(r.valor)||0;});
   return Object.values(m).map(g=>{g.horas.sort((a,b)=>a-b);return g;});
 }
@@ -233,7 +234,7 @@ function construir(){
     acumIngresos:suma(semanas,'ingresos'),acumGastos:Number(R.gastosTotal)||0};
   const base=location.href.split('#')[0].split('?')[0].replace(/admin\.html$/,'');
   D={cfg,hoy,fecha:FECHA,horasFecha:horasDia(cfg,FECHA),delDia,pendientes,proximas,semanas,gastos:gas,kpis,grupos,
-     categorias:CATEGORIAS,medios:MEDIOS,urlPublica:base,urlAdmin:base+'admin.html',yo:R.yo,admins:R.admins,informes:R.informes||[],jugadores:R.jugadores||0,bloqueados:R.bloqueados||[]};
+     categorias:CATEGORIAS,medios:MEDIOS,urlPublica:base,urlAdmin:base+'admin.html',yo:R.yo,admins:R.admins,informes:R.informes||[],jugadores:R.jugadores||0,bloqueados:R.bloqueados||[],jugadoresLista:R.jugadoresLista||[],fijos:R.fijos||[]};
   $('tNeg').textContent=cfg.negocio;$('tYo').textContent=R.yo;
   const c2=$('cntPend');c2.textContent=kpis.pendientes;c2.classList.toggle('hidden',!kpis.pendientes);
   const bf=document.querySelector('#nav button[data-v=fin]');bf.classList.toggle('hidden',!(puede('finanzas')||puede('gastos')));
@@ -241,7 +242,7 @@ function construir(){
   $('tYo').textContent=R.yo+(PERM.dueno?' · Dueño':' · Administrador');
 }
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{VISTA=b.dataset.v;document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x===b));pintar();window.scrollTo(0,0);});
-function pintar(){['agenda','pend','prox','fin','ajustes'].forEach(v=>$('v-'+v).classList.toggle('hidden',v!==VISTA));({agenda:vAgenda,pend:vPend,prox:vProx,fin:vFin,ajustes:vAjustes})[VISTA]();}
+function pintar(){['agenda','pend','prox','jug','fin','ajustes'].forEach(v=>$('v-'+v).classList.toggle('hidden',v!==VISTA));({agenda:vAgenda,pend:vPend,prox:vProx,jug:vJug,fin:vFin,ajustes:vAjustes})[VISTA]();}
 function irA(f){if(!f)return;FECHA=f;construir();pintar();}
 
 /* ---------- Agenda ---------- */
@@ -266,7 +267,7 @@ function vAgenda(){
   D.horasFecha.forEach(x=>{
     h+=`<tr><td class="hr">${hora(x)}</td>`;
     for(let c=1;c<=D.cfg.canchas;c++){const g=map[c+'-'+x];
-      h+=g?`<td><div class="cell ${g.estado}" onclick="modalGrupo('${g.codigo}')"><div class="n">${esc(g.nombre)}</div><div class="e">${g.estado}${g.origen==='Admin'?' · presencial':''}</div></div></td>`
+      h+=g?`<td><div class="cell ${g.estado}" onclick="modalGrupo('${g.codigo}')"><div class="n">${esc(g.nombre)}</div><div class="e">${g.fijo?'📌 ':''}${g.estado}${g.fijo?' · fijo':g.origen==='Admin'?' · presencial':''}</div></div></td>`
           :`<td><div class="cell libre" onclick="modalNueva(${c},${x})">+ Libre</div></td>`;}
     h+='</tr>';});
   h+=`</table></div><div class="legend"><span><i style="background:var(--warn)"></i>Pendiente</span><span><i style="background:var(--info)"></i>Confirmada (por cobrar)</span><span><i style="background:var(--ok)"></i>Pagada</span></div></div>`;
@@ -278,10 +279,10 @@ function vAgenda(){
 /* ---------- Tarjetas ---------- */
 function itemGrupo(g){const d=pd(g.fecha);
   return `<div class="item"><div class="when"><div class="m">${DCORTO[d.getUTCDay()]}</div><div class="d">${d.getUTCDate()}</div><div class="m">${MESES[d.getUTCMonth()]}</div></div>
-   <div class="body"><div class="nm">${esc(g.nombre)} <span class="badge b-${g.estado}">${g.estado}</span>${g.uid&&D.bloqueados.includes(g.uid)?' <span class="badge b-Cancelada">Bloqueado</span>':''}</div>
+   <div class="body"><div class="nm">${esc(g.nombre)} <span class="badge b-${g.estado}">${g.estado}</span>${g.jid&&D.bloqueados.includes(g.jid)?' <span class="badge b-Cancelada">Bloqueado</span>':''}</div>
    <div class="muted">Cancha ${g.cancha} · ${rangoH(g.horas)} · ${pesos(g.total)}${g.whatsapp?' · 📱 '+g.whatsapp:''}</div>
    ${g.estado==='Pendiente'&&D.cfg.venceMin>0?(()=>{const m=Math.max(0,Math.round(D.cfg.venceMin-(Date.now()-new Date(g.creado).getTime())/60000));return `<div class="muted" style="color:var(--warn)">⏳ Se libera sola en ${m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'} si no la confirmas</div>`;})():''}
-   <div class="muted">Código ${g.codigo}${g.origen==='Admin'?' · presencial':''}${g.medio?' · '+esc(g.medio):''}${g.por&&g.por!=='cliente'?' · por '+esc(g.por.split('@')[0]):''}</div>
+   <div class="muted">Código ${g.codigo}${g.fijo?' · 📌 fijo':g.origen==='Admin'?' · presencial':''}${g.medio?' · '+esc(g.medio):''}${g.por&&g.por!=='cliente'?' · por '+esc(g.por.split('@')[0]):''}</div>
    <div class="acts">${botones(g,true)}</div></div></div>`;}
 function botones(g,cortos){
   const b=[],c=`'${g.codigo}'`,sm=cortos?' btn-sm':'';
@@ -326,8 +327,8 @@ function cerrarModal(){$('modal').innerHTML='';}
 function modalGrupo(cod){const g=buscar(cod);if(!g)return;
   abrirModal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>${esc(g.nombre)}</h2><span class="badge b-${g.estado}">${g.estado}</span></div>
    <div class="kv"><b>Código</b><span>${g.codigo}</span><b>Día</b><span>${fLarga(g.fecha)}</span><b>Cancha</b><span>${g.cancha}</span><b>Horas</b><span>${rangoH(g.horas)}</span><b>Total</b><span>${pesos(g.total)}</span>
-   <b>WhatsApp</b><span>${g.whatsapp?`<a href="https://wa.me/57${g.whatsapp}" target="_blank">${g.whatsapp}</a>`:'—'}</span><b>Origen</b><span>${g.origen==='Web'?'Página web':'Presencial'}</span>${g.uid?`<b>Cuenta</b><span>${D.bloqueados.includes(g.uid)?'🚫 Jugador bloqueado':'✔ Jugador registrado (Google)'}</span>`:''}${g.medio?`<b>Pago</b><span>${esc(g.medio)}</span>`:''}${g.notas?`<b>Notas</b><span>${esc(g.notas)}</span>`:''}${g.por?`<b>Último cambio</b><span>${esc(g.por)}</span>`:''}</div>
-   <div style="display:grid;gap:8px">${botones(g,false)}${g.uid&&puede('bloquear')?`<button class="btn btn-ghost" onclick="bloquear('${g.codigo}',${!D.bloqueados.includes(g.uid)},this)">${D.bloqueados.includes(g.uid)?'✅ Desbloquear jugador':'🚫 Bloquear jugador (no podrá reservar en línea)'}</button>`:''}<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button></div>`);}
+   <b>WhatsApp</b><span>${g.whatsapp?`<a href="https://wa.me/57${g.whatsapp}" target="_blank">${g.whatsapp}</a>`:'—'}</span><b>Origen</b><span>${g.fijo?'📌 Horario fijo':g.origen==='Web'?'Página web':'Presencial'}</span>${g.jid?`<b>Jugador</b><span><a href="#" onclick="cerrarModal();modalJugador('${g.jid}');return false">${D.bloqueados.includes(g.jid)?'🚫 Bloqueado · ':''}Ver ficha del jugador</a></span>`:''}${g.medio?`<b>Pago</b><span>${esc(g.medio)}</span>`:''}${g.notas?`<b>Notas</b><span>${esc(g.notas)}</span>`:''}${g.por?`<b>Último cambio</b><span>${esc(g.por)}</span>`:''}</div>
+   <div style="display:grid;gap:8px">${botones(g,false)}${g.jid&&puede('bloquear')?`<button class="btn btn-ghost" onclick="bloquear('${g.codigo}',${!D.bloqueados.includes(g.jid)},this)">${D.bloqueados.includes(g.jid)?'✅ Desbloquear jugador':'🚫 Bloquear jugador (no podrá reservar en línea)'}</button>`:''}<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button></div>`);}
 async function bloquear(cod,si,btn){if(si&&btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='Toca otra vez para bloquearlo';return;}
   try{await rpc('bloquear_jugador',{p_codigo:cod,p_bloquear:si});cerrarModal();toast(si?'Jugador bloqueado':'Jugador desbloqueado');await cargar();}catch(e){toast(e.message,true);}}
 function modalPago(cod){const g=buscar(cod);
@@ -336,8 +337,11 @@ function modalPago(cod){const g=buscar(cod);
    <div style="display:grid;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="accion('${cod}','Pagada',null,$('mMedio').value)">Guardar pago</button>
     ${g.whatsapp?`<button class="btn btn-wa" onclick="accion('${cod}','Pagada','recibo',$('mMedio').value)">Guardar y enviar recibo</button>`:''}
     <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button></div>`);}
-function modalNueva(cancha,hr){
+function modalNueva(cancha,hr,jid){
   abrirModal(`<h2>Nueva reserva</h2><p class="muted">Para clientes que reservan en persona o por llamada.</p>
+   <label>Jugador registrado (opcional)</label><input type="text" id="nJugBus" list="dlJug" placeholder="Busca por nombre o WhatsApp…" oninput="elegirJugNueva()" autocomplete="off">
+   <datalist id="dlJug">${D.jugadoresLista.map(j=>`<option value="${esc(j.nombre)} · ${j.whatsapp}">`).join('')}</datalist><input type="hidden" id="nJug">
+   <p class="muted" id="nJugInfo" style="margin:4px 0 0;font-size:12px">Si eliges un jugador, la reserva queda en su historial.</p>
    <div class="row"><div><label>Fecha</label><input type="date" id="nFecha" value="${D.fecha}" onchange="horasNueva()"></div>
    <div><label>Cancha</label><select id="nCancha" onchange="horasNueva()">${Array.from({length:D.cfg.canchas},(_,i)=>`<option value="${i+1}" ${cancha===i+1?'selected':''}>Cancha ${i+1}</option>`).join('')}</select></div></div>
    <label>Horas</label><div class="hchk" id="nHoras"></div>
@@ -347,7 +351,13 @@ function modalNueva(cancha,hr){
    <div id="nMedioBox"><label>Medio de pago</label><select id="nMedio">${MEDIOS.map(m=>`<option>${m}</option>`).join('')}</select></div></div>
    <div class="row"><div><label>Valor por hora</label><input type="number" id="nValor" value="${D.cfg.tarifa}" min="0" step="1000"></div><div><label>Notas</label><input type="text" id="nNotas" maxlength="120"></div></div>
    <div style="display:grid;gap:8px;margin-top:16px"><button class="btn btn-primary" id="nGuardar" onclick="guardarNueva()">Guardar reserva</button><button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button></div>`);
-  horasNueva(hr);}
+  horasNueva(hr);
+  if(jid){const j=D.jugadoresLista.find(x=>x.id===jid);if(j){$('nJugBus').value=j.nombre+' · '+j.whatsapp;elegirJugNueva();}}}
+function elegirJugNueva(){
+  const v=$('nJugBus').value,j=D.jugadoresLista.find(x=>(x.nombre+' · '+x.whatsapp)===v);
+  $('nJug').value=j?j.id:'';$('nNombre').disabled=$('nTel').disabled=!!j;
+  if(j){$('nNombre').value=j.nombre;$('nTel').value=j.whatsapp;$('nJugInfo').innerHTML='✔ Queda en el historial de <b>'+esc(j.nombre)+'</b>'+(D.bloqueados.includes(j.id)?' · <span style="color:var(--bad)">bloqueado en línea</span>':'');}
+  else $('nJugInfo').textContent='Si eliges un jugador, la reserva queda en su historial.';}
 function horasNueva(pre){
   const f=$('nFecha').value,c=Number($('nCancha').value),box=$('nHoras');if(!f)return;
   const horas=horasDia(D.cfg,f),ocup={};
@@ -357,7 +367,7 @@ async function guardarNueva(){
   const horas=[...document.querySelectorAll('#nHoras input:checked')].map(i=>Number(i.value));
   if(!horas.length){toast('Elige al menos una hora',true);return;}
   const b=$('nGuardar');b.disabled=true;const f=$('nFecha').value;
-  try{await rpc('nueva_reserva_admin',{p_fecha:f,p_cancha:Number($('nCancha').value),p_horas:horas,p_nombre:$('nNombre').value,p_whatsapp:$('nTel').value,p_estado:$('nEstado').value,p_medio:$('nMedio').value,p_valor:$('nValor').value===''?null:Number($('nValor').value),p_notas:$('nNotas').value});
+  try{await rpc('nueva_reserva_admin',{p_fecha:f,p_cancha:Number($('nCancha').value),p_horas:horas,p_nombre:$('nNombre').value,p_whatsapp:$('nTel').value,p_estado:$('nEstado').value,p_medio:$('nMedio').value,p_valor:$('nValor').value===''?null:Number($('nValor').value),p_notas:$('nNotas').value,p_jugador:$('nJug').value||null});
     cerrarModal();toast('Reserva guardada ✓');FECHA=f;await cargar();}
   catch(e){toast(e.message,true);b.disabled=false;}}
 
@@ -372,6 +382,79 @@ function vProx(){
   if(!L.length)h+='<p class="center muted" style="padding:26px 0">No hay reservas con este filtro.</p>';
   let dia='';L.forEach(g=>{if(g.fecha!==dia){dia=g.fecha;h+=`<div class="dayhdr">${g.fecha===D.hoy?'Hoy · ':''}${fLarga(g.fecha)}</div>`;}h+=itemGrupo(g);});
   $('v-prox').innerHTML=h+'</div>';}
+
+/* ---------- Jugadores ---------- */
+const DIAS_L=['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+let BUSQ='';
+const rangoFijo=f=>rangoH(Array.from({length:f.horas},(_,i)=>f.hora+i));
+function vJug(){
+  const q=BUSQ.toLowerCase().trim(),L=D.jugadoresLista.filter(j=>!q||(j.nombre+' '+j.whatsapp+' '+j.email).toLowerCase().includes(q));
+  let h=`<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">📌 Horarios fijos</h2><button class="btn btn-primary btn-sm" onclick="modalFijo()">+ Horario fijo</button></div>
+    <p class="muted" style="margin:6px 0 4px">Se apartan solos cada semana (14 días adelante), antes de que el público los vea.</p>
+    ${D.fijos.length?D.fijos.map(f=>`<div class="item" style="padding:12px 0;align-items:center"><div class="body"><b>${esc(f.jugador)}</b><div class="muted">${DIAS_L[f.dia]} · ${rangoFijo(f)} · Cancha ${f.cancha}${f.valor!=null?' · '+pesos(f.valor)+'/h':''}${f.hasta?' · hasta '+fCorta(f.hasta):''}</div>
+      ${f.choques.length?`<div class="muted" style="color:var(--warn)">⚠️ No se pudo apartar: ${f.choques.map(fCorta).join(', ')} (esa hora ya estaba ocupada)</div>`:''}</div>
+      <button class="btn btn-ghost btn-sm" onclick="modalJugador('${f.jugador_id}')">Ver</button></div>`).join(''):'<p class="muted center" style="padding:14px 0">Aún no hay horarios fijos.</p>'}</div>
+  <div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">👥 Jugadores (${D.jugadoresLista.length})</h2><button class="btn btn-primary btn-sm" onclick="modalJugadorNuevo()">+ Nuevo jugador</button></div>
+    <input type="text" id="busJug" placeholder="Buscar por nombre, WhatsApp o correo…" value="${esc(BUSQ)}" oninput="BUSQ=this.value;vJugLista()" style="margin-top:12px">
+    <div id="jugLista"></div></div>`;
+  $('v-jug').innerHTML=h;vJugLista();}
+function vJugLista(){
+  const q=BUSQ.toLowerCase().trim(),L=D.jugadoresLista.filter(j=>!q||(j.nombre+' '+j.whatsapp+' '+(j.email||'')).toLowerCase().includes(q));
+  $('jugLista').innerHTML=L.length?L.map(j=>`<div class="item" style="padding:12px 0;align-items:center;cursor:pointer" onclick="modalJugador('${j.id}')"><div class="body">
+    <div class="nm">${esc(j.nombre)} ${j.bloqueado?'<span class="badge b-Cancelada">Bloqueado</span>':''} ${D.fijos.some(f=>f.jugador_id===j.id)?'<span class="badge" style="background:rgba(198,244,50,.12);color:var(--neon)">📌 Fijo</span>':''}</div>
+    <div class="muted">📱 ${j.whatsapp}${j.email?' · '+esc(j.email):''}</div>
+    <div class="muted">${esc(j.origen)} · ${j.reservas} reserva${j.reservas===1?'':'s'}${j.ultima?' · última '+fCorta(j.ultima):''}</div></div><span class="muted">›</span></div>`).join(''):'<p class="muted center" style="padding:14px 0">No hay jugadores con esa búsqueda.</p>';}
+function formJugador(j){j=j||{};const conCuenta=j.origen&&j.origen!=='Panel';
+  return `<label>Nombre completo *</label><input type="text" id="jNom" maxlength="60" value="${esc(j.nombre||'')}">
+   <label>WhatsApp *</label><input type="tel" id="jTel" inputmode="numeric" maxlength="13" placeholder="3101234567" value="${esc(j.whatsapp||'')}">
+   <label>Correo (opcional)</label><input type="text" id="jMail" inputmode="email" placeholder="si lo tiene" value="${esc(j.email||'')}" ${conCuenta?'disabled':''}>
+   ${conCuenta?'<p class="muted" style="margin:4px 0 0;font-size:12px">Es el correo de su cuenta; solo él puede cambiarlo.</p>':'<p class="muted" style="margin:4px 0 0;font-size:12px">Si luego crea su cuenta con este correo, se le une su historial.</p>'}
+   <label>Dirección (opcional)</label><input type="text" id="jDir" maxlength="120" value="${esc(j.direccion||'')}">`;}
+function modalJugadorNuevo(){abrirModal(`<h2>Nuevo jugador</h2><p class="muted">Para quien no tiene correo o prefiere que lo registres tú.</p>${formJugador()}
+  <div style="display:grid;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="guardarJugadorUI(null,this)">Guardar jugador</button><button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button></div>`);}
+async function guardarJugadorUI(id,b){b.disabled=true;
+  try{const r=await rpc('guardar_jugador',{p_id:id,p_nombre:$('jNom').value,p_whatsapp:$('jTel').value,p_email:$('jMail').value,p_direccion:$('jDir').value});
+    toast(id?'Datos actualizados ✓':'Jugador creado ✓');await cargar();modalJugador(r.id);}catch(e){toast(e.message,true);b.disabled=false;}}
+async function modalJugador(id){
+  const j=D.jugadoresLista.find(x=>x.id===id);if(!j){toast('No encontré ese jugador',true);return;}
+  const fj=D.fijos.filter(f=>f.jugador_id===id);
+  abrirModal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2>${esc(j.nombre)}</h2>${j.bloqueado?'<span class="badge b-Cancelada">Bloqueado</span>':''}</div>
+   <p class="muted" style="margin:4px 0 0">${esc(j.origen)} · ${j.reservas} reservas · ${j.horas} horas jugadas</p>
+   <div class="row" style="margin-top:10px"><a class="btn btn-wa btn-sm" target="_blank" href="https://wa.me/57${j.whatsapp}">💬 WhatsApp</a><button class="btn btn-primary btn-sm" onclick="cerrarModal();modalNueva(1,null,'${id}')">+ Reservar para él</button></div>
+   <h2 style="margin-top:18px;font-size:18px">📌 Horarios fijos</h2>
+   ${fj.length?fj.map(f=>`<div class="item" style="padding:10px 0;align-items:center"><div class="body"><b>${DIAS_L[f.dia]} · ${rangoFijo(f)} · Cancha ${f.cancha}</b><div class="muted">desde ${fCorta(f.desde)}${f.hasta?' hasta '+fCorta(f.hasta):''}${f.choques.length?' · ⚠️ choque '+f.choques.map(fCorta).join(', '):''}</div></div><button class="btn btn-danger btn-sm" onclick="terminarFijo('${f.id}',this)">Terminar</button></div>`).join(''):'<p class="muted">No tiene horarios fijos.</p>'}
+   <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="modalFijo('${id}')">+ Agregar horario fijo</button>
+   <h2 style="margin-top:18px;font-size:18px">✏️ Datos</h2>${formJugador(j)}
+   <button class="btn btn-navy full" style="margin-top:12px" onclick="guardarJugadorUI('${id}',this)">Guardar datos</button>
+   ${puede('bloquear')?`<button class="btn btn-ghost full" style="margin-top:8px" onclick="bloquearJug('${id}',${!j.bloqueado},this)">${j.bloqueado?'✅ Desbloquear':'🚫 Bloquear (no podrá reservar en línea)'}</button>`:''}
+   <h2 style="margin-top:18px;font-size:18px">🕘 Historial</h2><div id="jHist"><span class="spinner"></span></div>
+   <button class="btn btn-ghost full" style="margin-top:12px" onclick="cerrarModal()">Cerrar</button>`);
+  try{const H=await rpc('historial_jugador',{p_id:id});
+    $('jHist').innerHTML=H.length?H.slice(0,30).map(g=>`<div class="muted" style="padding:6px 0;border-bottom:1px solid var(--line)">${fCorta(g.fecha)} · Cancha ${g.cancha} · ${rangoH(g.horas)} · ${pesos(g.total)} <span class="badge b-${g.estado}">${g.estado}</span>${g.fijo?' 📌':''}</div>`).join(''):'<p class="muted">Sin reservas todavía.</p>';}
+  catch(e){const x=$('jHist');if(x)x.textContent=e.message;}}
+async function bloquearJug(id,si,b){if(si&&b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='Toca otra vez para bloquearlo';return;}
+  try{await rpc('bloquear_jugador_id',{p_id:id,p_bloquear:si});toast(si?'Jugador bloqueado':'Jugador desbloqueado');await cargar();modalJugador(id);}catch(e){toast(e.message,true);}}
+function modalFijo(jid){
+  const opts=D.jugadoresLista.map(j=>`<option value="${j.id}" ${j.id===jid?'selected':''}>${esc(j.nombre)} · ${j.whatsapp}</option>`).join('');
+  const hs=Array.from({length:24},(_,i)=>i).filter(i=>i>=6);
+  abrirModal(`<h2>Horario fijo</h2><p class="muted">Se aparta solo cada semana como "Confirmada". Cada semana se cobra por separado.</p>
+   <label>Jugador</label><select id="fJug"><option value="">— Elige —</option>${opts}</select>
+   <p class="muted" style="margin:4px 0 0;font-size:12px">¿No aparece? Créalo primero en Jugadores → + Nuevo jugador.</p>
+   <div class="row"><div><label>Día</label><select id="fDia">${DIAS_L.slice(1).map((d,i)=>`<option value="${i+1}">${d}</option>`).join('')}</select></div>
+   <div><label>Cancha</label><select id="fCan">${Array.from({length:D.cfg.canchas},(_,i)=>`<option value="${i+1}">Cancha ${i+1}</option>`).join('')}</select></div></div>
+   <div class="row"><div><label>Hora</label><select id="fHora">${hs.map(h=>`<option value="${h}" ${h===20?'selected':''}>${hora(h)}</option>`).join('')}</select></div>
+   <div><label>Duración</label><select id="fHoras">${[1,2,3,4].map(n=>`<option value="${n}">${n} hora${n>1?'s':''}</option>`).join('')}</select></div></div>
+   <div class="row"><div><label>Desde</label><input type="date" id="fDesde" value="${D.hoy}"></div><div><label>Hasta (opcional)</label><input type="date" id="fHasta"></div></div>
+   <div class="row"><div><label>Precio por hora (vacío = tarifa)</label><input type="number" id="fValor" min="0" step="1000" placeholder="${D.cfg.tarifa}"></div><div><label>Notas</label><input type="text" id="fNotas" maxlength="120" placeholder="Ej. equipo Los Halcones"></div></div>
+   <div style="display:grid;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="guardarFijo(this)">Guardar horario fijo</button><button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button></div>`);}
+async function guardarFijo(b){
+  if(!$('fJug').value){toast('Elige el jugador',true);return;}
+  b.disabled=true;const jid=$('fJug').value;
+  try{await rpc('crear_fijo',{p_jugador:jid,p_dia:Number($('fDia').value),p_hora:Number($('fHora').value),p_horas:Number($('fHoras').value),p_cancha:Number($('fCan').value),
+      p_desde:$('fDesde').value||null,p_hasta:$('fHasta').value||null,p_valor:$('fValor').value===''?null:Number($('fValor').value),p_notas:$('fNotas').value});
+    toast('Horario fijo guardado ✓ Ya quedó apartado');await cargar();modalJugador(jid);}catch(e){toast(e.message,true);b.disabled=false;}}
+async function terminarFijo(id,b){if(b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='¿Seguro? Toca otra vez';return;}
+  try{const r=await rpc('terminar_fijo',{p_id:id});toast('Horario fijo terminado'+(r.liberadas?` · ${r.liberadas} fecha(s) liberada(s)`:''));await cargar();cerrarModal();}catch(e){toast(e.message,true);}}
 
 /* ---------- Finanzas ---------- */
 function vFin(){
@@ -441,7 +524,7 @@ async function descargarInforme(lunes,btn){
     const res=[{'Concepto':'Semana','Valor':fCorta(lunes)+' – '+fCorta(addD(lunes,6))},{'Concepto':'Horas ofertadas','Valor':R.ofertadas||0},{'Concepto':'Horas vendidas','Valor':R.vendidas||0},
       {'Concepto':'% Ocupación','Valor':R.ofertadas?Math.round(R.vendidas/R.ofertadas*1000)/10+'%':'0%'},{'Concepto':'Ingresos recaudados','Valor':ing},{'Concepto':'Quedó por cobrar','Valor':R.por_cobrar||0},
       {'Concepto':'Gastos','Valor':gas},{'Concepto':'Utilidad','Valor':ing-gas},{'Concepto':'Reservas web','Valor':R.web||0},{'Concepto':'Reservas presenciales','Valor':R.presencial||0}];
-    const det=(I.detalle||[]).map(r=>({'Código':r.codigo,'Fecha':r.fecha,'Hora':hora(r.hora),'Cancha':r.cancha,'Nombre':r.nombre,'WhatsApp':r.whatsapp,'Estado':r.estado,'Valor':r.valor,'Medio de pago':r.medio,'Origen':r.origen==='Web'?'Página web':'Presencial','Cuenta Google':r.cuenta?'Sí':'No','Notas':r.notas,'Último cambio por':r.por}));
+    const det=(I.detalle||[]).map(r=>({'Código':r.codigo,'Fecha':r.fecha,'Hora':hora(r.hora),'Cancha':r.cancha,'Nombre':r.nombre,'WhatsApp':r.whatsapp,'Estado':r.estado,'Valor':r.valor,'Medio de pago':r.medio,'Origen':r.origen==='Web'?'Página web':'Presencial','Jugador registrado':r.jugador?'Sí':'No','Horario fijo':r.fijo?'Sí':'No','Notas':r.notas,'Último cambio por':r.por}));
     const g=(I.gastos||[]).map(x=>({'Fecha':x.fecha,'Categoría':x.categoria,'Descripción':x.descripcion,'Valor':x.valor,'Medio de pago':x.medio,'Registrado por':x.creado_por}));
     [['Resumen',res],['Reservas',det],['Gastos',g]].forEach(([n,rows])=>{const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{'Sin datos':''}]);ws['!cols']=Object.keys(rows[0]||{a:1}).map(k=>({wch:Math.max(14,k.length+2)}));XLSX.utils.book_append_sheet(wb,ws,n);});
     XLSX.writeFile(wb,'Informe_VoleyPlaya_'+lunes+'.xlsx');toast('Informe descargado ✓');

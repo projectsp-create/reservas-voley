@@ -60,6 +60,13 @@
   .stat{display:flex;gap:10px;margin:12px 0}
   .stat div{flex:1;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
   .stat b{display:block;font-family:'Barlow Condensed',sans-serif;font-size:30px;color:var(--neon);line-height:1}
+  .ltabs{display:flex;gap:4px;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:4px;margin:14px 0 4px}
+  .ltabs button{flex:1;border:0;background:transparent;color:var(--muted);padding:10px;border-radius:9px;font-weight:600;cursor:pointer}
+  .ltabs button.on{background:var(--card-3);color:var(--neon)}
+  .ou{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin:16px 0 0;text-transform:uppercase;letter-spacing:.6px}
+  .ou:before,.ou:after{content:"";flex:1;height:1px;background:var(--line-2)}
+  .aviso{background:rgba(198,244,50,.08);border:1px solid rgba(198,244,50,.35);border-radius:12px;padding:14px;margin-top:14px;font-size:14px}
+  .fijo-box{background:var(--bg-2);border:1px solid var(--line-2);border-left:3px solid var(--neon);border-radius:12px;padding:12px 14px;margin:10px 0}
   .stat span{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600}
 </style>
 </head>
@@ -117,16 +124,14 @@
       <h2><span class="step">3</span><span id="paso3T">Confirma</span></h2>
       <div id="resumen" class="kv"></div>
       <!-- sin sesión -->
-      <div id="boxLogin" class="hidden">
-        <p class="muted" style="margin:0 0 14px">Para evitar reservas falsas, entra con tu cuenta de Google. Solo toma un toque.</p>
-        <button class="gbtn" onclick="loginGoogle()"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg> Continuar con Google</button>
-      </div>
+      <div id="boxLogin" class="hidden"></div>
       <!-- perfil -->
       <form id="boxPerfil" class="hidden" onsubmit="guardarPerfil(event)">
         <p class="muted" style="margin:0">Solo la primera vez: ¿cómo te contactamos?</p>
         <label for="pNombre">Nombre completo</label><input type="text" id="pNombre" maxlength="60" required>
         <label for="pTel">WhatsApp</label><input type="tel" id="pTel" inputmode="numeric" maxlength="13" placeholder="3101234567" required>
-        <label class="check"><input type="checkbox" id="pAcepta"> <span>Autorizo el tratamiento de mis datos (nombre, correo y WhatsApp) para gestionar mis reservas y mi historial, conforme a la Ley 1581 de 2012 y la <a href="privacidad.html" target="_blank" style="color:var(--neon)">política de tratamiento de datos</a>. Puedo eliminar mi cuenta y mis datos cuando quiera desde "Mis reservas".</span></label>
+        <label for="pDir">Dirección (opcional)</label><input type="text" id="pDir" maxlength="120" placeholder="Barrio, calle…">
+        <label class="check"><input type="checkbox" id="pAcepta"> <span>Autorizo el tratamiento de mis datos (nombre, correo, WhatsApp y dirección) para gestionar mis reservas y mi historial, conforme a la Ley 1581 de 2012 y la <a href="privacidad.html" target="_blank" style="color:var(--neon)">política de tratamiento de datos</a>. Puedo eliminar mi cuenta y mis datos cuando quiera desde "Mis reservas".</span></label>
         <button class="btn btn-primary full" style="margin-top:14px" id="btnPerfil" type="submit">Guardar y continuar</button>
       </form>
       <!-- confirmar -->
@@ -146,12 +151,14 @@
       <div style="display:flex;align-items:center;gap:10px"><h2 style="flex:1">👤 Mis reservas</h2><button class="btn btn-ghost btn-sm" onclick="ver('reserva')">← Reservar</button></div>
       <p class="muted" id="misQuien" style="margin:6px 0 0"></p>
       <div class="stat" id="misStats"></div>
+      <div id="misFijos"></div>
       <div id="misProx"></div>
     </div>
     <div class="card"><h2>🕘 Historial</h2><div id="misHist"></div></div>
     <div class="card"><h2>✏️ Mis datos</h2>
       <label for="eNombre">Nombre</label><input type="text" id="eNombre" maxlength="60">
       <label for="eTel">WhatsApp</label><input type="tel" id="eTel" inputmode="numeric" maxlength="13">
+      <label for="eDir">Dirección</label><input type="text" id="eDir" maxlength="120">
       <button class="btn btn-navy full" style="margin-top:14px" onclick="editarPerfil()">Guardar cambios</button>
       <button class="btn btn-ghost full" style="margin-top:10px" onclick="salir()">Cerrar sesión</button>
       <button class="btn btn-danger full" style="margin-top:10px" onclick="borrarCuenta(this)">Eliminar mi cuenta y mis datos</button>
@@ -246,31 +253,110 @@ const G_IN_APP=/FBAN|FBAV|FB_IAB|Instagram|Line\/|TikTok|Snapchat|; wv\)/i.test(
 function pintarUser(){
   const u=$('userbar');
   u.innerHTML=S.sesion?`<span class="chip" onclick="ver('mis')">👤 ${esc((S.perfil&&S.perfil.nombre||S.sesion.user.email).split(' ')[0])} · Mis reservas</span>`
-    :`<span class="chip" onclick="loginGoogle()">Iniciar sesión</span>`;}
+    :`<span class="chip" onclick="abrirLogin()">Iniciar sesión</span>`;}
+const GICON=`<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>`;
+let LTAB='entrar';
+function loginHTML(p){
+  return `<p class="muted" style="margin:0 0 14px">Para evitar reservas falsas, reserva con tu cuenta. Es gratis y la creas una sola vez.</p>
+  <button class="gbtn" onclick="loginGoogle()">${GICON} Continuar con Google</button>
+  <div class="ou">o con tu correo (Hotmail, Outlook, Yahoo…)</div>
+  <div class="ltabs"><button class="${LTAB==='entrar'?'on':''}" onclick="LTAB='entrar';pintarLogin()">Ya tengo cuenta</button><button class="${LTAB==='crear'?'on':''}" onclick="LTAB='crear';pintarLogin()">Crear cuenta</button></div>
+  ${LTAB==='entrar'?`
+    <label>Correo</label><input type="text" id="${p}Mail" inputmode="email" autocomplete="username" placeholder="tucorreo@hotmail.com">
+    <label>Contraseña</label><input type="password" id="${p}Pass" autocomplete="current-password">
+    <button class="btn btn-primary full" style="margin-top:14px" onclick="entrarCorreo('${p}',this)">Entrar</button>
+    <button class="btn btn-ghost full" style="margin-top:8px;border:0" onclick="olvide('${p}')">¿Olvidaste tu contraseña?</button>`
+  :`
+    <label>Nombre completo</label><input type="text" id="${p}Nom" maxlength="60" autocomplete="name">
+    <label>WhatsApp</label><input type="tel" id="${p}Tel" inputmode="numeric" maxlength="13" placeholder="3101234567">
+    <label>Dirección (opcional)</label><input type="text" id="${p}Dir" maxlength="120" placeholder="Barrio, calle…">
+    <label>Correo</label><input type="text" id="${p}Mail" inputmode="email" autocomplete="email" placeholder="tucorreo@hotmail.com">
+    <label>Contraseña (mínimo 8 caracteres)</label><input type="password" id="${p}Pass" autocomplete="new-password">
+    <label class="check"><input type="checkbox" id="${p}Acepta"> <span>Autorizo el tratamiento de mis datos (nombre, correo, WhatsApp y dirección) para gestionar mis reservas y mi historial, conforme a la Ley 1581 de 2012 y la <a href="privacidad.html" target="_blank" style="color:var(--neon)">política de tratamiento de datos</a>.</span></label>
+    <button class="btn btn-primary full" style="margin-top:14px" onclick="crearCuenta('${p}',this)">Crear cuenta</button>`}
+  <div id="${p}Aviso"></div>`;}
+function pintarLogin(){const b=$('boxLogin');if(b&&!b.classList.contains('hidden'))b.innerHTML=loginHTML('b');const m=$('mLogin');if(m)m.innerHTML=loginHTML('m');}
+function abrirLogin(){abrirModal(`<h2>Inicia sesión</h2><div id="mLogin">${loginHTML('m')}</div><button class="btn btn-ghost full" style="margin-top:10px" onclick="cerrarModal()">Cerrar</button>`);}
+function errAuth(m){m=m||'';
+  if(/Invalid login/i.test(m))return 'Correo o contraseña incorrectos.';
+  if(/not confirmed/i.test(m))return 'Aún no has confirmado tu correo. Revisa tu bandeja de entrada (y la carpeta de spam).';
+  if(/already registered|already been registered/i.test(m))return 'Ese correo ya tiene cuenta. Entra con tu contraseña o recupérala.';
+  if(/at least|weak/i.test(m))return 'La contraseña debe tener mínimo 8 caracteres.';
+  if(/rate limit|security purposes|seconds/i.test(m))return 'Espera un momento antes de volver a intentarlo.';
+  if(/valid email|invalid format/i.test(m))return 'Escribe un correo válido.';
+  if(/signups not allowed|disabled/i.test(m))return 'El registro con correo no está habilitado todavía.';
+  return m;}
+function guardarPend(){try{sessionStorage.setItem('vp_pend',JSON.stringify({fecha:S.fecha,cancha:S.cancha,sel:S.sel}));localStorage.setItem('vp_pend2',JSON.stringify({fecha:S.fecha,cancha:S.cancha,sel:S.sel,t:Date.now()}));}catch(e){}}
+async function entrarCorreo(p,b){
+  const mail=$(p+'Mail').value.trim(),pass=$(p+'Pass').value;if(!mail||!pass){toast('Escribe tu correo y contraseña',true);return;}
+  b.disabled=true;
+  const {error}=await sb.auth.signInWithPassword({email:mail,password:pass});b.disabled=false;
+  if(error){toast(errAuth(error.message),true);return;}
+  cerrarModal();toast('¡Bienvenido!');await cargarPerfil();
+}
+async function crearCuenta(p,b){
+  const nom=$(p+'Nom').value.trim(),tel=$(p+'Tel').value.replace(/\D/g,''),dir=$(p+'Dir').value.trim(),mail=$(p+'Mail').value.trim(),pass=$(p+'Pass').value;
+  if(nom.length<3){toast('Escribe tu nombre completo',true);return;}
+  if(!/^(57)?3\d{9}$/.test(tel)){toast('Escribe un WhatsApp válido de 10 dígitos',true);return;}
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){toast('Escribe un correo válido',true);return;}
+  if(pass.length<8){toast('La contraseña debe tener mínimo 8 caracteres',true);return;}
+  if(!$(p+'Acepta').checked){toast('Debes autorizar el tratamiento de datos',true);return;}
+  b.disabled=true;guardarPend();
+  const {data,error}=await sb.auth.signUp({email:mail,password:pass,options:{emailRedirectTo:location.origin+location.pathname,data:{nombre:nom,whatsapp:tel,direccion:dir,acepta:true}}});
+  b.disabled=false;
+  if(error){toast(errAuth(error.message),true);return;}
+  if(data&&data.session){cerrarModal();await cargarPerfil();return;}           // por si la confirmación está apagada
+  $(p+'Aviso').innerHTML=`<div class="aviso">📩 <b>¡Ya casi!</b> Te enviamos un correo a <b>${esc(mail)}</b>. Abre el enlace <b>"Confirmar mi cuenta"</b> y quedarás dentro, listo para reservar.<br><span class="muted">¿No llega? Revisa la carpeta de spam o promociones.</span><button class="btn btn-ghost btn-sm full" style="margin-top:10px" onclick="reenviar('${esc(mail)}',this)">Reenviar correo</button></div>`;
+}
+async function reenviar(mail,b){b.disabled=true;const {error}=await sb.auth.resend({type:'signup',email:mail,options:{emailRedirectTo:location.origin+location.pathname}});toast(error?errAuth(error.message):'Correo reenviado ✓',!!error);setTimeout(()=>b.disabled=false,30000);}
+async function olvide(p){
+  const mail=$(p+'Mail').value.trim();if(!mail){toast('Escribe tu correo primero',true);return;}
+  const {error}=await sb.auth.resetPasswordForEmail(mail,{redirectTo:location.origin+location.pathname});
+  if(error){toast(errAuth(error.message),true);return;}
+  $(p+'Aviso').innerHTML=`<div class="aviso">📩 Si ese correo tiene cuenta, te llegó un enlace para crear una contraseña nueva. Revisa también spam.</div>`;
+}
+function modalNuevaClave(){
+  abrirModal(`<h2>Nueva contraseña</h2><p class="muted">Escribe tu nueva contraseña.</p><label>Nueva contraseña</label><input type="password" id="nc1" autocomplete="new-password"><label>Repítela</label><input type="password" id="nc2" autocomplete="new-password">
+  <button class="btn btn-primary full" style="margin-top:14px" onclick="guardarClave(this)">Guardar</button>`);}
+async function guardarClave(b){const a=$('nc1').value;if(a.length<8){toast('Mínimo 8 caracteres',true);return;}if(a!==$('nc2').value){toast('No coinciden',true);return;}
+  b.disabled=true;const {error}=await sb.auth.updateUser({password:a});b.disabled=false;if(error){toast(errAuth(error.message),true);return;}
+  cerrarModal();history.replaceState(null,'',location.pathname);toast('Contraseña actualizada ✓');cargarPerfil();}
 function pintarPaso3(){
   ['boxLogin','boxPerfil','boxConfirmar'].forEach(x=>$(x).classList.add('hidden'));
-  if(!S.sesion){$('paso3T').textContent='Entra para reservar';$('boxLogin').classList.remove('hidden');}
+  if(!S.sesion){$('paso3T').textContent='Entra para reservar';$('boxLogin').classList.remove('hidden');$('boxLogin').innerHTML=loginHTML('b');}
   else if(!S.perfil){$('paso3T').textContent='Tus datos';$('boxPerfil').classList.remove('hidden');
-    const md=S.sesion.user.user_metadata||{};if(!$('pNombre').value)$('pNombre').value=md.full_name||md.name||'';}
+    const md=S.sesion.user.user_metadata||{},sg=S.sugerido||{};
+    if(!$('pNombre').value)$('pNombre').value=sg.nombre||md.nombre||md.full_name||md.name||'';
+    if(!$('pTel').value)$('pTel').value=sg.whatsapp||md.whatsapp||'';
+    if(!$('pDir').value)$('pDir').value=sg.direccion||md.direccion||'';}
   else{$('paso3T').textContent='Confirma';$('boxConfirmar').classList.remove('hidden');}
   if(S.info&&S.info.venceMin>0){const m=S.info.venceMin;$('txtPend').innerHTML=`Tu hora queda <b>apartada ${m>=60?(m/60)+(m===60?' hora':' horas'):m+' minutos'}</b> mientras la confirmamos por WhatsApp.`;}
 }
 async function loginGoogle(){
   if(G_IN_APP){const url=location.href.split('#')[0];
-    abrirModal(`<h2>Abre en tu navegador</h2><p class="muted">Google no permite iniciar sesión dentro de Instagram, Facebook o TikTok. Toca los <b>⋮</b> o <b>…</b> de arriba y elige <b>"Abrir en Chrome"</b> o <b>"Abrir en Safari"</b>.</p><div class="linkbox" style="background:var(--bg-2);border-radius:10px;padding:10px;font-size:12px;word-break:break-all">${esc(url)}</div><button class="btn btn-primary full" style="margin-top:12px" onclick="navigator.clipboard&&navigator.clipboard.writeText('${esc(url)}').then(()=>toast('Link copiado ✓'))">Copiar link</button><button class="btn btn-ghost full" style="margin-top:8px" onclick="cerrarModal()">Cerrar</button>`);return;}
-  try{sessionStorage.setItem('vp_pend',JSON.stringify({fecha:S.fecha,cancha:S.cancha,sel:S.sel}));}catch(e){}
+    abrirModal(`<h2>Abre en tu navegador</h2><p class="muted">Google no permite iniciar sesión dentro de Instagram, Facebook o TikTok. Toca los <b>⋮</b> o <b>…</b> de arriba y elige <b>"Abrir en Chrome"</b> o <b>"Abrir en Safari"</b>. También puedes entrar con tu correo.</p><div class="linkbox" style="background:var(--bg-2);border-radius:10px;padding:10px;font-size:12px;word-break:break-all">${esc(url)}</div><button class="btn btn-primary full" style="margin-top:12px" onclick="navigator.clipboard&&navigator.clipboard.writeText('${esc(url)}').then(()=>toast('Link copiado ✓'))">Copiar link</button><button class="btn btn-ghost full" style="margin-top:8px" onclick="cerrarModal()">Cerrar</button>`);return;}
+  guardarPend();
   const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});
   if(error)toast(error.message,true);
 }
+let CARGANDO_PERFIL=null;
 async function cargarPerfil(){
-  const {data}=await sb.auth.getSession();S.sesion=data&&data.session||null;S.perfil=null;
-  if(S.sesion){try{const p=await rpc('mi_perfil');S.perfil=p.perfil;}catch(e){toast(e.message,true);}}
-  pintarUser();pintarPaso3();
+  if(CARGANDO_PERFIL)return CARGANDO_PERFIL;
+  CARGANDO_PERFIL=(async()=>{
+    const {data}=await sb.auth.getSession();S.sesion=data&&data.session||null;S.perfil=null;S.sugerido=null;
+    if(S.sesion){try{const p=await rpc('mi_perfil');S.perfil=p.perfil;S.sugerido=p.sugerido;
+      // Cuenta nueva con correo: los datos del registro llegan en la cuenta y el perfil se crea solo
+      const md=S.sesion.user.user_metadata||{};
+      if(!S.perfil&&md.acepta&&md.nombre&&md.whatsapp){const r=await rpc('guardar_perfil',{p_nombre:md.nombre,p_whatsapp:md.whatsapp,p_acepta:true,p_direccion:md.direccion||''});S.perfil=r.perfil;toast('¡Cuenta confirmada! Ya puedes reservar 🏐');}
+    }catch(e){toast(e.message,true);}}
+    pintarUser();pintarPaso3();
+  })();
+  try{await CARGANDO_PERFIL;}finally{CARGANDO_PERFIL=null;}
 }
 async function guardarPerfil(ev){ev.preventDefault();
   if(!$('pAcepta').checked){toast('Debes autorizar el tratamiento de datos',true);return;}
   const b=$('btnPerfil');b.disabled=true;
-  try{const p=await rpc('guardar_perfil',{p_nombre:$('pNombre').value,p_whatsapp:$('pTel').value,p_acepta:true});S.perfil=p.perfil;pintarUser();pintarPaso3();toast('¡Listo! Ya puedes confirmar tu reserva');}
+  try{const p=await rpc('guardar_perfil',{p_nombre:$('pNombre').value,p_whatsapp:$('pTel').value,p_acepta:true,p_direccion:$('pDir').value});S.perfil=p.perfil;pintarUser();pintarPaso3();toast('¡Listo! Ya puedes confirmar tu reserva');}
   catch(e){toast(e.message,true);}finally{b.disabled=false;}}
 async function salir(){await sb.auth.signOut();S.sesion=null;S.perfil=null;pintarUser();ver('reserva');toast('Sesión cerrada');}
 
@@ -293,16 +379,18 @@ async function cargarMis(){
   if(!S.sesion){ver('reserva');loginGoogle();return;}
   $('misProx').innerHTML='<div class="empty"><span class="spinner"></span></div>';$('misHist').innerHTML='';
   $('misQuien').textContent=(S.perfil?S.perfil.nombre+' · ':'')+S.sesion.user.email;
-  if(S.perfil){$('eNombre').value=S.perfil.nombre;$('eTel').value=S.perfil.whatsapp;}
+  if(S.perfil){$('eNombre').value=S.perfil.nombre;$('eTel').value=S.perfil.whatsapp;$('eDir').value=S.perfil.direccion||'';}
   try{
     const M=await rpc('mis_reservas'),hoy=M.hoy,ahora=M.ahora;
     const futura=g=>g.fecha>hoy||(g.fecha===hoy&&g.horas[g.horas.length-1]>=ahora);
     const prox=M.reservas.filter(g=>futura(g)&&['Pendiente','Confirmada','Pagada'].includes(g.estado)).reverse();
     const hist=M.reservas.filter(g=>!prox.includes(g));
     const jugadas=M.reservas.filter(g=>!futura(g)&&['Confirmada','Pagada'].includes(g.estado));
+    const DL=['','lunes','martes','miércoles','jueves','viernes','sábado','domingo'];
+    $('misFijos').innerHTML=(M.fijos||[]).map(f=>`<div class="fijo-box">📌 <b>Tu horario fijo:</b> todos los <b>${DL[f.dia]}</b> · ${rangoH(Array.from({length:f.horas},(_,i)=>f.hora+i))} · Cancha ${f.cancha}<div class="muted">Se aparta solo cada semana${f.hasta?' hasta el '+fLarga(f.hasta):''}. Si un día no puedes ir, cancela solo ese día.</div></div>`).join('');
     $('misStats').innerHTML=`<div><b>${prox.length}</b><span>Próximas</span></div><div><b>${jugadas.reduce((a,g)=>a+g.horas.length,0)}</b><span>Horas jugadas</span></div><div><b>${M.reservas.length}</b><span>Reservas</span></div>`;
     const item=(g,cancelable)=>{const d=pd(g.fecha);return `<div class="mis-item"><div class="when"><div class="m">${DIAS[d.getUTCDay()]}</div><div class="d">${d.getUTCDate()}</div><div class="m">${MESES[d.getUTCMonth()]}</div></div>
-      <div class="body"><div style="font-weight:600">Cancha ${g.cancha} · ${rangoH(g.horas)} <span class="badge b-${g.estado}">${g.estado}</span></div>
+      <div class="body"><div style="font-weight:600">Cancha ${g.cancha} · ${rangoH(g.horas)} <span class="badge b-${g.estado}">${g.estado}</span>${g.fijo?' <span class="badge" style="background:rgba(198,244,50,.12);color:var(--neon)">📌 Fijo</span>':''}</div>
       <div class="muted">Código ${g.codigo} · ${pesos(g.total)}${g.notas?' · '+esc(g.notas):''}</div>
       ${cancelable&&['Pendiente','Confirmada'].includes(g.estado)?`<button class="btn btn-danger btn-sm" style="margin-top:8px" onclick="cancelar('${g.codigo}',this)">Cancelar</button>`:''}</div></div>`;};
     $('misProx').innerHTML=prox.length?prox.map(g=>item(g,true)).join(''):'<p class="muted center" style="padding:14px 0">No tienes reservas próximas. <a href="#" onclick="ver(\'reserva\');return false">¡Reserva una!</a></p>';
@@ -311,7 +399,7 @@ async function cargarMis(){
 async function cancelar(cod,btn){
   if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='Toca otra vez para cancelar';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Cancelar';},4000);return;}
   try{await rpc('cancelar_mi_reserva',{p_codigo:cod});toast('Reserva cancelada');refrescar();cargarMis();}catch(e){toast(e.message,true);}}
-async function editarPerfil(){try{const p=await rpc('guardar_perfil',{p_nombre:$('eNombre').value,p_whatsapp:$('eTel').value,p_acepta:true});S.perfil=p.perfil;pintarUser();toast('Datos actualizados ✓');}catch(e){toast(e.message,true);}}
+async function editarPerfil(){try{const p=await rpc('guardar_perfil',{p_nombre:$('eNombre').value,p_whatsapp:$('eTel').value,p_acepta:true,p_direccion:$('eDir').value});S.perfil=p.perfil;pintarUser();toast('Datos actualizados ✓');}catch(e){toast(e.message,true);}}
 async function borrarCuenta(btn){
   if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='¿Seguro? Se cancelan tus reservas próximas. Toca otra vez';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Eliminar mi cuenta y mis datos';},5000);return;}
   try{await rpc('borrar_mi_cuenta');await sb.auth.signOut();S.sesion=null;S.perfil=null;pintarUser();ver('reserva');refrescar();toast('Tu cuenta y tus datos fueron eliminados');}catch(e){toast(e.message,true);}}
@@ -327,7 +415,9 @@ async function init(){
     $('chipTarifa').textContent=pesos(I.tarifa)+' / hora';$('chipCanchas').textContent='🏐 '+I.canchas+(I.canchas>1?' canchas':' cancha');
     let f=I.hoy;while(f<=I.max&&!abierto(f))f=addD(f,1);S.fecha=f;
     // si volvemos de Google, recuperamos lo que había elegido
-    let pend=null;try{pend=JSON.parse(sessionStorage.getItem('vp_pend')||'null');sessionStorage.removeItem('vp_pend');}catch(e){}
+    let pend=null;try{pend=JSON.parse(sessionStorage.getItem('vp_pend')||'null');sessionStorage.removeItem('vp_pend');
+      if(!pend&&/access_token|code=|type=signup/.test(location.href)){const p2=JSON.parse(localStorage.getItem('vp_pend2')||'null');if(p2&&Date.now()-p2.t<86400000)pend=p2;}
+      localStorage.removeItem('vp_pend2');}catch(e){}
     if(pend&&S.cal[pend.fecha]){S.fecha=pend.fecha;S.cancha=pend.cancha;S.sel=pend.sel||[];}
     pintarFechas();pintarTabs();
     const N={1:'Lun',2:'Mar',3:'Mié',4:'Jue',5:'Vie',6:'Sáb',7:'Dom',F:'Festivos'},grp={};
@@ -339,7 +429,7 @@ async function init(){
     if(S.sel.length){$('paso3').classList.remove('hidden');pintarPaso3();setTimeout(()=>$('paso3').scrollIntoView({behavior:'smooth'}),300);}
   }catch(e){$('cargando').innerHTML='<p>😕 '+esc(e.message)+'</p><button class="btn btn-ghost" onclick="location.reload()">Reintentar</button>';}
 }
-sb.auth.onAuthStateChange((ev)=>{if(ev==='SIGNED_IN'||ev==='SIGNED_OUT')cargarPerfil();});
+sb.auth.onAuthStateChange((ev)=>{if(ev==='PASSWORD_RECOVERY'){setTimeout(modalNuevaClave,300);return;}if(ev==='SIGNED_IN'||ev==='SIGNED_OUT')cargarPerfil();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-CAL_T>45000)refrescar();});
 setInterval(()=>{if(!document.hidden&&!$('vReserva').classList.contains('hidden'))refrescar();},60000);
 init();

@@ -118,6 +118,7 @@
   <main class="wrap" style="padding-bottom:40px">
     <div id="v-agenda"></div><div id="v-pend" class="hidden"></div><div id="v-prox" class="hidden"></div><div id="v-jug" class="hidden"></div>
     <div id="v-fin" class="hidden"></div><div id="v-ajustes" class="hidden"></div>
+    <p class="muted center" style="font-size:12px;margin:24px 0 0;color:var(--dim)" id="pieVersion">Panel · versión 4.3</p>
   </main>
 </section>
 
@@ -126,6 +127,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
+const VERSION='4.3';
 const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],DCORTO=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const CATEGORIAS=['Mantenimiento arena','Redes y balones','Energía / iluminación','Agua','Personal / aseo','Publicidad','Arriendo','Impuestos y permisos','Otros'];
@@ -577,7 +579,10 @@ function vAjustes(){
     hor+=`<div class="hor"><b style="font-size:14px">${N[d]}</b><select id="hA${d}" ${cerr?'disabled':''}>${opts(cerr?15:v[0])}</select><select id="hB${d}" ${cerr?'disabled':''}>${opts(cerr?22:v[1])}</select>
     <label style="margin:0;font-weight:500;font-size:12px;display:flex;gap:4px;align-items:center"><input type="checkbox" id="hC${d}" ${cerr?'checked':''} onchange="$('hA${d}').disabled=$('hB${d}').disabled=this.checked">Cerrado</label></div>`;}
   const shareTxt=encodeURIComponent(`🏐 ¡Reserva tu cancha de vóley playa en ${C.negocio}! ${pesos(C.tarifa)} la hora. Elige tu horario aquí: ${D.urlPublica}`);
+  const vBD=RAW.version||'4.2 o anterior',okV=vBD===VERSION;
   $('v-ajustes').innerHTML=`
+  <div class="card"><h2>🏷️ Versión</h2><div class="kv"><b>Página</b><span>${VERSION}</span><b>Base de datos</b><span>${esc(vBD)} ${okV?'<span class="badge b-Pagada">Al día</span>':'<span class="badge b-Pendiente">Falta actualizar</span>'}</span></div>
+    ${okV?'':'<p class="muted" style="margin:0">Corre en Supabase (SQL Editor) el archivo SQL de la versión '+VERSION+' para que todo quede igual.</p>'}</div>
   <div class="card"><h2>🔗 Links</h2>
     <label>Página pública de reservas (compártela)</label><div class="linkbox"><span id="lPub">${esc(D.urlPublica)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lPub')">Copiar</button></div>
     <a class="btn btn-wa full" style="margin-top:10px" target="_blank" href="https://wa.me/?text=${shareTxt}">Compartir por WhatsApp</a>

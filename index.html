@@ -157,8 +157,11 @@
         <p class="muted center" style="margin:10px 0 0" id="txtPend">Tu reserva queda <b>pendiente</b> hasta que la confirmemos por WhatsApp.</p>
       </div>
     </div>
+    <div class="card"><h2>📞 ¿Dudas? Escríbenos</h2>
+      <p class="muted" style="margin:6px 0 4px">Para confirmar tu reserva, consultar disponibilidad o cualquier información de las canchas, habla con nuestros encargados:</p>
+      <div id="contactos"></div></div>
     <p class="muted center" style="margin:22px 0 6px" id="horTxt"></p>
-    <p class="muted center" style="margin:0 0 90px;font-size:12px"><a href="privacidad.html" style="color:var(--muted)">Política de tratamiento de datos</a> · <span style="color:var(--dim)">Versión 4.6</span><span id="lnkInst" class="hidden"> · <a href="#" style="color:var(--muted)" onclick="instalar();return false">📲 Instalar app</a></span></p>
+    <p class="muted center" style="margin:0 0 90px;font-size:12px"><a href="privacidad.html" style="color:var(--muted)">Política de tratamiento de datos</a> · <span style="color:var(--dim)">Versión 4.6.1</span><span id="lnkInst" class="hidden"> · <a href="#" style="color:var(--muted)" onclick="instalar();return false">📲 Instalar app</a></span></p>
   </section>
 
   <!-- MIS RESERVAS -->
@@ -201,7 +204,7 @@
       <div class="code" id="okCod"></div>
       <div class="kv" id="okDet" style="text-align:left;max-width:340px;margin:14px auto"></div>
       <p class="muted" id="okVence">Te confirmaremos por WhatsApp. Si quieres agilizarlo, avísanos:</p>
-      <a class="btn btn-wa full" id="okWa" target="_blank" rel="noopener">💬 Enviar mi reserva por WhatsApp</a>
+      <div id="okWa" style="display:grid;gap:8px"></div>
       <button class="btn btn-ghost full" style="margin-top:10px" onclick="ver('mis')">Ver mis reservas</button>
       <button class="btn btn-ghost full" style="margin-top:10px;border:0" onclick="ver('reserva')">Hacer otra reserva</button>
     </div>
@@ -216,9 +219,16 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const VERSION='4.6';
+const VERSION='4.6.1';
 const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],DIASL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+// Encargados de las canchas (para cambiarlos, edita esta lista)
+const CONTACTOS=[{nombre:'Meyer Bastidas',tel:'3138616720'},{nombre:'Oscar Ceballos',tel:'3105787993'}];
+function pintarContactos(){const fmt=t=>t.slice(0,3)+' '+t.slice(3,6)+' '+t.slice(6);
+  $('contactos').innerHTML=CONTACTOS.map(c=>`<div class="item" style="display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)">
+    <div style="flex:1;min-width:0"><b>${c.nombre}</b><div class="muted">${fmt(c.tel)}</div></div>
+    <a class="btn btn-wa btn-sm" target="_blank" rel="noopener" href="https://wa.me/57${c.tel}?text=${encodeURIComponent('Hola '+c.nombre.split(' ')[0]+' 👋, te escribo por las canchas de vóley playa.')}">💬 WhatsApp</a>
+    <a class="btn btn-ghost btn-sm" href="tel:+57${c.tel}">📞 Llamar</a></div>`).join('');}
 const S={info:null,cal:null,fecha:null,cancha:1,sel:[],sesion:null,perfil:null,esperas:new Set(),mis:{}};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -402,8 +412,8 @@ function exito(r){
   const hs=r.horas.map(x=>hora(x)+' – '+hora(x+1)).join(', ');
   $('okDet').innerHTML=`<b>Día</b><span>${fLarga(r.fecha)}</span><b>Cancha</b><span>${r.cancha}</span><b>Horas</b><span>${hs}</span><b>Total</b><span>${pesos(r.total)}</span><b>Estado</b><span><span class="badge b-Pendiente">Pendiente</span></span>`;
   if(S.info.venceMin>0){const m=S.info.venceMin;$('okVence').textContent=`Tu hora queda apartada ${m>=60?(m/60)+(m===60?' hora':' horas'):m+' minutos'} mientras la confirmamos por WhatsApp. Avísanos para agilizarlo:`;}
-  if(S.info.whatsappAdmin){const msg=`Hola 👋, acabo de reservar en ${S.info.negocio}.\n\n🎫 Código: ${r.codigo}\n👤 ${r.nombre}\n📅 ${fLarga(r.fecha)}\n🏐 Cancha ${r.cancha}\n🕔 ${hs}\n💵 ${pesos(r.total)}\n\n¿Me confirmas, por favor?`;
-    $('okWa').href='https://wa.me/'+S.info.whatsappAdmin+'?text='+encodeURIComponent(msg);$('okWa').classList.remove('hidden');}else $('okWa').classList.add('hidden');}
+  {const msg=`Hola 👋, acabo de reservar en ${S.info.negocio}.\n\n🎫 Código: ${r.codigo}\n👤 ${r.nombre}\n📅 ${fLarga(r.fecha)}\n🏐 Cancha ${r.cancha}\n🕔 ${hs}\n💵 ${pesos(r.total)}\n\n¿Me confirmas, por favor?`;
+    $('okWa').innerHTML=CONTACTOS.map(c=>`<a class="btn btn-wa full" target="_blank" rel="noopener" href="https://wa.me/57${c.tel}?text=${encodeURIComponent(msg)}">💬 Enviar a ${c.nombre.split(' ')[0]}</a>`).join('');}}
 
 /* ---------- Lista de espera ---------- */
 function espera(x){
@@ -528,7 +538,7 @@ async function init(){
     const N={1:'Lun',2:'Mar',3:'Mié',4:'Jue',5:'Vie',6:'Sáb',7:'Dom',F:'Festivos'},grp={};
     ['1','2','3','4','5','6','7','F'].forEach(d=>{const h=I.horario[d];if(h&&h[1]>h[0]){const k=hora(h[0])+' a '+hora(h[1])+' (última reserva '+hora(h[1]-1)+')';(grp[k]=grp[k]||[]).push(N[d]);}});
     $('horTxt').textContent='Horario: '+Object.entries(grp).map(([k,v])=>v.join(', ')+' · '+k).join('  |  ');
-    $('cargando').classList.add('hidden');$('vReserva').classList.remove('hidden');pintarInstalar();
+    $('cargando').classList.add('hidden');$('vReserva').classList.remove('hidden');pintarInstalar();pintarContactos();
     pintarSlots();
     await cargarPerfil();
     if(S.sel.length){$('paso3').classList.remove('hidden');pintarPaso3();setTimeout(()=>$('paso3').scrollIntoView({behavior:'smooth'}),300);}

@@ -295,13 +295,11 @@ function itemGrupo(g){const d=pd(g.fecha);
   return `<div class="item"><div class="when"><div class="m">${DCORTO[d.getUTCDay()]}</div><div class="d">${d.getUTCDate()}</div><div class="m">${MESES[d.getUTCMonth()]}</div></div>
    <div class="body"><div class="nm">${esc(g.nombre)} <span class="badge b-${g.estado}">${g.estado}</span>${g.jid&&D.bloqueados.includes(g.jid)?' <span class="badge b-Cancelada">Bloqueado</span>':''}</div>
    <div class="muted">Cancha ${g.cancha} · ${rangoH(g.horas)} · ${pesos(g.total)}${g.whatsapp?' · 📱 '+g.whatsapp:''}</div>
-   ${g.rep&&g.estado!=='Pagada'?`<div class="muted" style="color:var(--info);font-weight:600">💸 Dice que ya pagó por ${esc(g.rep)}: revisa tu ${esc(g.rep)} y registra el pago</div>`:''}
-   ${g.estado==='Pendiente'&&D.cfg.venceMin>0&&!g.rep?(()=>{const m=Math.max(0,Math.round(D.cfg.venceMin-(Date.now()-new Date(g.creado).getTime())/60000));return `<div class="muted" style="color:var(--warn)">⏳ Se libera sola en ${m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'} si no la confirmas</div>`;})():''}
+   ${g.estado==='Pendiente'&&D.cfg.venceMin>0?(()=>{const m=Math.max(0,Math.round(D.cfg.venceMin-(Date.now()-new Date(g.creado).getTime())/60000));return `<div class="muted" style="color:var(--warn)">⏳ Se libera sola en ${m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'} si no la confirmas</div>`;})():''}
    <div class="muted">Código ${g.codigo}${g.fijo?' · 📌 fijo':g.origen==='Admin'?' · presencial':''}${g.medio?' · '+esc(g.medio):''}${g.por&&g.por!=='cliente'?' · por '+esc(g.por.split('@')[0]):''}</div>
    <div class="acts">${botones(g,true)}</div></div></div>`;}
 function botones(g,cortos){
   const b=[],c=`'${g.codigo}'`,sm=cortos?' btn-sm':'';
-  if(g.estado==='Pendiente'&&g.rep)b.push(`<button class="btn btn-navy${sm}" onclick="modalPago(${c})">💵 Ya verifiqué: registrar pago</button>`);
   if(g.estado==='Pendiente'){b.push(`<button class="btn btn-wa${sm}" onclick="accion(${c},'Confirmada','confirmar')">✓ Confirmar${g.whatsapp?' y avisar':''}</button>`);
     b.push(`<button class="btn btn-danger${sm}" onclick="accion(${c},'Rechazada','rechazar')">Rechazar</button>`);}
   if(g.estado==='Confirmada'){b.push(`<button class="btn btn-navy${sm}" onclick="modalPago(${c})">💵 Registrar pago</button>`);
@@ -744,12 +742,6 @@ function vAjustes(){
     <div class="row"><div><label>Días de anticipación</label><input type="number" id="aDias" value="${C.diasAnticipacion}" min="1" max="60"></div><div><label>Máx. horas por reserva web</label><input type="number" id="aMax" value="${C.maxHorasPorReserva}" min="1" max="8"></div></div>
     <label>Minutos para confirmar una reserva antes de que se libere sola (0 = nunca)</label><input type="number" id="aVence" value="${C.venceMin}" min="0" max="1440" step="15">
     <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="aNombres" ${C.mostrarNombres?'checked':''} style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Mostrar el nombre abreviado del jugador (ej. "Meyer B.") en las horas ocupadas del calendario público. Cada jugador puede ocultarlo desde su cuenta.</span></label>
-    <h2 style="margin-top:22px">💳 Pago anticipado</h2><p class="muted" style="margin:4px 0 0">Al reservar, el jugador ve estos datos para pagar antes y te avisa por WhatsApp con el comprobante. Mientras verificas, su reserva no se vence.</p>
-    <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="aPagoOn" ${C.pagoActivo?'checked':''} style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Mostrar opción de pago anticipado a los jugadores</span></label>
-    <div class="row"><div><label>Nequi (número)</label><input type="tel" id="aPagoN" value="${esc(C.pagoNequi)}" inputmode="numeric" maxlength="30" placeholder="3001234567"></div><div><label>Daviplata (número)</label><input type="tel" id="aPagoD" value="${esc(C.pagoDaviplata)}" inputmode="numeric" maxlength="30" placeholder="Vacío si no usas"></div></div>
-    <label>Otra cuenta o llave (opcional)</label><input type="text" id="aPagoO" value="${esc(C.pagoOtro)}" maxlength="80" placeholder="Ej. Bancolombia ahorros 123-456789-00 o llave @pedro">
-    <label>A nombre de</label><input type="text" id="aPagoT" value="${esc(C.pagoTitular)}" maxlength="60" placeholder="Nombre que aparece al transferir">
-    <label>Nota para el jugador (opcional)</label><input type="text" id="aPagoNota" value="${esc(C.pagoNota)}" maxlength="160" placeholder="Ej. Si cancelas con 3 horas de anticipación te devolvemos el dinero">
     <h2 style="margin-top:22px">🕔 Horario</h2><p class="muted" style="margin:4px 0 0">"Hasta" es la hora de cierre: la última reserva empieza una hora antes. Los festivos de Colombia se calculan solos.</p><div class="hor muted" style="font-size:12px"><span></span><span>Abre</span><span>Cierra</span><span></span></div>${hor}
     <button class="btn btn-primary full" style="margin-top:14px" id="aBtn" onclick="guardarAjustesUI()">Guardar ajustes</button></div>`}
   ${!puede('finanzas')?'':`<div class="card"><h2>🧹 Privacidad</h2><p class="muted">Cada lunes se cierra la semana anterior: se genera el informe descargable (dura 4 semanas) y se borran los datos de las reservas presenciales. Las reservas de jugadores con cuenta quedan en su historial personal.</p>
@@ -777,7 +769,7 @@ function copiar(id){const t=$(id).textContent;(navigator.clipboard?navigator.cli
 async function guardarAjustesUI(){
   const hor={};for(const d of ['1','2','3','4','5','6','7','F'])hor[d]=$('hC'+d).checked?[0,0]:[Number($('hA'+d).value),Number($('hB'+d).value)];
   const b=$('aBtn');b.disabled=true;
-  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,mostrarNombres:$('aNombres').checked,pagoActivo:$('aPagoOn').checked,pagoNequi:$('aPagoN').value,pagoDaviplata:$('aPagoD').value,pagoOtro:$('aPagoO').value,pagoTitular:$('aPagoT').value,pagoNota:$('aPagoNota').value,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
+  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,mostrarNombres:$('aNombres').checked,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
   catch(e){toast(e.message,true);}finally{b.disabled=false;}}
 async function agregarAdmin(){try{await rpc('agregar_admin',{p_email:$('nuevoAdm').value,p_permisos:leerPermisos('pm-nuevo')});toast('Administrador agregado ✓');await cargar();}catch(e){toast(e.message,true);}}
 async function quitarAdmin(email,btn){if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='¿Seguro?';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Quitar';},3000);return;}

@@ -76,10 +76,6 @@
   .inst{display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(198,244,50,.14),rgba(198,244,50,.04));border:1px solid rgba(198,244,50,.4)}
   .inst img{width:44px;height:44px;border-radius:11px;flex:none}
   .inst .x{background:transparent;border:0;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 6px}
-  .pago-box{background:var(--bg-2);border:1px solid var(--line-2);border-left:3px solid var(--info);border-radius:12px;padding:14px;margin:14px 0;text-align:left}
-  .pago-box .ln{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
-  .pago-box .ln:last-of-type{border-bottom:0}
-  .pago-box .ln b{font-size:17px;letter-spacing:.5px;color:#fff;word-break:break-all}
   .slot.ocupado.fut{cursor:pointer}.slot.ocupado.esp{border-color:var(--warn)}.slot.ocupado.esp .s{color:var(--warn)}
   .pasos-ios{counter-reset:p;list-style:none;padding:0;margin:14px 0}.pasos-ios li{counter-increment:p;display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
   .pasos-ios li:before{content:counter(p);width:28px;height:28px;border-radius:8px;background:var(--neon);color:var(--neon-ink);display:grid;place-items:center;font-weight:800;flex:none}
@@ -204,10 +200,8 @@
       <p class="muted">Tu código:</p>
       <div class="code" id="okCod"></div>
       <div class="kv" id="okDet" style="text-align:left;max-width:340px;margin:14px auto"></div>
-      <div id="okPago" style="max-width:420px;margin:0 auto"></div>
       <p class="muted" id="okVence">Te confirmaremos por WhatsApp. Si quieres agilizarlo, avísanos:</p>
       <a class="btn btn-wa full" id="okWa" target="_blank" rel="noopener">💬 Enviar mi reserva por WhatsApp</a>
-      <button class="btn btn-navy full" style="margin-top:10px" id="okCal">📅 Agregar a mi calendario</button>
       <button class="btn btn-ghost full" style="margin-top:10px" onclick="ver('mis')">Ver mis reservas</button>
       <button class="btn btn-ghost full" style="margin-top:10px;border:0" onclick="ver('reserva')">Hacer otra reserva</button>
     </div>
@@ -408,8 +402,6 @@ function exito(r){
   const hs=r.horas.map(x=>hora(x)+' – '+hora(x+1)).join(', ');
   $('okDet').innerHTML=`<b>Día</b><span>${fLarga(r.fecha)}</span><b>Cancha</b><span>${r.cancha}</span><b>Horas</b><span>${hs}</span><b>Total</b><span>${pesos(r.total)}</span><b>Estado</b><span><span class="badge b-Pendiente">Pendiente</span></span>`;
   if(S.info.venceMin>0){const m=S.info.venceMin;$('okVence').textContent=`Tu hora queda apartada ${m>=60?(m/60)+(m===60?' hora':' horas'):m+' minutos'} mientras la confirmamos por WhatsApp. Avísanos para agilizarlo:`;}
-  $('okPago').innerHTML=pagoHTML(r.codigo,r.total,false);
-  $('okCal').onclick=()=>agregarCal(r.fecha,r.cancha,r.horas,r.codigo);
   if(S.info.whatsappAdmin){const msg=`Hola 👋, acabo de reservar en ${S.info.negocio}.\n\n🎫 Código: ${r.codigo}\n👤 ${r.nombre}\n📅 ${fLarga(r.fecha)}\n🏐 Cancha ${r.cancha}\n🕔 ${hs}\n💵 ${pesos(r.total)}\n\n¿Me confirmas, por favor?`;
     $('okWa').href='https://wa.me/'+S.info.whatsappAdmin+'?text='+encodeURIComponent(msg);$('okWa').classList.remove('hidden');}else $('okWa').classList.add('hidden');}
 
@@ -433,41 +425,7 @@ async function irAHora(f,c,h){ver('reserva');await refrescar();if(!S.cal[f]){toa
   S.fecha=f;S.cancha=c;S.sel=S.cal[f].slots[c+'-'+h]==='libre'?[h]:[];pintarFechas();pintarTabs();pintarSlots();
   if(!S.sel.length){toast('Uy, alguien ya la tomó 😕',true);return;}$('paso3').classList.remove('hidden');pintarPaso3();setTimeout(()=>$('paso3').scrollIntoView({behavior:'smooth'}),200);}
 
-/* ---------- Pago anticipado ---------- */
-function pagoHTML(cod,total,modal){const P=S.info.pago;if(!P)return '';
-  const ln=(t,v,id)=>`<div class="ln"><div><div class="muted">${t}</div><b id="${id}">${esc(v)}</b></div><button class="btn btn-ghost btn-sm" onclick="copiarTxt('${id}')">Copiar</button></div>`;
-  const medios=[P.nequi&&'Nequi',P.daviplata&&'Daviplata',P.otro&&'Transferencia'].filter(Boolean);
-  const msg=m=>`Hola 👋, ya pagué mi reserva ${cod} (${pesos(total)}) por ${m}. Te envío el comprobante 👇`;
-  return `<div class="pago-box"><b style="font-size:16px">💳 ${modal?'Paga tu reserva':'¿Quieres asegurar tu hora? Paga ahora'}</b>
-    <p class="muted" style="margin:4px 0 6px">Transfiere <b style="color:#fff">${pesos(total)}</b>${modal?'':' y tu reserva <b>no se vence</b> mientras verificamos el pago'}.</p>
-    ${P.nequi?ln('Nequi',P.nequi,'pgN'+cod):''}${P.daviplata?ln('Daviplata',P.daviplata,'pgD'+cod):''}${P.otro?ln('Cuenta / llave',P.otro,'pgO'+cod):''}
-    ${P.titular?`<p class="muted" style="margin:8px 0 0">A nombre de <b style="color:#fff">${esc(P.titular)}</b></p>`:''}${P.nota?`<p class="muted" style="margin:4px 0 0">${esc(P.nota)}</p>`:''}
-    <p class="muted" style="margin:12px 0 6px">¿Ya pagaste? Avísanos y manda el comprobante:</p>
-    <div style="display:grid;gap:8px">${medios.map(m=>`<a class="btn btn-wa" target="_blank" rel="noopener" ${S.info.whatsappAdmin?`href="https://wa.me/${S.info.whatsappAdmin}?text=${encodeURIComponent(msg(m))}"`:''} onclick="yaPague('${cod}','${m}')">✅ Ya pagué por ${m}</a>`).join('')}</div></div>`;}
-function modalPagar(cod){const g=S.mis[cod];if(!g)return;abrirModal(`<h2>Pagar reserva</h2><p class="muted">Código ${cod} · ${fLarga(g.fecha)} · Cancha ${g.cancha} · ${rangoH(g.horas)}</p>${pagoHTML(cod,g.total,true)}<button class="btn btn-ghost full" onclick="cerrarModal()">Cerrar</button>`);}
-async function yaPague(cod,m){try{await rpc('reportar_pago',{p_codigo:cod,p_medio:m});if(S.mis[cod]){S.mis[cod].reportado=true;S.mis[cod].repMedio=m;}
-    const box=document.querySelectorAll('.pago-box');box.forEach(b=>b.outerHTML=`<div class="aviso" style="text-align:left">✅ Listo, avisaste que pagaste por ${m}. Cuando verifiquemos el pago te confirmamos. Tu hora no se vence mientras tanto.</div>`);
-    if(!$('vMis').classList.contains('hidden'))setTimeout(()=>{cerrarModal();cargarMis();},1500);}
-  catch(e){toast(e.message,true);}}
-function copiarTxt(id){const t=$(id).textContent.replace(/\s/g,'').match(/^\d+$/)?$(id).textContent.replace(/\s/g,''):$(id).textContent;
-  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copiado ✓ '+t)).catch(()=>toast('Mantén presionado el número para copiarlo'));}
-
-/* ---------- Calendario ---------- */
 const IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-function calDe(cod){const g=S.mis[cod];if(g)agregarCal(g.fecha,g.cancha,g.horas,g.codigo);}
-function agregarCal(f,c,horas,cod){
-  const hs=horas.map(Number).sort((a,b)=>a-b),[y,m,d]=f.split('-').map(Number);
-  const T=(h,utc)=>new Date(Date.UTC(y,m-1,d,h+(utc?5:0))).toISOString().replace(/[-:]/g,'').slice(0,15)+(utc?'Z':'');
-  const ini=hs[0],fin=hs[hs.length-1]+1,tit=`🏐 Vóley playa · Cancha ${c}`;
-  const det=`Reserva ${cod} en ${S.info.negocio}. Horas: ${rangoH(hs)}. Ver o cancelar: ${location.origin+location.pathname}`;
-  const lugar=[S.info.negocio,S.info.direccion].filter(Boolean).join(', ');
-  if(IOS&&!G_IN_APP){
-    const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//VoleyPlaya//ES','BEGIN:VEVENT','UID:'+cod+'-'+f+'@voleyplaya','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z',
-      'DTSTART:'+T(ini,true),'DTEND:'+T(fin,true),'SUMMARY:'+tit,'LOCATION:'+lugar.replace(/,/g,'\\,'),'DESCRIPTION:'+det.replace(/,/g,'\\,'),
-      'BEGIN:VALARM','TRIGGER:-PT1H','ACTION:DISPLAY','DESCRIPTION:'+tit,'END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
-    location.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics);return;}
-  const u='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(tit)+'&dates='+T(ini)+'/'+T(fin)+'&ctz=America/Bogota&details='+encodeURIComponent(det)+'&location='+encodeURIComponent(lugar);
-  window.open(u,'_blank','noopener');}
 
 /* ---------- App instalable ---------- */
 let PROMPT=null;const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
@@ -518,11 +476,7 @@ async function cargarMis(mantenerAviso){
     const item=(g,cancelable)=>{const d=pd(g.fecha);return `<div class="mis-item"><div class="when"><div class="m">${DIAS[d.getUTCDay()]}</div><div class="d">${d.getUTCDate()}</div><div class="m">${MESES[d.getUTCMonth()]}</div></div>
       <div class="body"><div style="font-weight:600">Cancha ${g.cancha} · ${rangoH(g.horas)} <span class="badge b-${g.estado}">${g.estado}</span>${g.fijo?' <span class="badge" style="background:rgba(198,244,50,.12);color:var(--neon)">📌 Fijo</span>':''}</div>
       <div class="muted">Código ${g.codigo} · ${pesos(g.total)}${g.notas?' · '+esc(g.notas):''}</div>
-      ${cancelable&&g.reportado&&g.estado!=='Pagada'?`<div class="muted" style="color:var(--info);margin-top:4px">💸 Avisaste que pagaste${g.repMedio?' por '+esc(g.repMedio):''}. Lo verificamos y te confirmamos.</div>`:''}
-      ${cancelable?`<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-        ${S.info.pago&&!g.reportado&&['Pendiente','Confirmada'].includes(g.estado)?`<button class="btn btn-primary btn-sm" onclick="modalPagar('${g.codigo}')">💳 Pagar ahora</button>`:''}
-        <button class="btn btn-navy btn-sm" onclick="calDe('${g.codigo}')">📅 Calendario</button>
-        ${['Pendiente','Confirmada'].includes(g.estado)?`<button class="btn btn-danger btn-sm" onclick="cancelar('${g.codigo}',this)">Cancelar</button>`:''}</div>`:''}</div></div>`;};
+      ${cancelable&&['Pendiente','Confirmada'].includes(g.estado)?`<button class="btn btn-danger btn-sm" style="margin-top:8px" onclick="cancelar('${g.codigo}',this)">Cancelar</button>`:''}</div></div>`;};
     $('misProx').innerHTML=prox.length?prox.map(g=>item(g,true)).join(''):'<p class="muted center" style="padding:14px 0">No tienes reservas próximas. <a href="#" onclick="ver(\'reserva\');return false">¡Reserva una!</a></p>';
     $('misHist').innerHTML=hist.length?hist.map(g=>item(g,false)).join(''):'<p class="muted center" style="padding:14px 0">Aquí verás tus partidos anteriores.</p>';
   }catch(e){$('misProx').innerHTML='<p class="muted">'+esc(e.message)+'</p>';}}

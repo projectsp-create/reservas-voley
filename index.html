@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0E1116">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vóley Playa">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-26 -26 52 52'%3E%3Crect x='-26' y='-26' width='52' height='52' rx='14' fill='%23C6F432'/%3E%3Ccircle r='15' fill='none' stroke='%230E1116' stroke-width='2.6'/%3E%3Cpath d='M-15 0 C-5 -4 5 -4 15 0 M-4 -14.5 C3 -7 3 7 -4 14.5 M4 -14.5 C12 -5 13 5 9 11.5' stroke='%230E1116' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,6 +73,16 @@
   .ou:before,.ou:after{content:"";flex:1;height:1px;background:var(--line-2)}
   .aviso{background:rgba(198,244,50,.08);border:1px solid rgba(198,244,50,.35);border-radius:12px;padding:14px;margin-top:14px;font-size:14px}
   .fijo-box{background:var(--bg-2);border:1px solid var(--line-2);border-left:3px solid var(--neon);border-radius:12px;padding:12px 14px;margin:10px 0}
+  .inst{display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(198,244,50,.14),rgba(198,244,50,.04));border:1px solid rgba(198,244,50,.4)}
+  .inst img{width:44px;height:44px;border-radius:11px;flex:none}
+  .inst .x{background:transparent;border:0;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 6px}
+  .pago-box{background:var(--bg-2);border:1px solid var(--line-2);border-left:3px solid var(--info);border-radius:12px;padding:14px;margin:14px 0;text-align:left}
+  .pago-box .ln{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+  .pago-box .ln:last-of-type{border-bottom:0}
+  .pago-box .ln b{font-size:17px;letter-spacing:.5px;color:#fff;word-break:break-all}
+  .slot.ocupado.fut{cursor:pointer}.slot.ocupado.esp{border-color:var(--warn)}.slot.ocupado.esp .s{color:var(--warn)}
+  .pasos-ios{counter-reset:p;list-style:none;padding:0;margin:14px 0}.pasos-ios li{counter-increment:p;display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+  .pasos-ios li:before{content:counter(p);width:28px;height:28px;border-radius:8px;background:var(--neon);color:var(--neon-ink);display:grid;place-items:center;font-weight:800;flex:none}
   .stat span{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600}
 </style>
 </head>
@@ -110,6 +126,9 @@
 
   <!-- RESERVAR -->
   <section id="vReserva" class="hidden">
+    <div class="card inst hidden" id="instBanner"><img src="icono-192.png" alt="">
+      <div style="flex:1;min-width:0"><b>📲 Instala la app</b><div class="muted">Gratis y sin descargas: es esta misma página con ícono en tu celular.</div></div>
+      <button class="btn btn-primary btn-sm" onclick="instalar()">Instalar</button><button class="x" aria-label="Cerrar" onclick="ocultarInst()">×</button></div>
     <div class="card">
       <h2><span class="step">1</span>Elige el día</h2>
       <div class="dates" id="fechas" style="margin-top:12px"></div>
@@ -119,6 +138,7 @@
       <div class="tabs" id="tabsCancha"></div>
       <div id="slots"></div>
       <div class="legend"><span><i style="background:var(--bg-2);border:1.5px solid var(--line-2)"></i>Libre</span><span><i style="background:rgba(198,244,50,.25);border:1.5px solid var(--neon)"></i>Tu selección</span><span><i style="border:1.5px dashed var(--line-2)"></i>Ocupado</span></div>
+      <p class="muted" style="margin:8px 0 0;font-size:12px">⏳ ¿Tu hora está ocupada? Tócala y anótate en la <b>lista de espera</b>: si se libera, te avisamos por WhatsApp.</p>
     </div>
     <div class="card hidden" id="paso3">
       <h2><span class="step">3</span><span id="paso3T">Confirma</span></h2>
@@ -142,7 +162,7 @@
       </div>
     </div>
     <p class="muted center" style="margin:22px 0 6px" id="horTxt"></p>
-    <p class="muted center" style="margin:0 0 90px;font-size:12px"><a href="privacidad.html" style="color:var(--muted)">Política de tratamiento de datos</a> · <span style="color:var(--dim)">Versión 4.4</span></p>
+    <p class="muted center" style="margin:0 0 90px;font-size:12px"><a href="privacidad.html" style="color:var(--muted)">Política de tratamiento de datos</a> · <span style="color:var(--dim)">Versión 4.5</span><span id="lnkInst" class="hidden"> · <a href="#" style="color:var(--muted)" onclick="instalar();return false">📲 Instalar app</a></span></p>
   </section>
 
   <!-- MIS RESERVAS -->
@@ -153,6 +173,7 @@
       <div class="stat" id="misStats"></div>
       <div id="misFijos"></div>
       <div id="misProx"></div>
+      <div id="misEspera"></div>
     </div>
     <div class="card"><h2>📌 Pide tu horario fijo</h2>
       <p class="muted" style="margin:6px 0 0">¿Juegas siempre el mismo día y hora? Pídelo y, si lo aprobamos, se te aparta solo cada semana.</p>
@@ -183,8 +204,10 @@
       <p class="muted">Tu código:</p>
       <div class="code" id="okCod"></div>
       <div class="kv" id="okDet" style="text-align:left;max-width:340px;margin:14px auto"></div>
+      <div id="okPago" style="max-width:420px;margin:0 auto"></div>
       <p class="muted" id="okVence">Te confirmaremos por WhatsApp. Si quieres agilizarlo, avísanos:</p>
       <a class="btn btn-wa full" id="okWa" target="_blank" rel="noopener">💬 Enviar mi reserva por WhatsApp</a>
+      <button class="btn btn-navy full" style="margin-top:10px" id="okCal">📅 Agregar a mi calendario</button>
       <button class="btn btn-ghost full" style="margin-top:10px" onclick="ver('mis')">Ver mis reservas</button>
       <button class="btn btn-ghost full" style="margin-top:10px;border:0" onclick="ver('reserva')">Hacer otra reserva</button>
     </div>
@@ -199,10 +222,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const VERSION='4.4';
+const VERSION='4.5';
 const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],DIASL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-const S={info:null,cal:null,fecha:null,cancha:1,sel:[],sesion:null,perfil:null};
+const S={info:null,cal:null,fecha:null,cancha:1,sel:[],sesion:null,perfil:null,esperas:new Set(),mis:{}};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pesos=n=>'$'+Math.round(n||0).toLocaleString('es-CO');
@@ -245,9 +268,10 @@ function pintarSlots(){
   let h='<div class="slots">';
   D.horas.forEach(x=>{const st=D.slots[S.cancha+'-'+x],sel=S.sel.includes(x);
     const q=(D.quien||{})[S.cancha+'-'+x];
-    const sub=st==='libre'?pesos(S.info.tarifa):(st==='ocupado'?(q?(q.f?'📌 ':'')+esc(q.n):'Ocupado'):'Ya pasó');
+    const enEsp=st==='ocupado'&&S.esperas.has(S.fecha+'|'+S.cancha+'-'+x);
+    const sub=st==='libre'?pesos(S.info.tarifa):(st==='ocupado'?(enEsp?'⏳ En lista de espera':(q?(q.f?'📌 ':'')+esc(q.n):'Ocupado')):'Ya pasó');
     if(st!=='libre'&&sel)S.sel=S.sel.filter(y=>y!==x);
-    h+=`<button class="slot ${st} ${sel&&st==='libre'?'sel':''}" ${st==='libre'?`onclick="toggle(${x})"`:'disabled'}><div class="t">${hora(x)}</div><div class="s">${sub}</div></button>`;});
+    h+=`<button class="slot ${st} ${st==='ocupado'?'fut':''} ${enEsp?'esp':''} ${sel&&st==='libre'?'sel':''}" ${st==='libre'?`onclick="toggle(${x})"`:st==='ocupado'?`onclick="espera(${x})"`:'disabled'}><div class="t">${hora(x)}</div><div class="s">${sub}</div></button>`;});
   $('slots').innerHTML=h+'</div>';actualizarBarra();}
 function toggle(x){const i=S.sel.indexOf(x);
   if(i>=0)S.sel.splice(i,1);else{if(S.sel.length>=S.info.maxHoras){toast('Máximo '+S.info.maxHoras+' horas por reserva');return;}S.sel.push(x);}
@@ -356,12 +380,13 @@ async function cargarPerfil(){
   if(CARGANDO_PERFIL)return CARGANDO_PERFIL;
   CARGANDO_PERFIL=(async()=>{
     const {data}=await sb.auth.getSession();S.sesion=data&&data.session||null;S.perfil=null;S.sugerido=null;
-    if(S.sesion){try{const p=await rpc('mi_perfil');S.perfil=p.perfil;S.sugerido=p.sugerido;
+    if(S.sesion){try{const p=await rpc('mi_perfil');S.perfil=p.perfil;S.sugerido=p.sugerido;S.esperas=new Set(p.esperas||[]);
       // Cuenta nueva con correo: los datos del registro llegan en la cuenta y el perfil se crea solo
       const md=S.sesion.user.user_metadata||{};
       if(!S.perfil&&md.acepta&&md.nombre&&md.whatsapp){const r=await rpc('guardar_perfil',{p_nombre:md.nombre,p_whatsapp:md.whatsapp,p_acepta:true,p_direccion:md.direccion||''});S.perfil=r.perfil;toast('¡Cuenta confirmada! Ya puedes reservar 🏐');}
     }catch(e){toast(e.message,true);}}
-    pintarUser();pintarPaso3();
+    if(!S.sesion)S.esperas=new Set();
+    pintarUser();pintarPaso3();if(S.cal)pintarSlots();
   })();
   try{await CARGANDO_PERFIL;}finally{CARGANDO_PERFIL=null;}
 }
@@ -383,8 +408,85 @@ function exito(r){
   const hs=r.horas.map(x=>hora(x)+' – '+hora(x+1)).join(', ');
   $('okDet').innerHTML=`<b>Día</b><span>${fLarga(r.fecha)}</span><b>Cancha</b><span>${r.cancha}</span><b>Horas</b><span>${hs}</span><b>Total</b><span>${pesos(r.total)}</span><b>Estado</b><span><span class="badge b-Pendiente">Pendiente</span></span>`;
   if(S.info.venceMin>0){const m=S.info.venceMin;$('okVence').textContent=`Tu hora queda apartada ${m>=60?(m/60)+(m===60?' hora':' horas'):m+' minutos'} mientras la confirmamos por WhatsApp. Avísanos para agilizarlo:`;}
+  $('okPago').innerHTML=pagoHTML(r.codigo,r.total,false);
+  $('okCal').onclick=()=>agregarCal(r.fecha,r.cancha,r.horas,r.codigo);
   if(S.info.whatsappAdmin){const msg=`Hola 👋, acabo de reservar en ${S.info.negocio}.\n\n🎫 Código: ${r.codigo}\n👤 ${r.nombre}\n📅 ${fLarga(r.fecha)}\n🏐 Cancha ${r.cancha}\n🕔 ${hs}\n💵 ${pesos(r.total)}\n\n¿Me confirmas, por favor?`;
     $('okWa').href='https://wa.me/'+S.info.whatsappAdmin+'?text='+encodeURIComponent(msg);$('okWa').classList.remove('hidden');}else $('okWa').classList.add('hidden');}
+
+/* ---------- Lista de espera ---------- */
+function espera(x){
+  const k=S.fecha+'|'+S.cancha+'-'+x,ya=S.esperas.has(k);
+  abrirModal(`<h2>⏳ Lista de espera</h2><p class="muted" style="font-size:14px">${fLarga(S.fecha)} · ${hora(x)} · Cancha ${S.cancha}</p>
+    ${ya?`<p>Ya estás en la lista de esta hora 👍. Si se libera, te avisamos por WhatsApp. También lo ves en <b>Mis reservas</b>.</p>
+      <div style="display:grid;gap:8px;margin-top:14px"><button class="btn btn-ghost" onclick="cerrarModal();ver('mis')">Ver mis reservas</button><button class="btn btn-ghost" style="border:0" onclick="cerrarModal()">Cerrar</button></div>`
+    :`<p>Esta hora ya está reservada. Anótate y, <b>si se libera</b>, te avisamos por WhatsApp en orden de llegada para que la tomes.</p>
+      <div style="display:grid;gap:8px;margin-top:14px"><button class="btn btn-primary" onclick="anotarEspera(${x},this)">Anotarme en la lista</button><button class="btn btn-ghost" onclick="cerrarModal()">Ahora no</button></div>`}`);}
+async function anotarEspera(x,b){
+  if(!S.sesion){cerrarModal();toast('Entra con tu cuenta para anotarte');abrirLogin();return;}
+  if(!S.perfil){cerrarModal();toast('Primero completa tus datos en "Mis reservas"',true);ver('mis');return;}
+  b.disabled=true;
+  try{const r=await rpc('anotar_espera',{p_fecha:S.fecha,p_cancha:S.cancha,p_hora:x});S.esperas.add(S.fecha+'|'+S.cancha+'-'+x);cerrarModal();pintarSlots();
+    toast(r.puesto>1?`¡Anotado! Eres el número ${r.puesto} en la lista`:'¡Anotado! Eres el primero en la lista 🙌');}
+  catch(e){toast(e.message,true);b.disabled=false;if(/libre/.test(e.message)){cerrarModal();refrescar();}}}
+async function salirEspera(id,b){b.disabled=true;try{await rpc('salir_espera',{p_id:id});toast('Saliste de la lista');await cargarMis();pintarSlots();}catch(e){toast(e.message,true);b.disabled=false;}}
+async function irAHora(f,c,h){ver('reserva');await refrescar();if(!S.cal[f]){toast('Esa fecha ya no está disponible',true);return;}
+  S.fecha=f;S.cancha=c;S.sel=S.cal[f].slots[c+'-'+h]==='libre'?[h]:[];pintarFechas();pintarTabs();pintarSlots();
+  if(!S.sel.length){toast('Uy, alguien ya la tomó 😕',true);return;}$('paso3').classList.remove('hidden');pintarPaso3();setTimeout(()=>$('paso3').scrollIntoView({behavior:'smooth'}),200);}
+
+/* ---------- Pago anticipado ---------- */
+function pagoHTML(cod,total,modal){const P=S.info.pago;if(!P)return '';
+  const ln=(t,v,id)=>`<div class="ln"><div><div class="muted">${t}</div><b id="${id}">${esc(v)}</b></div><button class="btn btn-ghost btn-sm" onclick="copiarTxt('${id}')">Copiar</button></div>`;
+  const medios=[P.nequi&&'Nequi',P.daviplata&&'Daviplata',P.otro&&'Transferencia'].filter(Boolean);
+  const msg=m=>`Hola 👋, ya pagué mi reserva ${cod} (${pesos(total)}) por ${m}. Te envío el comprobante 👇`;
+  return `<div class="pago-box"><b style="font-size:16px">💳 ${modal?'Paga tu reserva':'¿Quieres asegurar tu hora? Paga ahora'}</b>
+    <p class="muted" style="margin:4px 0 6px">Transfiere <b style="color:#fff">${pesos(total)}</b>${modal?'':' y tu reserva <b>no se vence</b> mientras verificamos el pago'}.</p>
+    ${P.nequi?ln('Nequi',P.nequi,'pgN'+cod):''}${P.daviplata?ln('Daviplata',P.daviplata,'pgD'+cod):''}${P.otro?ln('Cuenta / llave',P.otro,'pgO'+cod):''}
+    ${P.titular?`<p class="muted" style="margin:8px 0 0">A nombre de <b style="color:#fff">${esc(P.titular)}</b></p>`:''}${P.nota?`<p class="muted" style="margin:4px 0 0">${esc(P.nota)}</p>`:''}
+    <p class="muted" style="margin:12px 0 6px">¿Ya pagaste? Avísanos y manda el comprobante:</p>
+    <div style="display:grid;gap:8px">${medios.map(m=>`<a class="btn btn-wa" target="_blank" rel="noopener" ${S.info.whatsappAdmin?`href="https://wa.me/${S.info.whatsappAdmin}?text=${encodeURIComponent(msg(m))}"`:''} onclick="yaPague('${cod}','${m}')">✅ Ya pagué por ${m}</a>`).join('')}</div></div>`;}
+function modalPagar(cod){const g=S.mis[cod];if(!g)return;abrirModal(`<h2>Pagar reserva</h2><p class="muted">Código ${cod} · ${fLarga(g.fecha)} · Cancha ${g.cancha} · ${rangoH(g.horas)}</p>${pagoHTML(cod,g.total,true)}<button class="btn btn-ghost full" onclick="cerrarModal()">Cerrar</button>`);}
+async function yaPague(cod,m){try{await rpc('reportar_pago',{p_codigo:cod,p_medio:m});if(S.mis[cod]){S.mis[cod].reportado=true;S.mis[cod].repMedio=m;}
+    const box=document.querySelectorAll('.pago-box');box.forEach(b=>b.outerHTML=`<div class="aviso" style="text-align:left">✅ Listo, avisaste que pagaste por ${m}. Cuando verifiquemos el pago te confirmamos. Tu hora no se vence mientras tanto.</div>`);
+    if(!$('vMis').classList.contains('hidden'))setTimeout(()=>{cerrarModal();cargarMis();},1500);}
+  catch(e){toast(e.message,true);}}
+function copiarTxt(id){const t=$(id).textContent.replace(/\s/g,'').match(/^\d+$/)?$(id).textContent.replace(/\s/g,''):$(id).textContent;
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copiado ✓ '+t)).catch(()=>toast('Mantén presionado el número para copiarlo'));}
+
+/* ---------- Calendario ---------- */
+const IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function calDe(cod){const g=S.mis[cod];if(g)agregarCal(g.fecha,g.cancha,g.horas,g.codigo);}
+function agregarCal(f,c,horas,cod){
+  const hs=horas.map(Number).sort((a,b)=>a-b),[y,m,d]=f.split('-').map(Number);
+  const T=(h,utc)=>new Date(Date.UTC(y,m-1,d,h+(utc?5:0))).toISOString().replace(/[-:]/g,'').slice(0,15)+(utc?'Z':'');
+  const ini=hs[0],fin=hs[hs.length-1]+1,tit=`🏐 Vóley playa · Cancha ${c}`;
+  const det=`Reserva ${cod} en ${S.info.negocio}. Horas: ${rangoH(hs)}. Ver o cancelar: ${location.origin+location.pathname}`;
+  const lugar=[S.info.negocio,S.info.direccion].filter(Boolean).join(', ');
+  if(IOS&&!G_IN_APP){
+    const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//VoleyPlaya//ES','BEGIN:VEVENT','UID:'+cod+'-'+f+'@voleyplaya','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z',
+      'DTSTART:'+T(ini,true),'DTEND:'+T(fin,true),'SUMMARY:'+tit,'LOCATION:'+lugar.replace(/,/g,'\\,'),'DESCRIPTION:'+det.replace(/,/g,'\\,'),
+      'BEGIN:VALARM','TRIGGER:-PT1H','ACTION:DISPLAY','DESCRIPTION:'+tit,'END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+    location.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics);return;}
+  const u='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(tit)+'&dates='+T(ini)+'/'+T(fin)+'&ctz=America/Bogota&details='+encodeURIComponent(det)+'&location='+encodeURIComponent(lugar);
+  window.open(u,'_blank','noopener');}
+
+/* ---------- App instalable ---------- */
+let PROMPT=null;const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();PROMPT=e;pintarInstalar();});
+window.addEventListener('appinstalled',()=>{PROMPT=null;pintarInstalar();toast('¡App instalada! Búscala en tu pantalla de inicio 🏐');});
+function pintarInstalar(){let no=false;try{no=Number(localStorage.getItem('vp_inst_no')||0)>Date.now();}catch(e){}
+  $('instBanner').classList.toggle('hidden',STANDALONE||no||!(PROMPT||(IOS&&!G_IN_APP)));
+  $('lnkInst').classList.toggle('hidden',STANDALONE);}
+function ocultarInst(){try{localStorage.setItem('vp_inst_no',Date.now()+14*864e5);}catch(e){}pintarInstalar();}
+async function instalar(){
+  if(PROMPT){PROMPT.prompt();try{await PROMPT.userChoice;}catch(e){}PROMPT=null;pintarInstalar();return;}
+  const seguro='<p class="muted" style="margin-top:10px">🔒 Es la misma página web con un ícono: no se descarga ningún archivo, no pide permisos y la quitas como cualquier app.</p>';
+  if(G_IN_APP){abrirModal(`<h2>📲 Instalar app</h2><p>Desde Instagram, Facebook o TikTok no se puede instalar. Toca los <b>⋮</b> o <b>…</b> de arriba y elige <b>"Abrir en ${IOS?'Safari':'Chrome'}"</b>; allá aparece la opción.</p>${seguro}<button class="btn btn-ghost full" style="margin-top:12px" onclick="cerrarModal()">Entendido</button>`);return;}
+  if(IOS){abrirModal(`<h2>📲 Instalar en iPhone</h2><ol class="pasos-ios">
+     <li><span>Toca el botón <b>Compartir</b> <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px"><path d="M12 3v12M8 7l4-4 4 4M5 11v9h14v-9"/></svg> (abajo en Safari, arriba en Chrome)</span></li>
+     <li><span>Baja y elige <b>"Agregar a inicio"</b> ➕</span></li><li><span>Toca <b>"Agregar"</b>. ¡Listo, el ícono queda en tu pantalla!</span></li></ol>${seguro}
+     <button class="btn btn-primary full" style="margin-top:12px" onclick="cerrarModal()">Entendido</button>`);return;}
+  abrirModal(`<h2>📲 Instalar app</h2><ol class="pasos-ios"><li><span>Toca el menú <b>⋮</b> de Chrome (arriba a la derecha)</span></li><li><span>Elige <b>"Instalar app"</b> o <b>"Agregar a la pantalla principal"</b></span></li></ol>${seguro}<button class="btn btn-primary full" style="margin-top:12px" onclick="cerrarModal()">Entendido</button>`);}
 
 /* ---------- Mis reservas ---------- */
 async function cargarMis(mantenerAviso){
@@ -407,10 +509,20 @@ async function cargarMis(mantenerAviso){
     $('misSol').innerHTML=aviso+(M.solicitudes||[]).map(x=>`<div class="fijo-box" style="border-left-color:${x.estado==='Aprobada'?'var(--ok)':x.estado==='Pendiente'?'var(--warn)':'var(--bad)'}"><b>${DSEM[x.dia]} · ${rangoH(Array.from({length:x.horas},(_,i)=>x.hora+i))} · Cancha ${x.cancha}</b> <span class="badge b-${x.estado==='Aprobada'?'Pagada':x.estado==='Pendiente'?'Pendiente':'Cancelada'}">${x.estado}</span>${x.respuesta?`<div class="muted">💬 ${esc(x.respuesta)}</div>`:''}${x.estado==='Pendiente'?`<button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="cancelarSol('${x.id}',this)">Cancelar solicitud</button>`:''}</div>`).join('');
     $('misFijos').innerHTML=(M.fijos||[]).map(f=>`<div class="fijo-box">📌 <b>Tu horario fijo:</b> todos los <b>${DL[f.dia]}</b> · ${rangoH(Array.from({length:f.horas},(_,i)=>f.hora+i))} · Cancha ${f.cancha}<div class="muted">Se aparta solo cada semana${f.hasta?' hasta el '+fLarga(f.hasta):''}. Si un día no puedes ir, cancela solo ese día.</div></div>`).join('');
     $('misStats').innerHTML=`<div><b>${prox.length}</b><span>Próximas</span></div><div><b>${jugadas.reduce((a,g)=>a+g.horas.length,0)}</b><span>Horas jugadas</span></div><div><b>${M.reservas.length}</b><span>Reservas</span></div>`;
+    S.mis={};M.reservas.forEach(g=>S.mis[g.codigo]=g);
+    S.esperas=new Set((M.esperas||[]).map(e=>e.fecha+'|'+e.cancha+'-'+e.hora));
+    $('misEspera').innerHTML=(M.esperas||[]).length?`<h3 style="margin:16px 0 6px">⏳ Lista de espera</h3>`+M.esperas.map(e=>`<div class="fijo-box" style="border-left-color:${e.libre?'var(--ok)':'var(--warn)'}">
+      <b>${fLarga(e.fecha)} · ${hora(e.hora)} · Cancha ${e.cancha}</b>
+      <div class="muted">${e.libre?'🎉 <b style="color:var(--ok)">¡Se liberó!</b> Resérvala antes de que alguien más la tome.':'Sigue ocupada. Si se libera, te avisamos por WhatsApp.'}</div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">${e.libre?`<button class="btn btn-primary btn-sm" onclick="irAHora('${e.fecha}',${e.cancha},${e.hora})">Reservar ahora</button>`:''}<button class="btn btn-ghost btn-sm" onclick="salirEspera('${e.id}',this)">Salir de la lista</button></div></div>`).join(''):'';
     const item=(g,cancelable)=>{const d=pd(g.fecha);return `<div class="mis-item"><div class="when"><div class="m">${DIAS[d.getUTCDay()]}</div><div class="d">${d.getUTCDate()}</div><div class="m">${MESES[d.getUTCMonth()]}</div></div>
       <div class="body"><div style="font-weight:600">Cancha ${g.cancha} · ${rangoH(g.horas)} <span class="badge b-${g.estado}">${g.estado}</span>${g.fijo?' <span class="badge" style="background:rgba(198,244,50,.12);color:var(--neon)">📌 Fijo</span>':''}</div>
       <div class="muted">Código ${g.codigo} · ${pesos(g.total)}${g.notas?' · '+esc(g.notas):''}</div>
-      ${cancelable&&['Pendiente','Confirmada'].includes(g.estado)?`<button class="btn btn-danger btn-sm" style="margin-top:8px" onclick="cancelar('${g.codigo}',this)">Cancelar</button>`:''}</div></div>`;};
+      ${cancelable&&g.reportado&&g.estado!=='Pagada'?`<div class="muted" style="color:var(--info);margin-top:4px">💸 Avisaste que pagaste${g.repMedio?' por '+esc(g.repMedio):''}. Lo verificamos y te confirmamos.</div>`:''}
+      ${cancelable?`<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        ${S.info.pago&&!g.reportado&&['Pendiente','Confirmada'].includes(g.estado)?`<button class="btn btn-primary btn-sm" onclick="modalPagar('${g.codigo}')">💳 Pagar ahora</button>`:''}
+        <button class="btn btn-navy btn-sm" onclick="calDe('${g.codigo}')">📅 Calendario</button>
+        ${['Pendiente','Confirmada'].includes(g.estado)?`<button class="btn btn-danger btn-sm" onclick="cancelar('${g.codigo}',this)">Cancelar</button>`:''}</div>`:''}</div></div>`;};
     $('misProx').innerHTML=prox.length?prox.map(g=>item(g,true)).join(''):'<p class="muted center" style="padding:14px 0">No tienes reservas próximas. <a href="#" onclick="ver(\'reserva\');return false">¡Reserva una!</a></p>';
     $('misHist').innerHTML=hist.length?hist.map(g=>item(g,false)).join(''):'<p class="muted center" style="padding:14px 0">Aquí verás tus partidos anteriores.</p>';
   }catch(e){$('misProx').innerHTML='<p class="muted">'+esc(e.message)+'</p>';}}
@@ -462,7 +574,7 @@ async function init(){
     const N={1:'Lun',2:'Mar',3:'Mié',4:'Jue',5:'Vie',6:'Sáb',7:'Dom',F:'Festivos'},grp={};
     ['1','2','3','4','5','6','7','F'].forEach(d=>{const h=I.horario[d];if(h&&h[1]>h[0]){const k=hora(h[0])+' a '+hora(h[1])+' (última reserva '+hora(h[1]-1)+')';(grp[k]=grp[k]||[]).push(N[d]);}});
     $('horTxt').textContent='Horario: '+Object.entries(grp).map(([k,v])=>v.join(', ')+' · '+k).join('  |  ');
-    $('cargando').classList.add('hidden');$('vReserva').classList.remove('hidden');
+    $('cargando').classList.add('hidden');$('vReserva').classList.remove('hidden');pintarInstalar();
     pintarSlots();
     await cargarPerfil();
     if(S.sel.length){$('paso3').classList.remove('hidden');pintarPaso3();setTimeout(()=>$('paso3').scrollIntoView({behavior:'smooth'}),300);}

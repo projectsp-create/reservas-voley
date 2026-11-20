@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0E1116">
+<link rel="manifest" href="manifest-admin.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Admin Vóley">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-26 -26 52 52'%3E%3Crect x='-26' y='-26' width='52' height='52' rx='14' fill='%23C6F432'/%3E%3Ccircle r='15' fill='none' stroke='%230E1116' stroke-width='2.6'/%3E%3Cpath d='M-15 0 C-5 -4 5 -4 15 0 M-4 -14.5 C3 -7 3 7 -4 14.5 M4 -14.5 C12 -5 13 5 9 11.5' stroke='%230E1116' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -119,7 +124,7 @@
   <main class="wrap" style="padding-bottom:40px">
     <div id="v-agenda"></div><div id="v-pend" class="hidden"></div><div id="v-prox" class="hidden"></div><div id="v-jug" class="hidden"></div>
     <div id="v-tienda" class="hidden"></div><div id="v-fin" class="hidden"></div><div id="v-ajustes" class="hidden"></div>
-    <p class="muted center" style="font-size:12px;margin:24px 0 0;color:var(--dim)" id="pieVersion">Panel · versión 4.4</p>
+    <p class="muted center" style="font-size:12px;margin:24px 0 0;color:var(--dim)" id="pieVersion">Panel · versión 4.5</p>
   </main>
 </section>
 
@@ -128,7 +133,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const VERSION='4.4';
+const VERSION='4.5';
 const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],DCORTO=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const CATEGORIAS=['Mantenimiento arena','Redes y balones','Energía / iluminación','Agua','Personal / aseo','Publicidad','Arriendo','Impuestos y permisos','Otros'];
@@ -203,7 +208,7 @@ const puede=p=>PERM.dueno||!!(PERM.permisos&&PERM.permisos[p]);
 function horasDia(cfg,f){const h=(FEST.has(f)&&cfg.horario.F)?cfg.horario.F:cfg.horario[String(iso(f))];const o=[];if(!h||!(h[1]>h[0]))return o;for(let i=h[0];i<h[1];i++)o.push(i);return o;}
 function agrupar(res){
   const m={};res.forEach(r=>{
-    if(!m[r.codigo])m[r.codigo]={codigo:r.codigo,fecha:r.fecha,cancha:r.cancha,horas:[],nombre:r.nombre,whatsapp:r.whatsapp||'',estado:r.estado,total:0,medio:r.medio||'',origen:r.origen,notas:r.notas||'',por:r.actualizado_por||'',creado:r.creado,uid:r.user_id||null,jid:r.jugador_id||null,fijo:!!r.fijo_id};
+    if(!m[r.codigo])m[r.codigo]={codigo:r.codigo,fecha:r.fecha,cancha:r.cancha,horas:[],nombre:r.nombre,whatsapp:r.whatsapp||'',estado:r.estado,total:0,medio:r.medio||'',origen:r.origen,notas:r.notas||'',por:r.actualizado_por||'',creado:r.creado,uid:r.user_id||null,jid:r.jugador_id||null,fijo:!!r.fijo_id,rep:r.pago_reportado?(r.pago_rep_medio||'sí'):''};
     m[r.codigo].horas.push(r.hora);m[r.codigo].total+=Number(r.valor)||0;});
   return Object.values(m).map(g=>{g.horas.sort((a,b)=>a-b);return g;});
 }
@@ -217,7 +222,8 @@ function statsSemana(l,res,gas,cfg){
 }
 function construir(){
   const R=RAW,c=R.cfg;FEST=new Set(R.festivos||[]);PERM=R.rol||{dueno:false,permisos:{}};
-  const cfg={negocio:c.negocio,direccion:c.direccion,tarifa:c.tarifa,canchas:c.canchas,whatsappAdmin:c.whatsapp_admin,diasAnticipacion:c.dias_anticipacion,maxHorasPorReserva:c.max_horas,horario:c.horario,venceMin:c.vence_pendiente_min,mostrarNombres:c.mostrar_nombres!==false};
+  const cfg={negocio:c.negocio,direccion:c.direccion,tarifa:c.tarifa,canchas:c.canchas,whatsappAdmin:c.whatsapp_admin,diasAnticipacion:c.dias_anticipacion,maxHorasPorReserva:c.max_horas,horario:c.horario,venceMin:c.vence_pendiente_min,mostrarNombres:c.mostrar_nombres!==false,
+    pagoActivo:!!c.pago_activo,pagoNequi:c.pago_nequi||'',pagoDaviplata:c.pago_daviplata||'',pagoOtro:c.pago_otro||'',pagoTitular:c.pago_titular||'',pagoNota:c.pago_nota||''};
   const hoy=R.hoy;FECHA=FECHA||hoy;
   const res=R.reservas,gas=R.gastos,grupos=agrupar(res),lAct=lunesDe(hoy);
   const delDia=grupos.filter(g=>g.fecha===FECHA);
@@ -240,9 +246,9 @@ function construir(){
     acumIngresos:suma(semanas,'ingresos'),acumTienda:suma(semanas,'tGanancia'),acumGastos:Number(R.gastosTotal)||0};
   const base=location.href.split('#')[0].split('?')[0].replace(/admin\.html$/,'');
   D={cfg,hoy,fecha:FECHA,horasFecha:horasDia(cfg,FECHA),delDia,pendientes,proximas,semanas,gastos:gas,kpis,grupos,
-     categorias:CATEGORIAS,medios:MEDIOS,urlPublica:base,urlAdmin:base+'admin.html',yo:R.yo,admins:R.admins,informes:R.informes||[],jugadores:R.jugadores||0,bloqueados:R.bloqueados||[],jugadoresLista:R.jugadoresLista||[],fijos:R.fijos||[],solicitudes:R.solicitudesFijo||[],cuentasPend:R.cuentasPendientes||[],productos:R.productos||[],ventasHoy:R.ventasHoy||[],cobrosHoy:R.cobrosHoy||[],cierres:R.cierres||[]};
+     categorias:CATEGORIAS,medios:MEDIOS,urlPublica:base,urlAdmin:base+'admin.html',yo:R.yo,admins:R.admins,informes:R.informes||[],jugadores:R.jugadores||0,bloqueados:R.bloqueados||[],jugadoresLista:R.jugadoresLista||[],fijos:R.fijos||[],solicitudes:R.solicitudesFijo||[],cuentasPend:R.cuentasPendientes||[],productos:R.productos||[],ventasHoy:R.ventasHoy||[],cobrosHoy:R.cobrosHoy||[],cierres:R.cierres||[],espera:R.espera||[]};
   $('tNeg').textContent=cfg.negocio;$('tYo').textContent=R.yo;
-  const nP=kpis.pendientes+(R.solicitudesFijo||[]).length;const c2=$('cntPend');c2.textContent=nP;c2.classList.toggle('hidden',!nP);
+  const nP=kpis.pendientes+(R.solicitudesFijo||[]).length+(R.espera||[]).filter(e=>e.libre&&!e.avisado).length;const c2=$('cntPend');c2.textContent=nP;c2.classList.toggle('hidden',!nP);
   const bf=document.querySelector('#nav button[data-v=fin]');bf.classList.toggle('hidden',!(puede('finanzas')||puede('gastos')));
   if(VISTA==='fin'&&bf.classList.contains('hidden'))VISTA='agenda';
   const bt=document.querySelector('#nav button[data-v=tienda]');bt.classList.toggle('hidden',!(puede('vender')||puede('inventario')));
@@ -289,11 +295,13 @@ function itemGrupo(g){const d=pd(g.fecha);
   return `<div class="item"><div class="when"><div class="m">${DCORTO[d.getUTCDay()]}</div><div class="d">${d.getUTCDate()}</div><div class="m">${MESES[d.getUTCMonth()]}</div></div>
    <div class="body"><div class="nm">${esc(g.nombre)} <span class="badge b-${g.estado}">${g.estado}</span>${g.jid&&D.bloqueados.includes(g.jid)?' <span class="badge b-Cancelada">Bloqueado</span>':''}</div>
    <div class="muted">Cancha ${g.cancha} · ${rangoH(g.horas)} · ${pesos(g.total)}${g.whatsapp?' · 📱 '+g.whatsapp:''}</div>
-   ${g.estado==='Pendiente'&&D.cfg.venceMin>0?(()=>{const m=Math.max(0,Math.round(D.cfg.venceMin-(Date.now()-new Date(g.creado).getTime())/60000));return `<div class="muted" style="color:var(--warn)">⏳ Se libera sola en ${m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'} si no la confirmas</div>`;})():''}
+   ${g.rep&&g.estado!=='Pagada'?`<div class="muted" style="color:var(--info);font-weight:600">💸 Dice que ya pagó por ${esc(g.rep)}: revisa tu ${esc(g.rep)} y registra el pago</div>`:''}
+   ${g.estado==='Pendiente'&&D.cfg.venceMin>0&&!g.rep?(()=>{const m=Math.max(0,Math.round(D.cfg.venceMin-(Date.now()-new Date(g.creado).getTime())/60000));return `<div class="muted" style="color:var(--warn)">⏳ Se libera sola en ${m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'} si no la confirmas</div>`;})():''}
    <div class="muted">Código ${g.codigo}${g.fijo?' · 📌 fijo':g.origen==='Admin'?' · presencial':''}${g.medio?' · '+esc(g.medio):''}${g.por&&g.por!=='cliente'?' · por '+esc(g.por.split('@')[0]):''}</div>
    <div class="acts">${botones(g,true)}</div></div></div>`;}
 function botones(g,cortos){
   const b=[],c=`'${g.codigo}'`,sm=cortos?' btn-sm':'';
+  if(g.estado==='Pendiente'&&g.rep)b.push(`<button class="btn btn-navy${sm}" onclick="modalPago(${c})">💵 Ya verifiqué: registrar pago</button>`);
   if(g.estado==='Pendiente'){b.push(`<button class="btn btn-wa${sm}" onclick="accion(${c},'Confirmada','confirmar')">✓ Confirmar${g.whatsapp?' y avisar':''}</button>`);
     b.push(`<button class="btn btn-danger${sm}" onclick="accion(${c},'Rechazada','rechazar')">Rechazar</button>`);}
   if(g.estado==='Confirmada'){b.push(`<button class="btn btn-navy${sm}" onclick="modalPago(${c})">💵 Registrar pago</button>`);
@@ -385,8 +393,12 @@ function vPend(){const L=D.pendientes;
     ${D.solicitudes.map(x=>{const ch=D.fijos.find(f=>f.dia===x.dia&&f.cancha===x.cancha&&f.hora<x.hora+x.horas&&x.hora<f.hora+f.horas);
       return `<div class="item"><div class="body"><div class="nm">${esc(x.jugador)}</div><div class="muted">Todos los ${DIAS_L[x.dia].toLowerCase()} · ${rangoFijo(x)} · Cancha ${x.cancha} · 📱 ${x.whatsapp}</div>${x.notas?`<div class="muted">📝 ${esc(x.notas)}</div>`:''}${ch?`<div class="muted" style="color:var(--warn)">⚠️ Ya es fijo de ${esc(ch.jugador)}</div>`:''}
       ${puede('fijos')?`<div class="acts"><button class="btn btn-wa btn-sm" onclick="responderSol('${x.id}',true,this)">✓ Aprobar y avisar</button><button class="btn btn-danger btn-sm" onclick="responderSol('${x.id}',false,this)">Rechazar</button></div>`:''}</div></div>`;}).join('')}</div>`:'';
-  $('v-pend').innerHTML=SOL+`<div class="card"><h2>🔔 Por confirmar</h2><p class="muted" style="margin:6px 0 0">Al confirmar se abre WhatsApp con el mensaje listo para el cliente: solo toca <b>Enviar</b>.</p>
-   ${L.length?L.map(itemGrupo).join(''):'<p class="center muted" style="padding:26px 0">🎉 No hay solicitudes pendientes.</p>'}</div>`;}
+  const E=D.espera,lib=E.filter(e=>e.libre);
+  const ESP=E.length?`<div class="card"><h2>⏳ Lista de espera</h2><p class="muted" style="margin:6px 0 0">Jugadores esperando una hora ocupada. Cuando una se libera, avísale al primero de la lista.</p>
+    ${lib.length?`<div class="dayhdr" style="color:var(--ok)">🎉 Se liberaron</div>${lib.map(e=>itemEspera(e,true)).join('')}`:''}
+    ${E.length>lib.length?`<div class="dayhdr">Siguen ocupadas</div>${E.filter(e=>!e.libre).map(e=>itemEspera(e,false)).join('')}`:''}</div>`:'';
+  $('v-pend').innerHTML=SOL+(lib.length?ESP:'')+`<div class="card"><h2>🔔 Por confirmar</h2><p class="muted" style="margin:6px 0 0">Al confirmar se abre WhatsApp con el mensaje listo para el cliente: solo toca <b>Enviar</b>.</p>
+   ${L.length?L.map(itemGrupo).join(''):'<p class="center muted" style="padding:26px 0">🎉 No hay solicitudes pendientes.</p>'}</div>`+(lib.length?'':ESP);}
 function vProx(){
   const L=D.proximas.filter(g=>FILTRO==='todas'||(FILTRO==='activas'?ACT.includes(g.estado):g.estado===FILTRO));
   let h=`<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">📋 Próximos 14 días</h2>
@@ -394,6 +406,16 @@ function vProx(){
   if(!L.length)h+='<p class="center muted" style="padding:26px 0">No hay reservas con este filtro.</p>';
   let dia='';L.forEach(g=>{if(g.fecha!==dia){dia=g.fecha;h+=`<div class="dayhdr">${g.fecha===D.hoy?'Hoy · ':''}${fLarga(g.fecha)}</div>`;}h+=itemGrupo(g);});
   $('v-prox').innerHTML=h+'</div>';}
+
+function itemEspera(e,libre){
+  const msg=`Hola ${e.jugador.split(' ')[0]} 👋, ¡se liberó la cancha ${e.cancha} el ${fLarga(e.fecha)} a las ${hora(e.hora)}! Estabas en la lista de espera. Resérvala ya antes de que alguien más la tome: ${D.urlPublica}`;
+  return `<div class="item"><div class="body"><div class="nm">${esc(e.jugador)} ${e.puesto===1?'<span class="badge b-Pagada">1° en la lista</span>':`<span class="badge b-Confirmada">Puesto ${e.puesto}</span>`}${e.avisado?' <span class="badge b-Pendiente">Avisado</span>':''}</div>
+    <div class="muted">${fLarga(e.fecha)} · ${hora(e.hora)} · Cancha ${e.cancha} · 📱 ${e.whatsapp}</div>
+    ${e.avisado?`<div class="muted">Avisado ${new Date(e.avisado).toLocaleString('es-CO',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})}${e.avisado_por?' por '+esc(e.avisado_por.split('@')[0]):''}</div>`:''}
+    <div class="acts">${libre?`<a class="btn btn-wa btn-sm" target="_blank" rel="noopener" href="https://wa.me/57${e.whatsapp}?text=${encodeURIComponent(msg)}" onclick="gestEspera('${e.id}','avisado')">💬 Avisarle que se liberó</a>`:''}
+      <button class="btn btn-ghost btn-sm" onclick="gestEspera('${e.id}','quitar',this)">Quitar de la lista</button></div></div></div>`;}
+async function gestEspera(id,acc,b){if(acc==='quitar'&&b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='¿Quitar?';return;}
+  try{await rpc('gestionar_espera',{p_id:id,p_accion:acc});if(acc==='quitar')toast('Quitado de la lista');setTimeout(cargar,acc==='avisado'?1200:0);}catch(e){toast(e.message,true);}}
 
 /* ---------- Solicitudes de fijo ---------- */
 function responderSol(id,ok,b){
@@ -706,6 +728,8 @@ function vAjustes(){
   $('v-ajustes').innerHTML=`
   <div class="card"><h2>🏷️ Versión</h2><div class="kv"><b>Página</b><span>${VERSION}</span><b>Base de datos</b><span>${esc(vBD)} ${okV?'<span class="badge b-Pagada">Al día</span>':'<span class="badge b-Pendiente">Falta actualizar</span>'}</span></div>
     ${okV?'':'<p class="muted" style="margin:0">Corre en Supabase (SQL Editor) el archivo SQL de la versión '+VERSION+' para que todo quede igual.</p>'}</div>
+  ${STANDALONE?'':`<div class="card"><h2>📲 Panel como app</h2><p class="muted" style="margin:6px 0 10px">Ten el panel a un toque en tu celular, con su propio ícono. No se descarga nada: es esta misma página.</p>
+    <button class="btn btn-primary full" onclick="instalarPanel()">Instalar el panel</button></div>`}
   <div class="card"><h2>🔗 Links</h2>
     <label>Página pública de reservas (compártela)</label><div class="linkbox"><span id="lPub">${esc(D.urlPublica)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lPub')">Copiar</button></div>
     <a class="btn btn-wa full" style="margin-top:10px" target="_blank" href="https://wa.me/?text=${shareTxt}">Compartir por WhatsApp</a>
@@ -720,6 +744,12 @@ function vAjustes(){
     <div class="row"><div><label>Días de anticipación</label><input type="number" id="aDias" value="${C.diasAnticipacion}" min="1" max="60"></div><div><label>Máx. horas por reserva web</label><input type="number" id="aMax" value="${C.maxHorasPorReserva}" min="1" max="8"></div></div>
     <label>Minutos para confirmar una reserva antes de que se libere sola (0 = nunca)</label><input type="number" id="aVence" value="${C.venceMin}" min="0" max="1440" step="15">
     <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="aNombres" ${C.mostrarNombres?'checked':''} style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Mostrar el nombre abreviado del jugador (ej. "Meyer B.") en las horas ocupadas del calendario público. Cada jugador puede ocultarlo desde su cuenta.</span></label>
+    <h2 style="margin-top:22px">💳 Pago anticipado</h2><p class="muted" style="margin:4px 0 0">Al reservar, el jugador ve estos datos para pagar antes y te avisa por WhatsApp con el comprobante. Mientras verificas, su reserva no se vence.</p>
+    <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="aPagoOn" ${C.pagoActivo?'checked':''} style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Mostrar opción de pago anticipado a los jugadores</span></label>
+    <div class="row"><div><label>Nequi (número)</label><input type="tel" id="aPagoN" value="${esc(C.pagoNequi)}" inputmode="numeric" maxlength="30" placeholder="3001234567"></div><div><label>Daviplata (número)</label><input type="tel" id="aPagoD" value="${esc(C.pagoDaviplata)}" inputmode="numeric" maxlength="30" placeholder="Vacío si no usas"></div></div>
+    <label>Otra cuenta o llave (opcional)</label><input type="text" id="aPagoO" value="${esc(C.pagoOtro)}" maxlength="80" placeholder="Ej. Bancolombia ahorros 123-456789-00 o llave @pedro">
+    <label>A nombre de</label><input type="text" id="aPagoT" value="${esc(C.pagoTitular)}" maxlength="60" placeholder="Nombre que aparece al transferir">
+    <label>Nota para el jugador (opcional)</label><input type="text" id="aPagoNota" value="${esc(C.pagoNota)}" maxlength="160" placeholder="Ej. Si cancelas con 3 horas de anticipación te devolvemos el dinero">
     <h2 style="margin-top:22px">🕔 Horario</h2><p class="muted" style="margin:4px 0 0">"Hasta" es la hora de cierre: la última reserva empieza una hora antes. Los festivos de Colombia se calculan solos.</p><div class="hor muted" style="font-size:12px"><span></span><span>Abre</span><span>Cierra</span><span></span></div>${hor}
     <button class="btn btn-primary full" style="margin-top:14px" id="aBtn" onclick="guardarAjustesUI()">Guardar ajustes</button></div>`}
   ${!puede('finanzas')?'':`<div class="card"><h2>🧹 Privacidad</h2><p class="muted">Cada lunes se cierra la semana anterior: se genera el informe descargable (dura 4 semanas) y se borran los datos de las reservas presenciales. Las reservas de jugadores con cuenta quedan en su historial personal.</p>
@@ -747,7 +777,7 @@ function copiar(id){const t=$(id).textContent;(navigator.clipboard?navigator.cli
 async function guardarAjustesUI(){
   const hor={};for(const d of ['1','2','3','4','5','6','7','F'])hor[d]=$('hC'+d).checked?[0,0]:[Number($('hA'+d).value),Number($('hB'+d).value)];
   const b=$('aBtn');b.disabled=true;
-  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,mostrarNombres:$('aNombres').checked,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
+  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,mostrarNombres:$('aNombres').checked,pagoActivo:$('aPagoOn').checked,pagoNequi:$('aPagoN').value,pagoDaviplata:$('aPagoD').value,pagoOtro:$('aPagoO').value,pagoTitular:$('aPagoT').value,pagoNota:$('aPagoNota').value,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
   catch(e){toast(e.message,true);}finally{b.disabled=false;}}
 async function agregarAdmin(){try{await rpc('agregar_admin',{p_email:$('nuevoAdm').value,p_permisos:leerPermisos('pm-nuevo')});toast('Administrador agregado ✓');await cargar();}catch(e){toast(e.message,true);}}
 async function quitarAdmin(email,btn){if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='¿Seguro?';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Quitar';},3000);return;}
@@ -756,6 +786,17 @@ async function cambiarClave(){const a=$('p1').value,b=$('p2').value;
   if(a.length<8){toast('Mínimo 8 caracteres',true);return;}if(a!==b){toast('No coinciden',true);return;}
   const {error}=await sb.auth.updateUser({password:a});toast(error?error.message:'Contraseña actualizada ✓',!!error);if(!error)$('p1').value=$('p2').value='';}
 async function cerrarSem(b){b.disabled=true;try{const r=await rpc('cerrar_semanas');toast(r.eliminadas?`Listo: ${r.cerradas} semana(s) cerrada(s), ${r.eliminadas} registros borrados`:'No hay semanas pasadas por cerrar');await cargar();}catch(e){toast(e.message,true);}finally{b.disabled=false;}}
+
+/* ---------- App instalable ---------- */
+let PROMPT=null;const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const IOS_A=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();PROMPT=e;});
+window.addEventListener('appinstalled',()=>toast('¡Panel instalado! Búscalo en tu pantalla de inicio'));
+async function instalarPanel(){
+  if(PROMPT){PROMPT.prompt();try{await PROMPT.userChoice;}catch(e){}PROMPT=null;return;}
+  abrirModal(IOS_A?`<h2>Instalar en iPhone</h2><p>1. Abre esta página en <b>Safari</b>.<br>2. Toca <b>Compartir</b> (cuadro con flecha ⬆️).<br>3. Elige <b>"Agregar a inicio"</b> y luego <b>"Agregar"</b>.</p><button class="btn btn-primary full" onclick="cerrarModal()">Entendido</button>`
+    :`<h2>Instalar el panel</h2><p>En Chrome toca el menú <b>⋮</b> (arriba a la derecha) y elige <b>"Instalar app"</b> o <b>"Agregar a la pantalla principal"</b>.</p><p class="muted">Si no aparece, es porque ya lo tienes instalado.</p><button class="btn btn-primary full" onclick="cerrarModal()">Entendido</button>`);}
 
 /* ---------- Inicio ---------- */
 (async()=>{

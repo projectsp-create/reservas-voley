@@ -127,7 +127,7 @@
       <button class="btn btn-primary btn-sm" onclick="instalarPanel()">Instalar</button><button style="background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer" aria-label="Cerrar" onclick="ocultarInstAdm()">×</button></div>
     <div id="v-agenda"></div><div id="v-pend" class="hidden"></div><div id="v-prox" class="hidden"></div><div id="v-jug" class="hidden"></div>
     <div id="v-tienda" class="hidden"></div><div id="v-fin" class="hidden"></div><div id="v-ajustes" class="hidden"></div>
-    <p class="muted center" style="font-size:12px;margin:24px 0 0;color:var(--dim)" id="pieVersion">Panel · versión 4.6</p>
+    <p class="muted center" style="font-size:12px;margin:24px 0 0;color:var(--dim)" id="pieVersion">Panel · versión 4.6.1</p>
   </main>
 </section>
 
@@ -136,7 +136,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const VERSION='4.6';
+const VERSION='4.6.1';
 const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],DCORTO=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const CATEGORIAS=['Mantenimiento arena','Redes y balones','Energía / iluminación','Agua','Personal / aseo','Publicidad','Arriendo','Impuestos y permisos','Otros'];
@@ -841,6 +841,11 @@ function vAjustes(){
     <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="aNombres" ${C.mostrarNombres?'checked':''} style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Mostrar el nombre abreviado del jugador (ej. "Meyer B.") en las horas ocupadas del calendario público. Cada jugador puede ocultarlo desde su cuenta.</span></label>
     <h2 style="margin-top:22px">🕔 Horario</h2><p class="muted" style="margin:4px 0 0">"Hasta" es la hora de cierre: la última reserva empieza una hora antes. Los festivos de Colombia se calculan solos.</p><div class="hor muted" style="font-size:12px"><span></span><span>Abre</span><span>Cierra</span><span></span></div>${hor}
     <button class="btn btn-primary full" style="margin-top:14px" id="aBtn" onclick="guardarAjustesUI()">Guardar ajustes</button></div>`}
+  ${!PERM.dueno?'':`<div class="card" style="border-color:rgba(255,92,92,.35)"><h2>🧪 Borrar pruebas de la tienda</h2>
+    <p class="muted" style="margin:6px 0 0">Solo tú (dueño) ves esto. Borra <b>todas</b> las ventas, cuentas, entradas, conteos/mermas y cierres de caja, y deja la tienda en cero para arrancar de verdad. Las reservas de canchas y los gastos no se tocan.</p>
+    <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="rtProd" style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Borrar también los productos (si no, quedan creados con stock en 0 y les cargas la mercancía real con "+ Entrada")</span></label>
+    <label>Para confirmar escribe BORRAR</label><input type="text" id="rtConf" autocomplete="off" placeholder="BORRAR">
+    <button class="btn btn-danger full" style="margin-top:12px" onclick="reiniciarTienda(this)">Borrar pruebas de la tienda</button></div>`}
   ${!puede('finanzas')?'':`<div class="card"><h2>🧹 Privacidad</h2><p class="muted">Cada lunes se cierra la semana anterior: se genera el informe descargable (dura 4 semanas) y se borran los datos de las reservas presenciales. Las reservas de jugadores con cuenta quedan en su historial personal.</p>
     <button class="btn btn-ghost full" onclick="cerrarSem(this)">Cerrar semanas pasadas ahora</button></div>`}`;}
 const PERMS=[['finanzas','💰 Ver finanzas e informes'],['gastos','🧾 Registrar y borrar gastos'],['ajustes','⚙️ Cambiar ajustes (tarifa, horario…)'],['bloquear','🚫 Bloquear jugadores'],['fijos','📌 Crear y aprobar horarios fijos'],['vender','🛒 Vender y cierre de caja'],['inventario','📦 Productos e inventario']];
@@ -875,6 +880,11 @@ async function cambiarClave(){const a=$('p1').value,b=$('p2').value;
   if(a.length<8){toast('Mínimo 8 caracteres',true);return;}if(a!==b){toast('No coinciden',true);return;}
   const {error}=await sb.auth.updateUser({password:a});toast(error?error.message:'Contraseña actualizada ✓',!!error);if(!error)$('p1').value=$('p2').value='';}
 async function cerrarSem(b){b.disabled=true;try{const r=await rpc('cerrar_semanas');toast(r.eliminadas?`Listo: ${r.cerradas} semana(s) cerrada(s), ${r.eliminadas} registros borrados`:'No hay semanas pasadas por cerrar');await cargar();}catch(e){toast(e.message,true);}finally{b.disabled=false;}}
+
+async function reiniciarTienda(b){b.disabled=true;
+  try{const r=await rpc('reiniciar_tienda',{p_borrar_productos:$('rtProd').checked,p_confirmo:$('rtConf').value});CARRO={};
+    toast(`Tienda en cero ✓ (${r.ventas} ventas, ${r.movimientos} movimientos, ${r.cierres} cierres borrados)`);await cargar();}
+  catch(e){toast(e.message,true);b.disabled=false;}}
 
 /* ---------- App instalable ---------- */
 let PROMPT=null;const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;

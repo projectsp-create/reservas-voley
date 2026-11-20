@@ -581,27 +581,40 @@ function modalAjuste(id){const p=D.productos.find(x=>x.id===id);
    <label>Motivo (si hay diferencia)</label><input type="text" id="aNota" maxlength="120" placeholder="Ej. 2 vencidos">
    <div style="display:grid;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="guardarAjuste('${id}',this)">Guardar conteo</button><button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button></div>`);}
 async function guardarAjuste(id,b){b.disabled=true;try{await rpc('ajustar_stock',{p_producto:id,p_stock_real:Number($('aReal').value),p_notas:$('aNota').value});cerrarModal();toast('Conteo guardado ✓');await cargar();}catch(e){toast(e.message,true);b.disabled=false;}}
-function vCierre(){
-  const VH=(D.ventasHoy||[]).filter(v=>!v.anulada),porM={};
-  MEDIOS.forEach(m=>porM[m]={c:0,t:0});
+function datosCierre(){
+  const porM={};MEDIOS.forEach(m=>porM[m]={c:0,t:0});
   (D.cobrosHoy||[]).forEach(x=>{const m=porM[x.medio]?x.medio:'Otro';porM[m].c+=x.total;});
-  VH.forEach(v=>{const m=porM[v.medio]?v.medio:'Otro';porM[m].t+=v.total;});
-  const tc=Object.values(porM).reduce((a,x)=>a+x.c,0),tt=Object.values(porM).reduce((a,x)=>a+x.t,0),esp=porM['Efectivo'].c+porM['Efectivo'].t;
+  (D.ventasHoy||[]).filter(v=>!v.anulada).forEach(v=>{const m=porM[v.medio]?v.medio:'Otro';porM[m].t+=v.total;});
+  return porM;}
+function vCierre(){
+  const porM=datosCierre(),usados=MEDIOS.filter(m=>porM[m].c||porM[m].t||m==='Efectivo');
+  const tc=MEDIOS.reduce((a,m)=>a+porM[m].c,0),tt=MEDIOS.reduce((a,m)=>a+porM[m].t,0);
   const CI=D.cierres||[];
-  return `<div class="card"><h2>💵 Cierre de caja · hoy</h2><p class="muted" style="margin:6px 0 10px">Lo cobrado hoy en canchas (reservas marcadas como pagadas hoy) y lo vendido en la tienda.</p>
+  return `<div class="card"><h2>💵 Cierre de caja · hoy</h2><p class="muted" style="margin:6px 0 10px">Lo cobrado hoy en canchas (reservas marcadas como pagadas hoy) y lo vendido en la tienda, por medio de pago.</p>
    <div class="scroll-x"><table><tr><th>Medio</th><th class="num">🏐 Canchas</th><th class="num">🛒 Tienda</th><th class="num">Total</th></tr>
-   ${MEDIOS.filter(m=>porM[m].c||porM[m].t||m==='Efectivo').map(m=>`<tr><td>${m}</td><td class="num">${pesos(porM[m].c)}</td><td class="num">${pesos(porM[m].t)}</td><td class="num"><b>${pesos(porM[m].c+porM[m].t)}</b></td></tr>`).join('')}
+   ${usados.map(m=>`<tr><td>${m}</td><td class="num">${pesos(porM[m].c)}</td><td class="num">${pesos(porM[m].t)}</td><td class="num"><b>${pesos(porM[m].c+porM[m].t)}</b></td></tr>`).join('')}
    <tr><td><b>Total</b></td><td class="num"><b>${pesos(tc)}</b></td><td class="num"><b>${pesos(tt)}</b></td><td class="num"><b style="color:var(--neon)">${pesos(tc+tt)}</b></td></tr></table></div>
-   <div class="kv" style="margin-top:14px"><b>Efectivo que debería haber</b><span style="font-size:18px;font-weight:700">${pesos(esp)}</span></div>
-   <div class="row"><div><label>Efectivo que contaste</label><input type="number" id="cCont" min="0" step="1000" placeholder="${esp}" oninput="difCierre(${esp})"></div><div><label>Nota</label><input type="text" id="cNota" maxlength="200" placeholder="Opcional"></div></div>
-   <p id="cDif" class="muted" style="margin:8px 0 0"></p>
-   <button class="btn btn-primary full" style="margin-top:12px" onclick="guardarCierreUI(${esp},this)">Guardar cierre del día</button></div>
-  <div class="card"><h2>Cierres anteriores</h2>${CI.length?`<div class="scroll-x"><table><tr><th>Fecha</th><th class="num">Esperado</th><th class="num">Contado</th><th class="num">Diferencia</th><th>Por</th></tr>
-   ${CI.map(c=>{const d=c.contado-c.esperado;return `<tr><td>${fCorta(c.fecha)}</td><td class="num">${pesos(c.esperado)}</td><td class="num">${pesos(c.contado)}</td><td class="num" style="font-weight:700;color:${d<0?'var(--bad)':d>0?'var(--warn)':'var(--ok)'}">${d===0?'✓ Cuadra':pesos(d)}</td><td class="muted">${esc((c.por||'').split('@')[0])}${c.notas?' · '+esc(c.notas):''}</td></tr>`;}).join('')}</table></div>`:'<p class="muted center" style="padding:10px 0">Aún no hay cierres.</p>'}</div>`;}
-function difCierre(esp){const v=$('cCont').value;if(v===''){$('cDif').textContent='';return;}const d=Number(v)-esp;
-  $('cDif').innerHTML=d===0?'<span style="color:var(--ok)">✓ La caja cuadra</span>':d<0?`<span style="color:var(--bad)">Faltan ${pesos(-d)}</span>`:`<span style="color:var(--warn)">Sobran ${pesos(d)}</span>`;}
-async function guardarCierreUI(esp,b){if($('cCont').value===''){toast('Escribe el efectivo que contaste',true);return;}b.disabled=true;
-  try{await rpc('guardar_cierre',{p_contado:Number($('cCont').value),p_detalle:{efectivoEsperado:esp},p_notas:$('cNota').value});toast('Cierre guardado ✓');await cargar();}catch(e){toast(e.message,true);b.disabled=false;}}
+   <h3 style="margin:18px 0 4px">Ahora revisa lo que realmente tienes</h3>
+   <p class="muted" style="margin:0 0 8px;font-size:13px">Efectivo: cuenta la plata. Nequi, Daviplata, transferencias: mira en la app cuánto te llegó hoy.</p>
+   ${usados.map(m=>{const e=porM[m].c+porM[m].t;return `<div class="row" style="align-items:end"><div><label>${m==='Efectivo'?'💵 Efectivo contado':m==='Nequi'?'📱 Nequi recibido':m==='Daviplata'?'📱 Daviplata recibido':m==='Transferencia'?'🏦 Transferencias recibidas':'Otro'} <span style="text-transform:none;letter-spacing:0">(debería: ${pesos(e)})</span></label>
+     <input type="number" class="cMed" data-m="${m}" data-e="${e}" min="0" step="100" placeholder="${e}" oninput="difCierre()"></div><div class="cDifM muted" data-m="${m}" style="padding-bottom:12px"></div></div>`;}).join('')}
+   <div class="kv" style="margin-top:6px"><b>Resultado</b><span id="cDif" class="muted">Llena cada medio</span></div>
+   <label>Nota</label><input type="text" id="cNota" maxlength="200" placeholder="Opcional. Ej. faltó un Nequi de $5.000 por confirmar">
+   <button class="btn btn-primary full" style="margin-top:12px" onclick="guardarCierreUI(this)">Guardar cierre del día</button></div>
+  <div class="card"><h2>Cierres anteriores</h2>${CI.length?CI.map(c=>{const d=c.contado-c.esperado,md=(c.detalle&&c.detalle.medios)||null;
+     return `<div class="item" style="padding:10px 0;display:block"><div style="display:flex;justify-content:space-between;gap:10px"><b>${fCorta(c.fecha)}</b>
+       <b style="color:${d<0?'var(--bad)':d>0?'var(--warn)':'var(--ok)'}">${d===0?'✓ Cuadró':d<0?'Faltaron '+pesos(-d):'Sobraron '+pesos(d)}</b></div>
+       <div class="muted" style="font-size:12px">Esperado ${pesos(c.esperado)} · revisado ${pesos(c.contado)} · ${esc((c.por||'').split('@')[0])}${c.notas?' · '+esc(c.notas):''}</div>
+       ${md?`<div class="muted" style="font-size:12px">${Object.entries(md).filter(([,x])=>x.esperado||x.contado).map(([m,x])=>{const dd=x.contado-x.esperado;return `${esc(m)}: ${pesos(x.contado)}${dd?` <span style="color:${dd<0?'var(--bad)':'var(--warn)'}">(${dd>0?'+':''}${pesos(dd)})</span>`:' ✓'}`;}).join(' · ')}</div>`:''}</div>`;}).join(''):'<p class="muted center" style="padding:10px 0">Aún no hay cierres.</p>'}</div>`;}
+function difCierre(){let te=0,tc=0,lleno=true;
+  document.querySelectorAll('.cMed').forEach(i=>{const e=Number(i.dataset.e),o=document.querySelector(`.cDifM[data-m="${i.dataset.m}"]`);te+=e;
+    if(i.value===''){lleno=false;o.textContent='';return;}const d=Number(i.value)-e;tc+=Number(i.value);
+    o.innerHTML=d===0?'<span style="color:var(--ok)">✓ Cuadra</span>':d<0?`<span style="color:var(--bad)">Faltan ${pesos(-d)}</span>`:`<span style="color:var(--warn)">Sobran ${pesos(d)}</span>`;});
+  const d=tc-te;$('cDif').innerHTML=!lleno?'Llena cada medio':d===0?'<span style="color:var(--ok)">✓ Todo cuadra</span>':d<0?`<span style="color:var(--bad)">Faltan ${pesos(-d)} en total</span>`:`<span style="color:var(--warn)">Sobran ${pesos(d)} en total</span>`;}
+async function guardarCierreUI(b){const C={};let falta=false;
+  document.querySelectorAll('.cMed').forEach(i=>{if(i.value==='')falta=true;else C[i.dataset.m]=Number(i.value);});
+  if(falta){toast('Llena lo que tienes en cada medio (pon 0 si no llegó nada)',true);return;}b.disabled=true;
+  try{await rpc('guardar_cierre',{p_contado:0,p_detalle:{contado:C},p_notas:$('cNota').value});toast('Cierre guardado ✓');await cargar();}catch(e){toast(e.message,true);b.disabled=false;}}
 
 /* ---------- Finanzas ---------- */
 function vFin(){

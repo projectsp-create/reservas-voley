@@ -122,9 +122,12 @@
     </nav>
   </header>
   <main class="wrap" style="padding-bottom:40px">
+    <div class="card hidden" id="instAdm" style="display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(198,244,50,.14),rgba(198,244,50,.04));border-color:rgba(198,244,50,.4)">
+      <img src="icono-192.png" alt="" style="width:42px;height:42px;border-radius:10px;flex:none"><div style="flex:1;min-width:0"><b>📲 Instala el panel como app</b><div class="muted">A un toque desde tu pantalla de inicio.</div></div>
+      <button class="btn btn-primary btn-sm" onclick="instalarPanel()">Instalar</button><button style="background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer" aria-label="Cerrar" onclick="ocultarInstAdm()">×</button></div>
     <div id="v-agenda"></div><div id="v-pend" class="hidden"></div><div id="v-prox" class="hidden"></div><div id="v-jug" class="hidden"></div>
     <div id="v-tienda" class="hidden"></div><div id="v-fin" class="hidden"></div><div id="v-ajustes" class="hidden"></div>
-    <p class="muted center" style="font-size:12px;margin:24px 0 0;color:var(--dim)" id="pieVersion">Panel · versión 4.5</p>
+    <p class="muted center" style="font-size:12px;margin:24px 0 0;color:var(--dim)" id="pieVersion">Panel · versión 4.6</p>
   </main>
 </section>
 
@@ -133,7 +136,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const VERSION='4.5';
+const VERSION='4.6';
 const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],DCORTO=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const CATEGORIAS=['Mantenimiento arena','Redes y balones','Energía / iluminación','Agua','Personal / aseo','Publicidad','Arriendo','Impuestos y permisos','Otros'];
@@ -200,7 +203,7 @@ async function cargar(){
   try{
     RAW=await rpc('panel_admin');
     $('vLogin').classList.add('hidden');$('cargando').classList.add('hidden');$('vApp').classList.remove('hidden');
-    construir();pintar();
+    construir();pintar();pintarInstAdm();
   }catch(e){if(RAW||!/autorizado|vencida/i.test(e.message))toast(e.message,true);if(!RAW&&!/autorizado|vencida/i.test(e.message))mostrarLogin(e.message);}
 }
 let FEST=new Set(),PERM={dueno:false,permisos:{}};
@@ -208,7 +211,7 @@ const puede=p=>PERM.dueno||!!(PERM.permisos&&PERM.permisos[p]);
 function horasDia(cfg,f){const h=(FEST.has(f)&&cfg.horario.F)?cfg.horario.F:cfg.horario[String(iso(f))];const o=[];if(!h||!(h[1]>h[0]))return o;for(let i=h[0];i<h[1];i++)o.push(i);return o;}
 function agrupar(res){
   const m={};res.forEach(r=>{
-    if(!m[r.codigo])m[r.codigo]={codigo:r.codigo,fecha:r.fecha,cancha:r.cancha,horas:[],nombre:r.nombre,whatsapp:r.whatsapp||'',estado:r.estado,total:0,medio:r.medio||'',origen:r.origen,notas:r.notas||'',por:r.actualizado_por||'',creado:r.creado,uid:r.user_id||null,jid:r.jugador_id||null,fijo:!!r.fijo_id,rep:r.pago_reportado?(r.pago_rep_medio||'sí'):''};
+    if(!m[r.codigo])m[r.codigo]={codigo:r.codigo,fecha:r.fecha,cancha:r.cancha,horas:[],nombre:r.nombre,whatsapp:r.whatsapp||'',estado:r.estado,total:0,medio:r.medio||'',origen:r.origen,notas:r.notas||'',por:r.actualizado_por||'',creado:r.creado,uid:r.user_id||null,jid:r.jugador_id||null,fijo:!!r.fijo_id,rep:r.pago_reportado?(r.pago_rep_medio||'sí'):'',rec:r.recordado||null};
     m[r.codigo].horas.push(r.hora);m[r.codigo].total+=Number(r.valor)||0;});
   return Object.values(m).map(g=>{g.horas.sort((a,b)=>a-b);return g;});
 }
@@ -246,7 +249,7 @@ function construir(){
     acumIngresos:suma(semanas,'ingresos'),acumTienda:suma(semanas,'tGanancia'),acumGastos:Number(R.gastosTotal)||0};
   const base=location.href.split('#')[0].split('?')[0].replace(/admin\.html$/,'');
   D={cfg,hoy,fecha:FECHA,horasFecha:horasDia(cfg,FECHA),delDia,pendientes,proximas,semanas,gastos:gas,kpis,grupos,
-     categorias:CATEGORIAS,medios:MEDIOS,urlPublica:base,urlAdmin:base+'admin.html',yo:R.yo,admins:R.admins,informes:R.informes||[],jugadores:R.jugadores||0,bloqueados:R.bloqueados||[],jugadoresLista:R.jugadoresLista||[],fijos:R.fijos||[],solicitudes:R.solicitudesFijo||[],cuentasPend:R.cuentasPendientes||[],productos:R.productos||[],ventasHoy:R.ventasHoy||[],cobrosHoy:R.cobrosHoy||[],cierres:R.cierres||[],espera:R.espera||[]};
+     categorias:CATEGORIAS,medios:MEDIOS,urlPublica:base,urlAdmin:base+'admin.html',yo:R.yo,admins:R.admins,informes:R.informes||[],jugadores:R.jugadores||0,bloqueados:R.bloqueados||[],jugadoresLista:R.jugadoresLista||[],fijos:R.fijos||[],solicitudes:R.solicitudesFijo||[],cuentasPend:R.cuentasPendientes||[],productos:R.productos||[],ventasHoy:R.ventasHoy||[],cobrosHoy:R.cobrosHoy||[],cierres:R.cierres||[],espera:R.espera||[],cuentas:R.cuentas||[],ocupacion:R.ocupacion||[]};
   $('tNeg').textContent=cfg.negocio;$('tYo').textContent=R.yo;
   const nP=kpis.pendientes+(R.solicitudesFijo||[]).length+(R.espera||[]).filter(e=>e.libre&&!e.avisado).length;const c2=$('cntPend');c2.textContent=nP;c2.classList.toggle('hidden',!nP);
   const bf=document.querySelector('#nav button[data-v=fin]');bf.classList.toggle('hidden',!(puede('finanzas')||puede('gastos')));
@@ -397,9 +400,21 @@ function vPend(){const L=D.pendientes;
     ${E.length>lib.length?`<div class="dayhdr">Siguen ocupadas</div>${E.filter(e=>!e.libre).map(e=>itemEspera(e,false)).join('')}`:''}</div>`:'';
   $('v-pend').innerHTML=SOL+(lib.length?ESP:'')+`<div class="card"><h2>🔔 Por confirmar</h2><p class="muted" style="margin:6px 0 0">Al confirmar se abre WhatsApp con el mensaje listo para el cliente: solo toca <b>Enviar</b>.</p>
    ${L.length?L.map(itemGrupo).join(''):'<p class="center muted" style="padding:26px 0">🎉 No hay solicitudes pendientes.</p>'}</div>`+(lib.length?'':ESP);}
+let REC_DIA='manana';
+function cardRecordar(){
+  const f=REC_DIA==='hoy'?D.hoy:addD(D.hoy,1);
+  const L=D.grupos.filter(g=>g.fecha===f&&ACT.includes(g.estado)&&(f!==D.hoy||g.horas[g.horas.length-1]>=RAW.ahora)).sort((a,b)=>a.horas[0]-b.horas[0]||a.cancha-b.cancha);
+  const falta=L.filter(g=>!g.rec&&g.whatsapp).length;
+  return `<div class="card"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">📣 Recordatorios</h2>
+    ${[['hoy','Hoy'],['manana','Mañana']].map(([k,t])=>`<button class="btn btn-sm ${REC_DIA===k?'btn-primary':'btn-ghost'}" onclick="REC_DIA='${k}';vProx()">${t}</button>`).join('')}</div>
+    <p class="muted" style="margin:6px 0 0">${L.length?(falta?`Te faltan <b style="color:var(--warn)">${falta}</b> por recordar · ${fLarga(f)}`:`✅ Ya recordaste a todos · ${fLarga(f)}`):'No hay reservas '+(REC_DIA==='hoy'?'pendientes hoy':'para mañana')+'.'}</p>
+    ${L.map(g=>`<div class="item" style="padding:10px 0;align-items:center"><div class="body"><div class="nm">${horaC(g.horas[0])} · ${esc(g.nombre)} <span class="badge b-${g.estado}">${g.estado}</span></div>
+      <div class="muted">Cancha ${g.cancha} · ${rangoH(g.horas)}${g.rec?' · <span style="color:var(--ok)">✓ Recordado</span>':''}</div></div>
+      ${g.whatsapp?`<button class="btn ${g.rec?'btn-ghost':'btn-wa'} btn-sm" onclick="recordar('${g.codigo}')">💬 ${g.rec?'Otra vez':'Recordar'}</button>`:'<span class="muted" style="font-size:12px">Sin WhatsApp</span>'}</div>`).join('')}</div>`;}
+async function recordar(cod){wa(cod,'recordar');try{await rpc('marcar_recordado',{p_codigo:cod});const g=buscar(cod);if(g)g.rec=new Date().toISOString();RAW.reservas.forEach(r=>{if(r.codigo===cod)r.recordado=new Date().toISOString();});vProx();}catch(e){toast(e.message,true);}}
 function vProx(){
   const L=D.proximas.filter(g=>FILTRO==='todas'||(FILTRO==='activas'?ACT.includes(g.estado):g.estado===FILTRO));
-  let h=`<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">📋 Próximos 14 días</h2>
+  let h=cardRecordar()+`<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">📋 Próximos 14 días</h2>
     <select style="width:auto" onchange="FILTRO=this.value;vProx()">${[['activas','Activas'],['Pendiente','Pendientes'],['Confirmada','Por cobrar'],['Pagada','Pagadas'],['Cancelada','Canceladas'],['todas','Todas']].map(([v,t])=>`<option value="${v}" ${FILTRO===v?'selected':''}>${t}</option>`).join('')}</select></div>`;
   if(!L.length)h+='<p class="center muted" style="padding:26px 0">No hay reservas con este filtro.</p>';
   let dia='';L.forEach(g=>{if(g.fecha!==dia){dia=g.fecha;h+=`<div class="dayhdr">${g.fecha===D.hoy?'Hoy · ':''}${fLarga(g.fecha)}</div>`;}h+=itemGrupo(g);});
@@ -528,11 +543,12 @@ const CATS_P=['Bebidas','Hidratantes','Snacks','Alquiler','Otros'];
 let TSUB='vender',CARRO={};
 function vTienda(){
   if(TSUB==='inventario'&&!puede('inventario'))TSUB='vender';if(TSUB!=='inventario'&&!puede('vender'))TSUB='inventario';
-  const tabs=[['vender','🛒 Vender',puede('vender')],['inventario','📦 Inventario',puede('inventario')],['cierre','💵 Cierre de caja',puede('vender')]].filter(x=>x[2]);
+  const nC=D.cuentas.length;
+  const tabs=[['vender','🛒 Vender',puede('vender')],['cuentas','🧾 Cuentas'+(nC?' ('+nC+')':''),puede('vender')],['inventario','📦 Inventario',puede('inventario')],['cierre','💵 Cierre de caja',puede('vender')]].filter(x=>x[2]);
   const bajos=D.productos.filter(p=>p.activo&&p.stock<=p.stock_minimo);
   let h=`<div class="card" style="padding:10px"><div style="display:flex;gap:6px;flex-wrap:wrap">${tabs.map(([k,t])=>`<button class="btn btn-sm ${TSUB===k?'btn-primary':'btn-ghost'}" onclick="TSUB='${k}';vTienda()">${t}</button>`).join('')}</div>
     ${bajos.length?`<p class="muted" style="margin:10px 4px 0;color:var(--warn)">⚠️ Se está acabando: ${bajos.map(p=>esc(p.nombre)+' ('+p.stock+')').join(', ')}</p>`:''}</div>`;
-  if(TSUB==='vender')h+=vVender();if(TSUB==='inventario')h+=vInventario();if(TSUB==='cierre')h+=vCierre();
+  if(TSUB==='vender')h+=vVender();if(TSUB==='cuentas')h+=vCuentas();if(TSUB==='inventario')h+=vInventario();if(TSUB==='cierre')h+=vCierre();
   $('v-tienda').innerHTML=h;}
 function vVender(){
   const act=D.productos.filter(p=>p.activo);
@@ -636,6 +652,83 @@ async function guardarCierreUI(b){const C={};let falta=false;
   if(falta){toast('Llena lo que tienes en cada medio (pon 0 si no llegó nada)',true);return;}b.disabled=true;
   try{await rpc('guardar_cierre',{p_contado:0,p_detalle:{contado:C},p_notas:$('cNota').value});toast('Cierre guardado ✓');await cargar();}catch(e){toast(e.message,true);b.disabled=false;}}
 
+/* ---------- Cuentas abiertas ---------- */
+let CC={},CC_ID=null;
+function vCuentas(){
+  const L=D.cuentas;
+  let h=`<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">🧾 Cuentas abiertas</h2><button class="btn btn-primary btn-sm" onclick="modalAbrirCuenta()">+ Abrir cuenta</button></div>
+    <p class="muted" style="margin:6px 0 0">El equipo va pidiendo mientras juega y paga todo al final. Lo que agregas sale del inventario de una vez; la venta cuenta el día que se cobra.</p></div>`;
+  if(!L.length)return h+`<div class="card"><p class="muted center" style="padding:16px 0">No hay cuentas abiertas.</p></div>`;
+  L.forEach(c=>{const vieja=c.fecha<D.hoy;
+    h+=`<div class="card" style="${vieja?'border-color:var(--warn)':''}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+      <div><h2 style="font-size:20px">${c.cancha?'🏐 Cancha '+c.cancha+(c.cuenta&&c.cuenta!=='Cancha '+c.cancha?' · ':''):''}${c.cuenta&&c.cuenta!=='Cancha '+c.cancha?esc(c.cuenta):''}</h2>
+      <div class="muted">${vieja?'<span style="color:var(--warn)">⚠️ Abierta desde el '+fCorta(c.fecha)+'</span>':'Abierta '+new Date(c.creado).toLocaleTimeString('es-CO',{hour:'numeric',minute:'2-digit'})} · ${esc((c.por||'').split('@')[0])}</div></div>
+      <b style="font-family:'Barlow Condensed';font-size:30px;color:var(--neon);white-space:nowrap">${pesos(c.total)}</b></div>
+      ${c.items.length?c.items.map(i=>`<div class="item" style="padding:8px 0;align-items:center"><div class="body"><b>${i.cantidad}× ${esc(i.nombre)}</b> <span class="muted">${pesos(i.precio)} c/u</span></div>
+        <b>${pesos(i.cantidad*i.precio)}</b><button class="btn btn-ghost btn-sm" title="Quitar 1" onclick="quitarCuenta('${i.id}',this)">−</button></div>`).join(''):'<p class="muted" style="margin:10px 0">Todavía no ha pedido nada.</p>'}
+      <div class="row" style="margin-top:10px"><button class="btn btn-navy" onclick="modalAgregarCuenta('${c.id}')">+ Agregar productos</button>
+        ${c.items.length?`<button class="btn btn-primary" onclick="modalCobrarCuenta('${c.id}')">💵 Cobrar ${pesos(c.total)}</button>`:''}</div>
+      ${!c.items.length||puede('inventario')||c.por===D.yo?`<button class="btn btn-ghost btn-sm" style="margin-top:8px;border:0;color:var(--muted)" onclick="cerrarCuenta('${c.id}',this)">Cerrar sin cobrar${c.items.length?' (devuelve el stock)':''}</button>`:''}</div>`;});
+  return h;}
+function modalAbrirCuenta(){
+  const hoyR=D.grupos.filter(g=>g.fecha===D.hoy&&ACT.includes(g.estado)).sort((a,b)=>a.horas[0]-b.horas[0]);
+  abrirModal(`<h2>Abrir cuenta</h2>
+    ${hoyR.length?`<label>Reservas de hoy (toca una)</label><div class="hchk">${hoyR.map(g=>`<label style="cursor:pointer" onclick="$('ccCan').value='${g.cancha}';$('ccNom').value=${esc(JSON.stringify(g.nombre))}">🏐 ${g.cancha} · ${esc(g.nombre)} · ${horaC(g.horas[0])}</label>`).join('')}</div>`:''}
+    <div class="row"><div><label>Cancha</label><select id="ccCan"><option value="">Sin cancha</option>${Array.from({length:D.cfg.canchas},(_,i)=>`<option value="${i+1}">Cancha ${i+1}</option>`).join('')}</select></div>
+    <div><label>Nombre / equipo</label><input type="text" id="ccNom" maxlength="60" placeholder="Ej. Los Halcones"></div></div>
+    <div style="display:grid;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="abrirCuenta(this)">Abrir cuenta</button><button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button></div>`);}
+async function abrirCuenta(b){b.disabled=true;try{const r=await rpc('abrir_cuenta',{p_nombre:$('ccNom').value,p_cancha:$('ccCan').value?Number($('ccCan').value):null});
+  cerrarModal();toast('Cuenta abierta ✓');TSUB='cuentas';await cargar();modalAgregarCuenta(r.id);}catch(e){toast(e.message,true);b.disabled=false;}}
+function modalAgregarCuenta(id){CC={};CC_ID=id;pintarAgregarCuenta();}
+function pintarAgregarCuenta(){
+  const c=D.cuentas.find(x=>x.id===CC_ID);if(!c){cerrarModal();return;}
+  const act=D.productos.filter(p=>p.activo),n=Object.values(CC).reduce((a,q)=>a+q,0),tot=Object.entries(CC).reduce((a,[id,q])=>a+q*(act.find(p=>p.id===id)||{precio:0}).precio,0);
+  abrirModal(`<h2>Agregar a la cuenta</h2><p class="muted">${c.cancha?'Cancha '+c.cancha+' · ':''}${esc(c.cuenta)}</p>
+    ${act.length?CATS_P.map(cat=>{const L=act.filter(p=>p.categoria===cat);return L.length?`<div class="dayhdr">${cat}</div><div style="display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">${L.map(p=>`<button class="cell ${p.stock>0?'libre':''}" style="min-height:64px;align-items:flex-start;position:relative;${p.stock<=0?'opacity:.4':''}" ${p.stock<=0?'disabled':`onclick="sumarCC('${p.id}',1)"`}>
+      <div class="n" style="white-space:normal">${esc(p.nombre)}</div><div style="color:var(--neon);font-weight:700">${pesos(p.precio)}</div>${CC[p.id]?`<span class="badge b-Pagada" style="position:absolute;top:6px;right:6px">${CC[p.id]}</span>`:`<div class="e" style="color:var(--muted)">${p.stock<=0?'Agotado':'Quedan '+p.stock}</div>`}</button>`).join('')}</div>`:'';}).join(''):'<p class="muted">No hay productos. Créalos en 📦 Inventario.</p>'}
+    ${n?`<p class="muted" style="margin:12px 0 0">${Object.entries(CC).filter(([,q])=>q).map(([id,q])=>{const p=act.find(x=>x.id===id);return `${q}× ${esc(p.nombre)} <a href="#" onclick="sumarCC('${id}',-1);return false">−</a>`;}).join(' · ')}</p>`:''}
+    <div style="display:grid;gap:8px;margin-top:14px"><button class="btn btn-primary" ${n?'':'disabled'} onclick="guardarCC(this)">Agregar ${n?n+' producto'+(n>1?'s':'')+' · '+pesos(tot):''}</button><button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button></div>`);}
+function sumarCC(id,d){const p=D.productos.find(x=>x.id===id),q=(CC[id]||0)+d;if(q>p.stock){toast('Solo quedan '+p.stock+' de '+p.nombre,true);return;}CC[id]=Math.max(0,q);const sc=document.querySelector('.modal').scrollTop;pintarAgregarCuenta();document.querySelector('.modal').scrollTop=sc;}
+async function guardarCC(b){b.disabled=true;const items=Object.entries(CC).filter(([,q])=>q>0).map(([producto,cantidad])=>({producto,cantidad}));
+  try{const r=await rpc('agregar_a_cuenta',{p_id:CC_ID,p_items:items});cerrarModal();toast('Agregado ✓ Cuenta: '+pesos(r.total));await cargar();}catch(e){toast(e.message,true);b.disabled=false;}}
+async function quitarCuenta(item,b){b.disabled=true;try{await rpc('quitar_de_cuenta',{p_item:item,p_cantidad:1});toast('Quitado, el stock volvió');await cargar();}catch(e){toast(e.message,true);b.disabled=false;}}
+function modalCobrarCuenta(id){const c=D.cuentas.find(x=>x.id===id);
+  abrirModal(`<h2>Cobrar cuenta</h2><p class="muted">${c.cancha?'Cancha '+c.cancha+' · ':''}${esc(c.cuenta)}</p>
+    <div class="kv">${c.items.map(i=>`<b>${i.cantidad}× ${esc(i.nombre)}</b><span>${pesos(i.cantidad*i.precio)}</span>`).join('')}<b>TOTAL</b><span style="font-size:22px;font-weight:800;color:var(--neon)">${pesos(c.total)}</span></div>
+    <label>Medio de pago</label><select id="ccMedio">${MEDIOS.map(m=>`<option>${m}</option>`).join('')}</select>
+    <label>Nota (opcional)</label><input type="text" id="ccNota" maxlength="120">
+    <div style="display:grid;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="cobrarCuenta('${id}',this)">Cobrar ${pesos(c.total)}</button><button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button></div>`);}
+async function cobrarCuenta(id,b){b.disabled=true;try{const r=await rpc('cobrar_cuenta',{p_id:id,p_medio:$('ccMedio').value,p_notas:$('ccNota').value});cerrarModal();toast('Cuenta cobrada ✓ '+pesos(r.total));await cargar();}catch(e){toast(e.message,true);b.disabled=false;}}
+async function cerrarCuenta(id,b){if(b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='¿Seguro? Toca otra vez';return;}
+  try{await rpc('cerrar_cuenta',{p_id:id});toast('Cuenta cerrada');await cargar();}catch(e){toast(e.message,true);}}
+
+/* ---------- Mapa de horas fuertes ---------- */
+let MAPA_S=8;
+function mapaHoras(){
+  const desde=addD(D.hoy,-7*MAPA_S),A={},cols=['1','2','3','4','5','6','7'];let hayF=false;
+  const sumar=(f,h,v,o)=>{if(f<desde||f>=D.hoy)return;const k=FEST.has(f)?'F':String(iso(f));if(k==='F')hayF=true;const c=(A[k]=A[k]||{});const x=(c[h]=c[h]||{v:0,o:0});x.v+=v;x.o+=o;};
+  D.ocupacion.forEach(r=>sumar(r.f,r.h,r.v,r.o));
+  const yaCerr=new Set(D.ocupacion.map(r=>r.f));
+  const vend={};RAW.reservas.forEach(r=>{if(VEND.includes(r.estado))vend[r.fecha+'|'+r.hora]=(vend[r.fecha+'|'+r.hora]||0)+1;});
+  for(let f=lunesDe(D.hoy);f<D.hoy;f=addD(f,1))if(!yaCerr.has(f))horasDia(D.cfg,f).forEach(h=>sumar(f,h,vend[f+'|'+h]||0,D.cfg.canchas));
+  if(hayF)cols.push('F');
+  const hrs=[...new Set(Object.values(A).flatMap(c=>Object.keys(c).map(Number)))].sort((a,b)=>a-b);
+  const NOM={1:'Lun',2:'Mar',3:'Mié',4:'Jue',5:'Vie',6:'Sáb',7:'Dom',F:'Fest'};
+  let h=`<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">🔥 Horas fuertes</h2>
+    <select style="width:auto" onchange="MAPA_S=Number(this.value);vFin()">${[4,8,12,26].map(n=>`<option value="${n}" ${n===MAPA_S?'selected':''}>Últimas ${n} semanas</option>`).join('')}</select></div>
+    <p class="muted" style="margin:6px 0 10px">% de canchas ocupadas (confirmadas o pagadas) en cada día y hora. Entre más verde, más llena.</p>`;
+  if(!hrs.length)return h+'<p class="muted center" style="padding:16px 0">Todavía no hay datos suficientes. El mapa se llena solo con cada semana que pasa.</p></div>';
+  const celda=x=>{if(!x||!x.o)return '<td style="text-align:center;color:var(--dim);padding:7px 1px">—</td>';const p=x.v/x.o;
+    return `<td style="text-align:center;font-weight:700;border-radius:6px;padding:7px 1px;background:rgba(198,244,50,${(.06+.84*p).toFixed(2)})!important;color:${p>.45?'var(--neon-ink)':'var(--ink)'}">${Math.round(p*100)}%</td>`;};
+  h+=`<div class="scroll-x"><table style="border-collapse:separate;border-spacing:2px;font-size:11px;table-layout:fixed;width:100%"><tr><th style="width:38px;padding:4px 0;background:none"></th>${cols.map(c=>`<th style="text-align:center;padding:5px 0;font-size:10px;letter-spacing:0">${NOM[c]}</th>`).join('')}</tr>
+    ${hrs.map(x=>`<tr><td class="muted" style="text-align:right;padding:0 4px 0 0;font-size:11px">${horaC(x)}</td>${cols.map(c=>celda((A[c]||{})[x])).join('')}</tr>`).join('')}</table></div>`;
+  const L=[];cols.forEach(c=>hrs.forEach(x=>{const y=(A[c]||{})[x];if(y&&y.o>=D.cfg.canchas*2)L.push({c,x,p:y.v/y.o,o:y.o});}));
+  const tx=a=>`${NOM[a.c]} ${horaC(a.x)} (${Math.round(a.p*100)}%)`;
+  const llenas=L.slice().sort((a,b)=>b.p-a.p||b.o-a.o).slice(0,3),flojas=L.slice().sort((a,b)=>a.p-b.p||b.o-a.o).slice(0,3);
+  h+=L.length?`<p style="margin:12px 0 4px">🔥 <b>Más llenas:</b> ${llenas.map(tx).join(' · ')}</p>
+     <p style="margin:0">🧊 <b>Más flojas:</b> ${flojas.map(tx).join(' · ')} <span class="muted">— buenas para promociones</span></p></div>`:'<p class="muted" style="margin:12px 0 0">Con un par de semanas más de datos te digo cuáles son las horas más llenas y las más flojas.</p></div>';
+  return h;}
+
 /* ---------- Finanzas ---------- */
 function vFin(){
   const K=D.kpis,s=K.semana||{},S=D.semanas;
@@ -651,6 +744,7 @@ function vFin(){
     <div class="kpi"><div class="l">Jugadores registrados</div><div class="v">${D.jugadores}</div><div class="s">${D.bloqueados.length} bloqueado(s)</div></div></div>`;
   if(F)h+=`<div class="card"><h2>📑 Informes semanales</h2><p class="muted" style="margin:6px 0 4px">Cada lunes se genera el informe de la semana que terminó, con el detalle de todas las reservas. Descárgalo: a las 4 semanas se borra solo (los totales quedan en el resumen).</p>
    ${D.informes.length?D.informes.map(x=>{const dias=Math.max(0,Math.ceil((new Date(x.expira)-Date.now())/86400000));return `<div class="item" style="padding:12px 0;align-items:center"><div class="body"><b>Semana ${fCorta(x.lunes)} – ${fCorta(addD(x.lunes,6))}</b><div class="muted">${x.n} reservas · se borra en ${dias} día${dias===1?'':'s'}</div></div><button class="btn btn-primary btn-sm" onclick="descargarInforme('${x.lunes}',this)">📥 Descargar</button></div>`;}).join(''):'<p class="muted center" style="padding:16px 0">El primer informe aparece el próximo lunes.</p>'}</div>`;
+  if(F)h+=mapaHoras();
   if(F)h+=`<div class="card"><h2>Ingresos vs. gastos por semana</h2><p class="muted" style="margin:4px 0 8px">Ingresos = canchas + ganancia de la tienda.</p>${grafica(S.slice(-8).map(w=>({...w,ingresos:w.ingresos+w.tGanancia})))}</div>`;
   if(F)h+=`<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">Resumen semanal</h2><button class="btn btn-ghost btn-sm" onclick="exportar(this)">📥 Descargar Excel</button></div>
    <p class="muted" style="margin:6px 0 10px">Totales de cada semana (se guardan siempre).</p><div class="scroll-x"><table>
@@ -733,6 +827,9 @@ function vAjustes(){
     <a class="btn btn-wa full" style="margin-top:10px" target="_blank" href="https://wa.me/?text=${shareTxt}">Compartir por WhatsApp</a>
     <label>Panel de administradores</label><div class="linkbox"><span id="lAdm">${esc(D.urlAdmin)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lAdm')">Copiar</button></div></div>
   ${cardAdmins()}
+  <div class="card"><h2>🔑 Contraseña</h2><p class="muted" style="margin:6px 0 0">Crea o cambia una contraseña para entrar también con correo y contraseña (útil en la app del celular).</p>
+    <div class="row"><div><label>Nueva contraseña</label><input type="password" id="p1" autocomplete="new-password" placeholder="Mínimo 8 caracteres"></div><div><label>Repítela</label><input type="password" id="p2" autocomplete="new-password"></div></div>
+    <button class="btn btn-navy full" style="margin-top:12px" onclick="cambiarClave()">Guardar contraseña</button></div>
   ${puede('ajustes')?``:`<div class="card"><p class="muted center" style="margin:0">🔒 Los ajustes del negocio (tarifa, horario…) solo los cambia quien tenga ese permiso.</p></div>`}
   ${!puede('ajustes')?'':`<div class="card"><h2>🏖️ Negocio</h2>
     <label>Nombre</label><input type="text" id="aNeg" value="${esc(C.negocio)}" maxlength="60">
@@ -783,11 +880,14 @@ async function cerrarSem(b){b.disabled=true;try{const r=await rpc('cerrar_semana
 let PROMPT=null;const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const IOS_A=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();PROMPT=e;});
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();PROMPT=e;pintarInstAdm();});
+function pintarInstAdm(){let no=false;try{no=Number(localStorage.getItem('vp_instadm_no')||0)>Date.now();}catch(e){}
+  const b=$('instAdm');if(b)b.classList.toggle('hidden',STANDALONE||no||!(PROMPT||IOS_A));}
+function ocultarInstAdm(){try{localStorage.setItem('vp_instadm_no',Date.now()+14*864e5);}catch(e){}pintarInstAdm();}
 window.addEventListener('appinstalled',()=>toast('¡Panel instalado! Búscalo en tu pantalla de inicio'));
 async function instalarPanel(){
-  if(PROMPT){PROMPT.prompt();try{await PROMPT.userChoice;}catch(e){}PROMPT=null;return;}
-  abrirModal(IOS_A?`<h2>Instalar en iPhone</h2><p>1. Abre esta página en <b>Safari</b>.<br>2. Toca <b>Compartir</b> (cuadro con flecha ⬆️).<br>3. Elige <b>"Agregar a inicio"</b> y luego <b>"Agregar"</b>.</p><button class="btn btn-primary full" onclick="cerrarModal()">Entendido</button>`
+  if(PROMPT){PROMPT.prompt();try{await PROMPT.userChoice;}catch(e){}PROMPT=null;pintarInstAdm();return;}
+  abrirModal(IOS_A?`<h2>Instalar en iPhone</h2><p>1. Abre esta página en <b>Safari</b>.<br>2. Toca <b>Compartir</b> (cuadro con flecha ⬆️).<br>3. Elige <b>"Agregar a inicio"</b> y luego <b>"Agregar"</b>.</p><p class="muted">Si dentro de la app Google no te deja entrar, usa tu correo y contraseña (créala en ⚙️ Ajustes → 🔑 Contraseña).</p><button class="btn btn-primary full" onclick="cerrarModal()">Entendido</button>`
     :`<h2>Instalar el panel</h2><p>En Chrome toca el menú <b>⋮</b> (arriba a la derecha) y elige <b>"Instalar app"</b> o <b>"Agregar a la pantalla principal"</b>.</p><p class="muted">Si no aparece, es porque ya lo tienes instalado.</p><button class="btn btn-primary full" onclick="cerrarModal()">Entendido</button>`);}
 
 /* ---------- Inicio ---------- */

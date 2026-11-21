@@ -43,15 +43,17 @@
   .kpi.hl .meter{background:rgba(14,17,22,.15)}.kpi.hl .meter i{background:var(--neon-ink)}
   .kpi.or .v{color:var(--neon)}.kpi.neg .v{color:var(--bad)}
   .meter{height:6px;background:var(--card-3);border-radius:9px;margin-top:10px;overflow:hidden}.meter i{display:block;height:100%;background:var(--neon);border-radius:9px}
-  .datenav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .datenav .t{flex:1;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-style:italic;text-transform:uppercase;color:#fff;font-size:21px;min-width:150px}
-  .datenav input{width:auto;padding:8px 10px}
+  .datenav{display:flex;align-items:center;gap:8px}
+  .datenav .t{flex:1;min-width:0;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-style:italic;text-transform:uppercase;color:#fff;font-size:21px;line-height:1.1}
+  .datenav2{display:flex;gap:8px;margin-top:10px}
+  .datenav2 input{flex:1;min-width:0;width:auto;padding:8px 10px;min-height:40px}
+  .datenav2 .btn{flex:none}
   .grid{width:100%;border-collapse:separate;border-spacing:6px;margin:6px -6px 0;table-layout:fixed}
   .grid th{background:transparent;border:0;color:var(--neon);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;font-style:italic;padding:2px 4px;text-align:center;letter-spacing:.5px}
-  .grid th.h{width:70px}
+  .grid th.h{width:58px}
   .grid td{padding:0;border:0;background:transparent!important}
   .grid .hr{font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);text-align:right;padding-right:4px;font-weight:700;white-space:nowrap}
-  .cell{border-radius:12px;padding:9px 11px;min-height:56px;cursor:pointer;border:1.5px dashed var(--line-2);background:transparent;display:flex;flex-direction:column;justify-content:center;transition:transform .05s,border-color .15s}
+  .cell{min-width:0;overflow:hidden;border-radius:12px;padding:9px 10px;min-height:56px;cursor:pointer;border:1.5px dashed var(--line-2);background:transparent;display:flex;flex-direction:column;justify-content:center;transition:transform .05s,border-color .15s}
   .cell:active{transform:scale(.98)}
   .cell.libre{color:var(--dim);font-size:13px;align-items:center;font-weight:600}
   .cell.libre:hover{border-color:var(--neon);color:var(--neon);border-style:solid}
@@ -59,7 +61,7 @@
   .cell.Confirmada{background:var(--info-bg);border:1.5px solid rgba(90,176,255,.35);box-shadow:inset 3px 0 0 var(--info)}
   .cell.Pagada{background:var(--ok-bg);border:1.5px solid rgba(61,220,132,.35);box-shadow:inset 3px 0 0 var(--ok)}
   .cell .n{font-weight:600;font-size:13px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cell .e{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
+  .cell .e{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cell.Pendiente .e{color:var(--warn)}.cell.Confirmada .e{color:var(--info)}.cell.Pagada .e{color:var(--ok)}
   .item{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line)}
   .item:last-child{border-bottom:0}
@@ -68,7 +70,9 @@
   .item .body{flex:1;min-width:0}.item .body .nm{font-weight:600;color:#fff}
   .item .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
   .dayhdr{font-family:'Barlow Condensed',sans-serif;font-size:16px;text-transform:uppercase;font-style:italic;letter-spacing:.6px;color:var(--neon);font-weight:700;margin:20px 0 2px}
-  .hor{display:grid;grid-template-columns:76px 1fr 1fr 62px;gap:6px;align-items:center;margin:6px 0}
+  .hor{display:grid;grid-template-columns:minmax(0,72px) minmax(0,1fr) minmax(0,1fr) auto;gap:6px;align-items:center;margin:6px 0}
+  .hor>b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hor label{font-size:12px;white-space:nowrap}
   .hor select{padding:8px 2px 8px 8px;font-size:14px;min-width:0}
   .chart{width:100%;height:auto;display:block}
   .login{max-width:360px;margin:12vh auto 0;padding:0 16px}
@@ -274,8 +278,9 @@ function vAgenda(){
     <div class="kpi"><div class="l">Ocupación semana</div><div class="v">${pct(s.ocupacion)}</div><div class="meter"><i style="width:${Math.min(100,(s.ocupacion||0)*100)}%"></i></div></div>
   </div>
   <div class="card">
-    <div class="datenav"><button class="btn btn-ghost btn-sm" onclick="irA(addD(FECHA,-1))">◀</button><div class="t">${D.fecha===D.hoy?'Hoy, ':''}${fLarga(D.fecha)}${FEST.has(D.fecha)?' <span class="badge b-Cancelada" style="font-family:Inter;font-style:normal">Festivo</span>':''}</div>
-      <input type="date" value="${D.fecha}" onchange="irA(this.value)"><button class="btn btn-ghost btn-sm" onclick="irA(addD(FECHA,1))">▶</button>
+    <div class="datenav"><button class="btn btn-ghost btn-sm" aria-label="Día anterior" onclick="irA(addD(FECHA,-1))">◀</button><div class="t">${D.fecha===D.hoy?'Hoy, ':''}${fLarga(D.fecha)}${FEST.has(D.fecha)?' <span class="badge b-Cancelada" style="font-family:Inter;font-style:normal">Festivo</span>':''}</div>
+      <button class="btn btn-ghost btn-sm" aria-label="Día siguiente" onclick="irA(addD(FECHA,1))">▶</button></div>
+    <div class="datenav2"><input type="date" value="${D.fecha}" onchange="irA(this.value)">
       ${D.fecha!==D.hoy?`<button class="btn btn-ghost btn-sm" onclick="irA(D.hoy)">Hoy</button>`:''}
       <button class="btn btn-primary btn-sm" onclick="modalNueva()">+ Reserva</button></div>`;
   if(!D.horasFecha.length){$('v-agenda').innerHTML=h+'<p class="muted center" style="padding:20px">Este día no hay atención según el horario.</p></div>';return;}
@@ -284,10 +289,10 @@ function vAgenda(){
   D.horasFecha.forEach(x=>{
     h+=`<tr><td class="hr">${hora(x)}</td>`;
     for(let c=1;c<=D.cfg.canchas;c++){const g=map[c+'-'+x];
-      h+=g?`<td><div class="cell ${g.estado}" onclick="modalGrupo('${g.codigo}')"><div class="n">${esc(g.nombre)}</div><div class="e">${g.fijo?'📌 ':''}${g.estado}${g.fijo?' · fijo':g.origen==='Admin'?' · presencial':''}</div></div></td>`
+      h+=g?`<td><div class="cell ${g.estado}" onclick="modalGrupo('${g.codigo}')"><div class="n">${esc(g.nombre)}</div><div class="e">${g.estado}${g.fijo?' 📌':g.origen==='Admin'?' 🏪':''}</div></div></td>`
           :`<td><div class="cell libre" onclick="modalNueva(${c},${x})">+ Libre</div></td>`;}
     h+='</tr>';});
-  h+=`</table></div><div class="legend"><span><i style="background:var(--warn)"></i>Pendiente</span><span><i style="background:var(--info)"></i>Confirmada (por cobrar)</span><span><i style="background:var(--ok)"></i>Pagada</span></div></div>`;
+  h+=`</table></div><div class="legend"><span><i style="background:var(--warn)"></i>Pendiente</span><span><i style="background:var(--info)"></i>Confirmada (por cobrar)</span><span><i style="background:var(--ok)"></i>Pagada</span><span>🏪 Presencial</span><span>📌 Fijo</span></div></div>`;
   const canc=D.delDia.filter(g=>!ACT.includes(g.estado));
   if(canc.length)h+=`<div class="card"><h2>Canceladas / rechazadas</h2>${canc.map(itemGrupo).join('')}</div>`;
   $('v-agenda').innerHTML=h;

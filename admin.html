@@ -131,7 +131,7 @@
       <button class="btn btn-primary btn-sm" onclick="instalarPanel()">Instalar</button><button style="background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer" aria-label="Cerrar" onclick="ocultarInstAdm()">×</button></div>
     <div id="v-agenda"></div><div id="v-pend" class="hidden"></div><div id="v-prox" class="hidden"></div><div id="v-jug" class="hidden"></div>
     <div id="v-tienda" class="hidden"></div><div id="v-fin" class="hidden"></div><div id="v-ajustes" class="hidden"></div>
-    <p class="muted center" style="font-size:12px;margin:24px 0 0;color:var(--dim)" id="pieVersion">Panel · versión 4.6.1</p>
+    <p class="muted center" style="font-size:12px;margin:24px 0 0;color:var(--dim)" id="pieVersion">Panel · versión 4.6.2</p>
   </main>
 </section>
 
@@ -140,7 +140,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const VERSION='4.6.1';
+const VERSION='4.6.2';
 const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],DCORTO=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const CATEGORIAS=['Mantenimiento arena','Redes y balones','Energía / iluminación','Agua','Personal / aseo','Publicidad','Arriendo','Impuestos y permisos','Otros'];
@@ -350,7 +350,21 @@ function modalGrupo(cod){const g=buscar(cod);if(!g)return;
   abrirModal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>${esc(g.nombre)}</h2><span class="badge b-${g.estado}">${g.estado}</span></div>
    <div class="kv"><b>Código</b><span>${g.codigo}</span><b>Día</b><span>${fLarga(g.fecha)}</span><b>Cancha</b><span>${g.cancha}</span><b>Horas</b><span>${rangoH(g.horas)}</span><b>Total</b><span>${pesos(g.total)}</span>
    <b>WhatsApp</b><span>${g.whatsapp?`<a href="https://wa.me/57${g.whatsapp}" target="_blank">${g.whatsapp}</a>`:'—'}</span><b>Origen</b><span>${g.fijo?'📌 Horario fijo':g.origen==='Web'?'Página web':'Presencial'}</span>${g.jid?`<b>Jugador</b><span><a href="#" onclick="cerrarModal();modalJugador('${g.jid}');return false">${D.bloqueados.includes(g.jid)?'🚫 Bloqueado · ':''}Ver ficha del jugador</a></span>`:''}${g.medio?`<b>Pago</b><span>${esc(g.medio)}</span>`:''}${g.notas?`<b>Notas</b><span>${esc(g.notas)}</span>`:''}${g.por?`<b>Último cambio</b><span>${esc(g.por)}</span>`:''}</div>
+   <button class="btn btn-navy full" style="margin-bottom:8px" onclick="modalHistorial('${g.codigo}')">🕓 Ver historial de modificaciones</button>
    <div style="display:grid;gap:8px">${botones(g,false)}${g.jid&&puede('bloquear')?`<button class="btn btn-ghost" onclick="bloquear('${g.codigo}',${!D.bloqueados.includes(g.jid)},this)">${D.bloqueados.includes(g.jid)?'✅ Desbloquear jugador':'🚫 Bloquear jugador (no podrá reservar en línea)'}</button>`:''}<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button></div>`);}
+async function modalHistorial(cod){const g=buscar(cod);
+  abrirModal(`<h2>🕓 Historial</h2><p class="muted">${g?esc(g.nombre)+' · ':''}Código ${cod}</p><p class="muted center" style="padding:20px 0">Cargando…</p>`);
+  let H=[];try{H=await rpc('historial_reserva',{p_codigo:cod});}catch(e){toast(e.message,true);}
+  const COL={'Dueño':'var(--neon)','Admin':'var(--info)','Jugador':'var(--ok)','Sistema':'var(--muted)'};
+  const fh=t=>new Date(t).toLocaleString('es-CO',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+  abrirModal(`<h2>🕓 Historial de modificaciones</h2><p class="muted">${g?esc(g.nombre)+' · '+fLarga(g.fecha)+' · Cancha '+g.cancha+' · ':''}Código ${cod}</p>
+   ${H.length?`<ol style="list-style:none;margin:14px 0 0;padding:0">${H.map((h,i)=>`<li style="display:flex;gap:12px;padding-bottom:14px">
+     <div style="display:flex;flex-direction:column;align-items:center;flex:none"><span style="width:12px;height:12px;border-radius:50%;background:${COL[h.rol]||'var(--muted)'};margin-top:4px"></span>${i<H.length-1?'<span style="flex:1;width:2px;background:var(--line-2);margin-top:4px"></span>':''}</div>
+     <div style="min-width:0"><div style="font-weight:700">${esc(h.accion)}</div>
+      <div class="muted" style="font-size:12px;margin-top:2px">${fh(h.creado)} · <b style="color:${COL[h.rol]||'var(--muted)'}">${h.rol}</b>${h.por?' '+esc(h.por.split('@')[0]):''}</div>
+      ${h.detalle?`<div style="font-size:13px;color:var(--ink);margin-top:4px;word-break:break-word">${esc(h.detalle)}</div>`:''}</div></li>`).join('')}</ol>`
+   :'<p class="muted center" style="padding:20px 0">Todavía no hay movimientos guardados.<br><span style="font-size:12px">El historial se registra desde la versión 4.6.2; los cambios anteriores no quedaron anotados.</span></p>'}
+   <div style="display:grid;gap:8px;margin-top:6px">${g?`<button class="btn btn-ghost" onclick="modalGrupo('${cod}')">← Volver a la reserva</button>`:''}<button class="btn btn-ghost" style="border:0" onclick="cerrarModal()">Cerrar</button></div>`);}
 async function bloquear(cod,si,btn){if(si&&btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='Toca otra vez para bloquearlo';return;}
   try{await rpc('bloquear_jugador',{p_codigo:cod,p_bloquear:si});cerrarModal();toast(si?'Jugador bloqueado':'Jugador desbloqueado');await cargar();}catch(e){toast(e.message,true);}}
 function modalPago(cod){const g=buscar(cod);

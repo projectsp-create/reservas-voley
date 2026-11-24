@@ -131,7 +131,7 @@
       <button class="btn btn-primary btn-sm" onclick="instalarPanel()">Instalar</button><button style="background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer" aria-label="Cerrar" onclick="ocultarInstAdm()">×</button></div>
     <div id="v-agenda"></div><div id="v-pend" class="hidden"></div><div id="v-prox" class="hidden"></div><div id="v-jug" class="hidden"></div>
     <div id="v-tienda" class="hidden"></div><div id="v-fin" class="hidden"></div><div id="v-ajustes" class="hidden"></div>
-    <p class="muted center" style="font-size:12px;margin:24px 0 0;color:var(--dim)" id="pieVersion">Panel · versión 4.6.2</p>
+    <p class="muted center" style="font-size:12px;margin:24px 0 0;color:var(--dim)" id="pieVersion">Panel · versión 4.6.3</p>
   </main>
 </section>
 
@@ -140,7 +140,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const VERSION='4.6.2';
+const VERSION='4.6.3';
 const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],DCORTO=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const CATEGORIAS=['Mantenimiento arena','Redes y balones','Energía / iluminación','Agua','Personal / aseo','Publicidad','Arriendo','Impuestos y permisos','Otros'];
@@ -230,7 +230,7 @@ function statsSemana(l,res,gas,cfg){
 function construir(){
   const R=RAW,c=R.cfg;FEST=new Set(R.festivos||[]);PERM=R.rol||{dueno:false,permisos:{}};
   const cfg={negocio:c.negocio,direccion:c.direccion,tarifa:c.tarifa,canchas:c.canchas,whatsappAdmin:c.whatsapp_admin,diasAnticipacion:c.dias_anticipacion,maxHorasPorReserva:c.max_horas,horario:c.horario,venceMin:c.vence_pendiente_min,mostrarNombres:c.mostrar_nombres!==false,
-    pagoActivo:!!c.pago_activo,pagoNequi:c.pago_nequi||'',pagoDaviplata:c.pago_daviplata||'',pagoOtro:c.pago_otro||'',pagoTitular:c.pago_titular||'',pagoNota:c.pago_nota||''};
+    anuncio:{activo:!!c.anuncio_activo,titulo:c.anuncio_titulo||'',texto:c.anuncio_texto||'',fecha:c.anuncio_fecha||'',hora:c.anuncio_hora==null?'':c.anuncio_hora,boton:c.anuncio_boton||'',link:c.anuncio_link||'',popup:!!c.anuncio_popup},pagoActivo:!!c.pago_activo,pagoNequi:c.pago_nequi||'',pagoDaviplata:c.pago_daviplata||'',pagoOtro:c.pago_otro||'',pagoTitular:c.pago_titular||'',pagoNota:c.pago_nota||''};
   const hoy=R.hoy;FECHA=FECHA||hoy;
   const res=R.reservas,gas=R.gastos,grupos=agrupar(res),lAct=lunesDe(hoy);
   const delDia=grupos.filter(g=>g.fecha===FECHA);
@@ -858,6 +858,13 @@ function vAjustes(){
     <div class="row"><div><label>Días de anticipación</label><input type="number" id="aDias" value="${C.diasAnticipacion}" min="1" max="60"></div><div><label>Máx. horas por reserva web</label><input type="number" id="aMax" value="${C.maxHorasPorReserva}" min="1" max="8"></div></div>
     <label>Minutos para confirmar una reserva antes de que se libere sola (0 = nunca)</label><input type="number" id="aVence" value="${C.venceMin}" min="0" max="1440" step="15">
     <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="aNombres" ${C.mostrarNombres?'checked':''} style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Mostrar el nombre abreviado del jugador (ej. "Meyer B.") en las horas ocupadas del calendario público. Cada jugador puede ocultarlo desde su cuenta.</span></label>
+    <h2 style="margin-top:22px">📣 Anuncio en la página</h2><p class="muted" style="margin:4px 0 0">Un aviso animado arriba de las reservas, con cuenta regresiva. Se esconde solo cuando pasa la fecha.</p>
+    <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="anOn" ${C.anuncio.activo?'checked':''} style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Mostrar el anuncio a los jugadores</span></label>
+    <label>Título</label><input type="text" id="anTit" maxlength="60" value="${esc(C.anuncio.titulo)}">
+    <label>Texto</label><textarea id="anTxt" maxlength="260" rows="3">${esc(C.anuncio.texto)}</textarea>
+    <div class="row"><div><label>Fecha del evento</label><input type="date" id="anFecha" value="${C.anuncio.fecha}"></div><div><label>Hora (opcional)</label><select id="anHora"><option value="">Sin hora</option>${Array.from({length:24},(_,h)=>`<option value="${h}" ${String(C.anuncio.hora)===String(h)?'selected':''}>${hora(h)}</option>`).join('')}</select></div></div>
+    <div class="row"><div><label>Texto del botón</label><input type="text" id="anBtn" maxlength="30" value="${esc(C.anuncio.boton)}" placeholder="Vacío = sin botón"></div><div><label>Link del botón (opcional)</label><input type="text" id="anLink" maxlength="200" value="${esc(C.anuncio.link)}" placeholder="Vacío = WhatsApp de los encargados"></div></div>
+    <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="anPop" ${C.anuncio.popup?'checked':''} style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Mostrarlo también como ventana al entrar (una vez al día por persona)</span></label>
     <h2 style="margin-top:22px">🕔 Horario</h2><p class="muted" style="margin:4px 0 0">"Hasta" es la hora de cierre: la última reserva empieza una hora antes. Los festivos de Colombia se calculan solos.</p><div class="hor muted" style="font-size:12px"><span></span><span>Abre</span><span>Cierra</span><span></span></div>${hor}
     <button class="btn btn-primary full" style="margin-top:14px" id="aBtn" onclick="guardarAjustesUI()">Guardar ajustes</button></div>`}
   ${!PERM.dueno?'':`<div class="card" style="border-color:rgba(255,92,92,.35)"><h2>🧪 Borrar pruebas de la tienda</h2>
@@ -890,7 +897,7 @@ function copiar(id){const t=$(id).textContent;(navigator.clipboard?navigator.cli
 async function guardarAjustesUI(){
   const hor={};for(const d of ['1','2','3','4','5','6','7','F'])hor[d]=$('hC'+d).checked?[0,0]:[Number($('hA'+d).value),Number($('hB'+d).value)];
   const b=$('aBtn');b.disabled=true;
-  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,mostrarNombres:$('aNombres').checked,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
+  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,mostrarNombres:$('aNombres').checked,anuncioActivo:$('anOn').checked,anuncioTitulo:$('anTit').value,anuncioTexto:$('anTxt').value,anuncioFecha:$('anFecha').value,anuncioHora:$('anHora').value,anuncioBoton:$('anBtn').value,anuncioLink:$('anLink').value.trim(),anuncioPopup:$('anPop').checked,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
   catch(e){toast(e.message,true);}finally{b.disabled=false;}}
 async function agregarAdmin(){try{await rpc('agregar_admin',{p_email:$('nuevoAdm').value,p_permisos:leerPermisos('pm-nuevo')});toast('Administrador agregado ✓');await cargar();}catch(e){toast(e.message,true);}}
 async function quitarAdmin(email,btn){if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='¿Seguro?';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Quitar';},3000);return;}

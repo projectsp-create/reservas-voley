@@ -73,6 +73,34 @@
   .ou:before,.ou:after{content:"";flex:1;height:1px;background:var(--line-2)}
   .aviso{background:rgba(198,244,50,.08);border:1px solid rgba(198,244,50,.35);border-radius:12px;padding:14px;margin-top:14px;font-size:14px}
   .fijo-box{background:var(--bg-2);border:1px solid var(--line-2);border-left:3px solid var(--neon);border-radius:12px;padding:12px 14px;margin:10px 0}
+  /* ---- Anuncio animado (v4.6.3) ---- */
+  .anu{position:relative;border-radius:22px;padding:2px;margin-bottom:16px;background:linear-gradient(120deg,#C6F432,#3DDC84,#5AB0FF,#C6F432,#FFC24B,#C6F432);background-size:300% 300%;animation:anuBorde 6s linear infinite;box-shadow:0 10px 40px -12px rgba(198,244,50,.45)}
+  @keyframes anuBorde{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+  .anu-in{position:relative;overflow:hidden;border-radius:20px;padding:20px 18px 18px;background:radial-gradient(120% 90% at 100% 0%,rgba(198,244,50,.18),transparent 55%),radial-gradient(90% 80% at 0% 100%,rgba(90,176,255,.14),transparent 60%),#11161D}
+  .anu-in:after{content:"";position:absolute;top:-60%;left:-40%;width:40%;height:220%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);transform:rotate(18deg);animation:anuBrillo 4.5s ease-in-out infinite}
+  @keyframes anuBrillo{0%{left:-50%}60%,100%{left:130%}}
+  .anu-bola{position:absolute;border-radius:50%;border:2px solid rgba(198,244,50,.35);opacity:.6;animation:anuFlota 7s ease-in-out infinite}
+  .anu-bola:before{content:"";position:absolute;inset:18% 0 auto;height:2px;background:rgba(198,244,50,.3);border-radius:2px}
+  @keyframes anuFlota{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-14px) rotate(160deg)}}
+  .anu-tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.8px;color:var(--neon-ink);background:var(--neon);border-radius:99px;padding:5px 11px;animation:anuLatido 2s ease-in-out infinite}
+  @keyframes anuLatido{0%,100%{box-shadow:0 0 0 0 rgba(198,244,50,.6)}50%{box-shadow:0 0 0 8px rgba(198,244,50,0)}}
+  .anu-copa{position:absolute;right:14px;top:14px;width:64px;height:64px;animation:anuCopa 3s ease-in-out infinite;filter:drop-shadow(0 6px 14px rgba(198,244,50,.45))}
+  @keyframes anuCopa{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-8px) rotate(6deg)}}
+  .anu-tit{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-style:italic;text-transform:uppercase;font-size:38px;line-height:.95;margin:12px 70px 0 0;background:linear-gradient(90deg,#fff 0%,#fff 40%,var(--neon) 50%,#fff 60%,#fff 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:anuTexto 3.5s linear infinite}
+  @keyframes anuTexto{0%{background-position:100% 0}100%{background-position:-150% 0}}
+  .anu-fecha{font-size:13px;font-weight:700;color:var(--neon);margin-top:8px}
+  .anu-txt{font-size:14px;color:#C3CAD4;margin:8px 0 0;line-height:1.5;position:relative}
+  .anu-cnt{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px;position:relative}
+  .anu-cnt div{background:rgba(14,17,22,.75);border:1px solid var(--line-2);border-radius:12px;padding:8px 0;text-align:center}
+  .anu-cnt b{display:block;font-family:'Barlow Condensed',sans-serif;font-style:italic;font-weight:800;font-size:28px;line-height:1;color:#fff}
+  .anu-cnt b.tick{animation:anuTick .5s ease-out}
+  @keyframes anuTick{0%{transform:translateY(-40%);opacity:0;color:var(--neon)}100%{transform:none;opacity:1}}
+  .anu-cnt span{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px}
+  .anu-hoy{margin-top:14px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-style:italic;font-weight:800;font-size:30px;color:var(--neon);animation:anuLatido 1.6s infinite;border-radius:12px}
+  .anu-btn{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;margin-top:14px;border:0;border-radius:14px;background:var(--neon);color:var(--neon-ink);font-weight:800;font-size:15px;cursor:pointer;text-decoration:none;animation:anuBoton 2.4s ease-in-out infinite}
+  @keyframes anuBoton{0%,100%{box-shadow:0 0 0 0 rgba(198,244,50,.0)}50%{box-shadow:0 0 22px 2px rgba(198,244,50,.45)}}
+  .anu-x{position:absolute;top:8px;right:8px;z-index:2;background:rgba(14,17,22,.7);border:1px solid var(--line-2);color:var(--muted);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;line-height:1}
+  @media (prefers-reduced-motion:reduce){.anu,.anu-in:after,.anu-bola,.anu-tag,.anu-copa,.anu-tit,.anu-cnt b.tick,.anu-hoy,.anu-btn{animation:none!important}.anu-tit{color:#fff;background:none}}
   .inst{display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(198,244,50,.14),rgba(198,244,50,.04));border:1px solid rgba(198,244,50,.4)}
   .inst img{width:44px;height:44px;border-radius:11px;flex:none}
   .inst .x{background:transparent;border:0;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 6px}
@@ -122,6 +150,7 @@
 
   <!-- RESERVAR -->
   <section id="vReserva" class="hidden">
+    <div id="anuncio"></div>
     <div class="card inst hidden" id="instBanner"><img src="icono-192.png" alt="">
       <div style="flex:1;min-width:0"><b>📲 Instala la app</b><div class="muted">Gratis y sin descargas: es esta misma página con ícono en tu celular.</div></div>
       <button class="btn btn-primary btn-sm" onclick="instalar()">Instalar</button><button class="x" aria-label="Cerrar" onclick="ocultarInst()">×</button></div>
@@ -161,7 +190,7 @@
       <p class="muted" style="margin:6px 0 4px">Para confirmar tu reserva, consultar disponibilidad o cualquier información de las canchas, habla con nuestros encargados:</p>
       <div id="contactos"></div></div>
     <p class="muted center" style="margin:22px 0 6px" id="horTxt"></p>
-    <p class="muted center" style="margin:0 0 90px;font-size:12px"><a href="privacidad.html" style="color:var(--muted)">Política de tratamiento de datos</a> · <span style="color:var(--dim)">Versión 4.6.2</span><span id="lnkInst" class="hidden"> · <a href="#" style="color:var(--muted)" onclick="instalar();return false">📲 Instalar app</a></span></p>
+    <p class="muted center" style="margin:0 0 90px;font-size:12px"><a href="privacidad.html" style="color:var(--muted)">Política de tratamiento de datos</a> · <span style="color:var(--dim)">Versión 4.6.3</span><span id="lnkInst" class="hidden"> · <a href="#" style="color:var(--muted)" onclick="instalar();return false">📲 Instalar app</a></span></p>
   </section>
 
   <!-- MIS RESERVAS -->
@@ -219,7 +248,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const VERSION='4.6.2';
+const VERSION='4.6.3';
 const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],DIASL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 // Encargados de las canchas (para cambiarlos, edita esta lista)
@@ -437,6 +466,41 @@ async function irAHora(f,c,h){ver('reserva');await refrescar();if(!S.cal[f]){toa
 
 const IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 
+/* ---------- Anuncio animado (v4.6.3) ---------- */
+let ANU_T=null,ANU_PREV={};
+function anuObjetivo(A){return A.fecha?new Date(A.fecha+'T'+String(A.hora??0).padStart(2,'0')+':00:00-05:00'):null;}
+function anuFechaTxt(A){if(!A.fecha)return '';const d=new Date(A.fecha+'T12:00:00-05:00');
+  let t=d.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});t=t.charAt(0).toUpperCase()+t.slice(1);
+  if(A.hora!=null)t+=' · '+((A.hora%12)||12)+':00 '+(A.hora>=12?'p. m.':'a. m.');return '📅 '+t;}
+function anuHTML(A,enModal){const obj=anuObjetivo(A);
+  return `<div class="anu"><div class="anu-in">
+    ${enModal?'':'<button class="anu-x" aria-label="Ocultar anuncio" onclick="ocultarAnuncio()">×</button>'}
+    <span class="anu-bola" style="width:46px;height:46px;left:-12px;bottom:18px" aria-hidden="true"></span><span class="anu-bola" style="width:26px;height:26px;right:90px;top:60px;animation-delay:-3s" aria-hidden="true"></span>
+    <svg class="anu-copa" viewBox="0 0 64 64" aria-hidden="true" style="${enModal?'':'top:44px'}"><path d="M20 8h24v14a12 12 0 0 1-24 0z" fill="#C6F432"/><path d="M20 12H10a10 10 0 0 0 11 12M44 12h10a10 10 0 0 1-11 12" fill="none" stroke="#C6F432" stroke-width="4" stroke-linecap="round"/><path d="M28 34h8v10h-8z" fill="#9BD11A"/><rect x="20" y="44" width="24" height="7" rx="2" fill="#C6F432"/><path d="M27 15l3 3 7-7" fill="none" stroke="#0E1116" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="anu-tag">🏆 PRÓXIMO EVENTO</span>
+    <div class="anu-tit">${esc(A.titulo)}</div>
+    <div class="anu-fecha">${A.fecha?anuFechaTxt(A):'📅 Fecha por confirmar'}</div>
+    ${A.texto?`<p class="anu-txt">${esc(A.texto)}</p>`:''}
+    ${obj?`<div class="anu-cnt" data-cnt="1">${['Días','Horas','Min','Seg'].map((l,i)=>`<div><b data-u="${i}">–</b><span>${l.toUpperCase()}</span></div>`).join('')}</div><div class="anu-hoy hidden" data-hoy="1">¡ES HOY! 🔥</div>`:''}
+    ${A.boton?(A.link?`<a class="anu-btn" href="${esc(A.link)}" target="_blank" rel="noopener">${esc(A.boton)} →</a>`:`<button class="anu-btn" onclick="anuInscribir()">${esc(A.boton)} →</button>`):''}
+  </div></div>`;}
+function anuTick(){const A=S.info&&S.info.anuncio;if(!A)return;const obj=anuObjetivo(A);if(!obj)return;
+  let ms=obj-Date.now();const hoy=ms<=0;
+  document.querySelectorAll('[data-cnt]').forEach(c=>c.classList.toggle('hidden',hoy));document.querySelectorAll('[data-hoy]').forEach(c=>c.classList.toggle('hidden',!hoy));
+  if(hoy)return;const v=[Math.floor(ms/864e5),Math.floor(ms/36e5)%24,Math.floor(ms/6e4)%60,Math.floor(ms/1e3)%60];
+  document.querySelectorAll('[data-u]').forEach(b=>{const i=b.dataset.u,t=String(v[i]).padStart(i==='0'?1:2,'0');if(b.textContent!==t){b.textContent=t;b.classList.remove('tick');void b.offsetWidth;b.classList.add('tick');}});}
+function pintarAnuncio(){const A=S.info&&S.info.anuncio,box=$('anuncio');clearInterval(ANU_T);
+  let oculto=false;try{oculto=localStorage.getItem('vp_anu_oculto')===new Date().toDateString();}catch(e){}
+  if(!A||oculto){box.innerHTML='';return;}
+  box.innerHTML=anuHTML(A,false);anuTick();ANU_T=setInterval(anuTick,1000);
+  if(A.popup){let ya='';try{ya=localStorage.getItem('vp_anu_popup');}catch(e){}const hoy=new Date().toDateString();
+    if(ya!==hoy){try{localStorage.setItem('vp_anu_popup',hoy);}catch(e){}setTimeout(()=>{if($('modal').innerHTML)return;abrirModal(anuHTML(A,true)+'<button class="btn btn-ghost full" style="margin-top:4px" onclick="cerrarModal()">Ahora no</button>');anuTick();},900);}}}
+function ocultarAnuncio(){try{localStorage.setItem('vp_anu_oculto',new Date().toDateString());}catch(e){}$('anuncio').innerHTML='';clearInterval(ANU_T);toast('Anuncio oculto por hoy');}
+function anuInscribir(){const A=S.info.anuncio,msg=`Hola 👋, quiero información para inscribir mi equipo en ${A.titulo} 🏐`;
+  abrirModal(`<h2>${esc(A.titulo)}</h2><p class="muted">Escríbele a uno de nuestros encargados y te cuenta todo: valor, reglamento y cupos.</p>
+   <div style="display:grid;gap:8px;margin-top:12px">${CONTACTOS.map(c=>`<a class="btn btn-wa full" target="_blank" rel="noopener" href="https://wa.me/57${c.tel}?text=${encodeURIComponent(msg)}">💬 ${c.nombre}</a>`).join('')}
+   <button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button></div>`);}
+
 /* ---------- App instalable ---------- */
 let PROMPT=null;const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
@@ -538,7 +602,7 @@ async function init(){
     const N={1:'Lun',2:'Mar',3:'Mié',4:'Jue',5:'Vie',6:'Sáb',7:'Dom',F:'Festivos'},grp={};
     ['1','2','3','4','5','6','7','F'].forEach(d=>{const h=I.horario[d];if(h&&h[1]>h[0]){const k=hora(h[0])+' a '+hora(h[1])+' (última reserva '+hora(h[1]-1)+')';(grp[k]=grp[k]||[]).push(N[d]);}});
     $('horTxt').textContent='Horario: '+Object.entries(grp).map(([k,v])=>v.join(', ')+' · '+k).join('  |  ');
-    $('cargando').classList.add('hidden');$('vReserva').classList.remove('hidden');pintarInstalar();pintarContactos();
+    $('cargando').classList.add('hidden');$('vReserva').classList.remove('hidden');pintarInstalar();pintarContactos();pintarAnuncio();
     pintarSlots();
     await cargarPerfil();
     if(S.sel.length){$('paso3').classList.remove('hidden');pintarPaso3();setTimeout(()=>$('paso3').scrollIntoView({behavior:'smooth'}),300);}

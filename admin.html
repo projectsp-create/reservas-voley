@@ -43,6 +43,16 @@
   .kpi.hl .meter{background:rgba(14,17,22,.15)}.kpi.hl .meter i{background:var(--neon-ink)}
   .kpi.or .v{color:var(--neon)}.kpi.neg .v{color:var(--bad)}
   .meter{height:6px;background:var(--card-3);border-radius:9px;margin-top:10px;overflow:hidden}.meter i{display:block;height:100%;background:var(--neon);border-radius:9px}
+  .adm{border:1px solid var(--line-2);border-radius:14px;margin-top:8px;background:var(--bg-2);overflow:hidden}
+  .adm-cab{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 14px;cursor:pointer;list-style:none;min-height:48px}
+  .adm-cab::-webkit-details-marker{display:none}
+  .adm-fijo .adm-cab{cursor:default}
+  .adm-n{font-size:12px;width:100%;order:9;margin-top:-2px}
+  .adm-fl{flex:none;color:var(--muted);transition:transform .2s}
+  details[open]>.adm-cab .adm-fl{transform:rotate(180deg)}
+  details[open]>.adm-cab{border-bottom:1px solid var(--line)}
+  .adm-cuerpo{padding:12px 14px 14px}
+  .adm-nuevo{border-style:dashed;border-color:rgba(198,244,50,.45)}
   .datenav{display:flex;align-items:center;gap:8px}
   .datenav .t{flex:1;min-width:0;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-style:italic;text-transform:uppercase;color:#fff;font-size:21px;line-height:1.1}
   .datenav2{display:flex;gap:8px;margin-top:10px}
@@ -846,7 +856,7 @@ function vAjustes(){
     <a class="btn btn-wa full" style="margin-top:10px" target="_blank" href="https://wa.me/?text=${shareTxt}">Compartir por WhatsApp</a>
     <label>Panel de administradores</label><div class="linkbox"><span id="lAdm">${esc(D.urlAdmin)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lAdm')">Copiar</button></div></div>
   ${cardAdmins()}
-  <div class="card"><h2>🔑 Contraseña</h2><p class="muted" style="margin:6px 0 0">Crea o cambia una contraseña para entrar también con correo y contraseña (útil en la app del celular).</p>
+  <div class="card"><h2>🔑 Contraseña</h2><p class="muted" style="margin:6px 0 0">Es la contraseña para entrar <b>a este panel</b> con <b>${esc(D.yo)}</b> usando "correo y contraseña" (útil en la app del celular). <b>No cambia la contraseña de tu Gmail</b>, y cada admin crea la suya entrando con su cuenta.</p>
     <div class="row"><div><label>Nueva contraseña</label><input type="password" id="p1" autocomplete="new-password" placeholder="Mínimo 8 caracteres"></div><div><label>Repítela</label><input type="password" id="p2" autocomplete="new-password"></div></div>
     <button class="btn btn-navy full" style="margin-top:12px" onclick="cambiarClave()">Guardar contraseña</button></div>
   ${puede('ajustes')?``:`<div class="card"><p class="muted center" style="margin:0">🔒 Los ajustes del negocio (tarifa, horario…) solo los cambia quien tenga ese permiso.</p></div>`}
@@ -879,21 +889,27 @@ function vAjustes(){
   ${!puede('finanzas')?'':`<div class="card"><h2>🧹 Privacidad</h2><p class="muted">Cada lunes se cierra la semana anterior: se genera el informe descargable (dura 4 semanas) y se borran los datos de las reservas presenciales. Las reservas de jugadores con cuenta quedan en su historial personal.</p>
     <button class="btn btn-ghost full" onclick="cerrarSem(this)">Cerrar semanas pasadas ahora</button></div>`}`;}
 const PERMS=[['finanzas','💰 Ver finanzas e informes'],['gastos','🧾 Registrar y borrar gastos'],['ajustes','⚙️ Cambiar ajustes (tarifa, horario…)'],['bloquear','🚫 Bloquear jugadores'],['fijos','📌 Crear y aprobar horarios fijos'],['vender','🛒 Vender y cierre de caja'],['inventario','📦 Productos e inventario']];
+const ADM_ABIERTO=new Set();
 function cardAdmins(){
   const dueno=PERM.dueno;
+  const tog=k=>`ontoggle="this.open?ADM_ABIERTO.add('${k}'):ADM_ABIERTO.delete('${k}')" ${ADM_ABIERTO.has(k)?'open':''}`;
+  const flecha='<svg class="adm-fl" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
   const fila=a=>{
-    const yo=a.email===D.yo, tag=a.dueno?'<span class="badge b-Pagada">Dueño</span>':'<span class="badge b-Confirmada">Administrador</span>';
-    let h=`<div class="item" style="padding:12px 0;display:block"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="flex:1;word-break:break-all">${esc(a.email)}</b>${tag}${yo?' <span class="badge b-Pendiente">Tú</span>':''}</div>`;
-    if(dueno&&!a.dueno){const id=btoa(a.email).replace(/=/g,'');
-      h+=`<div class="hchk" style="margin-top:10px">${PERMS.map(([k,t])=>`<label><input type="checkbox" class="pm-${id}" data-k="${k}" ${a.permisos&&a.permisos[k]?'checked':''}>${t}</label>`).join('')}</div>
-        <div class="row" style="margin-top:10px"><button class="btn btn-navy btn-sm" onclick="guardarPermisos('${esc(a.email)}','${id}',this)">Guardar permisos</button><button class="btn btn-danger btn-sm" onclick="quitarAdmin('${esc(a.email)}',this)">Quitar</button></div>`;}
-    return h+'</div>';};
+    const yo=a.email===D.yo, tag=a.dueno?'<span class="badge b-Pagada">Dueño</span>':'<span class="badge b-Confirmada">Admin</span>';
+    const n=a.dueno?PERMS.length:PERMS.filter(([k])=>a.permisos&&a.permisos[k]).length;
+    const cab=`<b style="flex:1;min-width:0;word-break:break-all">${esc(a.email)}</b>${yo?'<span class="badge b-Pendiente">Tú</span>':''}${tag}`;
+    if(!(dueno&&!a.dueno))return `<div class="adm adm-fijo"><div class="adm-cab">${cab}<span class="muted adm-n">${a.dueno?'Todos los permisos':n+' de '+PERMS.length+' permisos'}</span></div></div>`;
+    const id=btoa(a.email).replace(/=/g,'');
+    return `<details class="adm" ${tog(id)}><summary class="adm-cab">${cab}<span class="muted adm-n">${n} de ${PERMS.length} permisos</span>${flecha}</summary>
+      <div class="adm-cuerpo"><div class="hchk">${PERMS.map(([k,t])=>`<label><input type="checkbox" class="pm-${id}" data-k="${k}" ${a.permisos&&a.permisos[k]?'checked':''}>${t}</label>`).join('')}</div>
+      <div class="row" style="margin-top:10px"><button class="btn btn-navy btn-sm" onclick="guardarPermisos('${esc(a.email)}','${id}',this)">Guardar permisos</button><button class="btn btn-danger btn-sm" onclick="quitarAdmin('${esc(a.email)}',this)">Quitar</button></div></div></details>`;};
   return `<div class="card"><h2>👥 Administradores</h2>
-    <p class="muted" style="margin:6px 0 4px">${dueno?'Eres el dueño: solo tú agregas, quitas y das permisos. Todos pueden ver la agenda, confirmar, cobrar y registrar reservas presenciales.':'Solo el dueño puede agregar, quitar o cambiar permisos de los administradores.'}</p>
+    <p class="muted" style="margin:6px 0 10px">${dueno?'Eres el dueño: solo tú agregas, quitas y das permisos. Toca un administrador para ver o cambiar sus permisos. Todos pueden ver la agenda, confirmar, cobrar y registrar reservas presenciales.':'Solo el dueño puede agregar, quitar o cambiar permisos de los administradores.'}</p>
     ${D.admins.map(fila).join('')}
-    ${dueno?`<label style="margin-top:14px">Agregar administrador (correo de Google)</label><input type="text" id="nuevoAdm" inputmode="email" placeholder="socio@gmail.com">
-      <div class="hchk" style="margin-top:10px">${PERMS.map(([k,t])=>`<label><input type="checkbox" class="pm-nuevo" data-k="${k}" ${['finanzas','gastos','bloquear','vender'].includes(k)?'checked':''}>${t}</label>`).join('')}</div>
-      <button class="btn btn-primary full" style="margin-top:12px" onclick="agregarAdmin()">Agregar administrador</button>`:''}
+    ${dueno?`<details class="adm adm-nuevo" ${tog('nuevo')}><summary class="adm-cab"><b style="flex:1;color:var(--neon)">＋ Agregar administrador</b>${flecha}</summary>
+      <div class="adm-cuerpo"><label style="margin-top:0">Correo de Google</label><input type="text" id="nuevoAdm" inputmode="email" placeholder="socio@gmail.com">
+      <label>Permisos</label><div class="hchk">${PERMS.map(([k,t])=>`<label><input type="checkbox" class="pm-nuevo" data-k="${k}" ${['finanzas','gastos','bloquear','vender'].includes(k)?'checked':''}>${t}</label>`).join('')}</div>
+      <button class="btn btn-primary full" style="margin-top:12px" onclick="agregarAdmin()">Agregar administrador</button></div></details>`:''}
     ${!dueno?`<p class="muted" style="margin-top:10px">Tus permisos: ${PERMS.filter(([k])=>puede(k)).map(([,t])=>t).join(' · ')||'solo agenda y reservas'}</p>`:''}</div>`;}
 const leerPermisos=cls=>{const o={};document.querySelectorAll('.'+cls).forEach(i=>o[i.dataset.k]=i.checked);return o;};
 async function guardarPermisos(email,id,btn){btn.disabled=true;try{await rpc('cambiar_permisos',{p_email:email,p_permisos:leerPermisos('pm-'+id)});toast('Permisos guardados ✓');await cargar();}catch(e){toast(e.message,true);}finally{btn.disabled=false;}}
@@ -903,7 +919,7 @@ async function guardarAjustesUI(btn){
   const b=btn||document.querySelector('#v-ajustes .btn-primary');b.disabled=true;
   try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,mostrarNombres:$('aNombres').checked,anuncioActivo:$('anOn').checked,anuncioTitulo:$('anTit').value,anuncioTexto:$('anTxt').value,anuncioFecha:$('anFecha').value,anuncioHora:$('anHora').value,anuncioBoton:$('anBtn').value,anuncioLink:$('anLink').value.trim(),anuncioPopup:$('anPop').checked,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
   catch(e){toast(e.message,true);}finally{b.disabled=false;}}
-async function agregarAdmin(){try{await rpc('agregar_admin',{p_email:$('nuevoAdm').value,p_permisos:leerPermisos('pm-nuevo')});toast('Administrador agregado ✓');await cargar();}catch(e){toast(e.message,true);}}
+async function agregarAdmin(){try{await rpc('agregar_admin',{p_email:$('nuevoAdm').value,p_permisos:leerPermisos('pm-nuevo')});ADM_ABIERTO.delete('nuevo');toast('Administrador agregado ✓');await cargar();}catch(e){toast(e.message,true);}}
 async function quitarAdmin(email,btn){if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='¿Seguro?';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Quitar';},3000);return;}
   try{await rpc('quitar_admin',{p_email:email});toast('Administrador quitado');await cargar();}catch(e){toast(e.message,true);}}
 async function cambiarClave(){const a=$('p1').value,b=$('p2').value;

@@ -1,7 +1,7 @@
 // Vóley Playa · app instalable (v4.5)
 // Siempre intenta traer la versión más nueva de internet; si no hay señal, muestra la última guardada.
 // No guarda nada de Supabase (reservas, datos de jugadores): eso siempre va directo y en vivo.
-const CACHE = 'voley-v4.7';
+const CACHE = 'voley-v4.7.1';
 self.addEventListener('install', e => { self.skipWaiting(); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));

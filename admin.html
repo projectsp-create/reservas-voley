@@ -164,7 +164,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const VERSION='4.7';
+const VERSION='4.7.1';
 const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],DCORTO=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const CATEGORIAS=['Mantenimiento arena','Redes y balones','Energía / iluminación','Agua','Personal / aseo','Publicidad','Arriendo','Impuestos y permisos','Otros'];
@@ -884,8 +884,8 @@ function vAjustes(){
     <button class="btn btn-navy full" style="margin-top:12px" onclick="cambiarClave()">Guardar contraseña</button>`)}
 
   <div class="sec-grupo">Página de reservas</div>
-  ${!puede('ajustes')?`<div class="card"><p class="muted center" style="margin:0">🔒 El anuncio, los datos del negocio y el horario solo los cambia quien tenga el permiso de Ajustes.</p></div>`:
-  sec('anuncio','📣','Anuncio en la página',A.activo?'Visible · '+esc(TIPOS[A.tipo]||'')+' · '+esc(A.titulo):'Apagado',`<p class="muted" style="margin:0">Un aviso animado arriba de las reservas. Con fecha muestra cuenta regresiva y se esconde solo cuando pasa.</p>
+  ${!(puede('ajustes')||puede('anuncio')||puede('horario'))?`<div class="card"><p class="muted center" style="margin:0">🔒 El anuncio, los datos del negocio y el horario los cambia quien tenga ese permiso.</p></div>`:''}
+  ${!(puede('ajustes')||puede('anuncio'))?'':sec('anuncio','📣','Anuncio en la página',A.activo?'Visible · '+esc(TIPOS[A.tipo]||'')+' · '+esc(A.titulo):'Apagado',`<p class="muted" style="margin:0">Un aviso animado arriba de las reservas. Con fecha muestra cuenta regresiva y se esconde solo cuando pasa.</p>
     <label>Tipo</label><div class="hchk" id="anTipoBox">${Object.entries(TIPOS).map(([k,t])=>`<label><input type="radio" name="anTipo" value="${k}" ${A.tipo===k?'checked':''}>${t}</label>`).join('')}</div>
     <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="anOn" ${C.anuncio.activo?'checked':''} style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Mostrar el anuncio a los jugadores</span></label>
     <label>Título</label><input type="text" id="anTit" maxlength="60" value="${esc(C.anuncio.titulo)}">
@@ -893,17 +893,18 @@ function vAjustes(){
     <div class="row"><div><label>Fecha del evento</label><input type="date" id="anFecha" value="${C.anuncio.fecha}"></div><div><label>Hora (opcional)</label><select id="anHora"><option value="">Sin hora</option>${Array.from({length:24},(_,h)=>`<option value="${h}" ${String(C.anuncio.hora)===String(h)?'selected':''}>${hora(h)}</option>`).join('')}</select></div></div>
     <div class="row"><div><label>Texto del botón</label><input type="text" id="anBtn" maxlength="30" value="${esc(C.anuncio.boton)}" placeholder="Vacío = sin botón"></div><div><label>Link del botón (opcional)</label><input type="text" id="anLink" maxlength="200" value="${esc(C.anuncio.link)}" placeholder="Vacío = WhatsApp de los encargados"></div></div>
     <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="anPop" ${C.anuncio.popup?'checked':''} style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Mostrarlo también como ventana al entrar (una vez al día por persona)</span></label>
-    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px"><a class="btn btn-ghost" href="./" target="_blank" rel="noopener">Ver cómo queda</a><button class="btn btn-primary" onclick="guardarAjustesUI(this)">Guardar anuncio</button></div>`,'sec-acento')+
-  sec('negocio','🏖️','Negocio',pesos(C.tarifa)+' la hora · '+C.canchas+' canchas',`
+    <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="anNotif" style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>📲 Avisar a los jugadores con notificación al guardar<br><small class="muted">Les llega a quienes activaron los avisos. Márcalo solo cuando publiques algo nuevo.</small></span></label>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px"><a class="btn btn-ghost" href="./" target="_blank" rel="noopener">Ver cómo queda</a><button class="btn btn-primary" onclick="guardarAnuncioUI(this)">Guardar anuncio</button></div>`,'sec-acento')}
+  ${!puede('ajustes')?'':sec('negocio','🏖️','Negocio',pesos(C.tarifa)+' la hora · '+C.canchas+' canchas',`
     <label>Nombre</label><input type="text" id="aNeg" value="${esc(C.negocio)}" maxlength="60">
     <label>Dirección / referencia</label><input type="text" id="aDir" value="${esc(C.direccion)}" maxlength="100">
     <div class="row"><div><label>Tarifa por hora</label><input type="number" id="aTar" value="${C.tarifa}" min="0" step="1000"></div><div><label>Canchas</label><input type="number" id="aCan" value="${C.canchas}" min="1" max="8"></div></div>
     <label>WhatsApp que recibe los avisos de clientes</label><input type="tel" id="aWa" value="${esc(C.whatsappAdmin)}" placeholder="3101234567">
     <div class="row"><div><label>Días de anticipación</label><input type="number" id="aDias" value="${C.diasAnticipacion}" min="1" max="60"></div><div><label>Máx. horas por reserva web</label><input type="number" id="aMax" value="${C.maxHorasPorReserva}" min="1" max="8"></div></div>
     <label>Minutos para confirmar una reserva antes de que se libere sola (0 = nunca)</label><input type="number" id="aVence" value="${C.venceMin}" min="0" max="1440" step="15">
-    <button class="btn btn-primary full" style="margin-top:14px" onclick="guardarAjustesUI(this)">Guardar datos del negocio</button>`)+
-  sec('horario','🕔','Horario','Apertura y cierre de cada día',`<p class="muted" style="margin:4px 0 0">"Hasta" es la hora de cierre: la última reserva empieza una hora antes. Los festivos de Colombia se calculan solos.</p><div class="hor muted" style="font-size:12px"><span></span><span>Abre</span><span>Cierra</span><span></span></div>${hor}
-    <button class="btn btn-primary full" style="margin-top:14px" onclick="guardarAjustesUI(this)">Guardar horario</button>`)}
+    <button class="btn btn-primary full" style="margin-top:14px" onclick="guardarAjustesUI(this)">Guardar datos del negocio</button>`)}
+  ${!(puede('ajustes')||puede('horario'))?'':sec('horario','🕔','Horario','Apertura y cierre de cada día',`<p class="muted" style="margin:4px 0 0">"Hasta" es la hora de cierre: la última reserva empieza una hora antes. Los festivos de Colombia se calculan solos.</p><div class="hor muted" style="font-size:12px"><span></span><span>Abre</span><span>Cierra</span><span></span></div>${hor}
+    <button class="btn btn-primary full" style="margin-top:14px" onclick="guardarHorarioUI(this)">Guardar horario</button>`)}
   ${sec('links','🔗','Links y compartir','Página pública y panel',`
     <label style="margin-top:0">Página pública de reservas (compártela)</label><div class="linkbox"><span id="lPub">${esc(D.urlPublica)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lPub')">Copiar</button></div>
     <a class="btn btn-wa full" style="margin-top:10px" target="_blank" href="https://wa.me/?text=${shareTxt}">Compartir por WhatsApp</a>
@@ -911,7 +912,7 @@ function vAjustes(){
 
   <div class="sec-grupo">Equipo</div>
   ${sec('admins','👥','Administradores',n+(n===1?' persona':' personas')+(PERM.dueno?' · permisos':''),cardAdmins())}
-  ${PERM.dueno?sec('bitacora','📜','Bitácora','Todo lo que hicieron los admins',`<div class="row" style="align-items:end"><div><label style="margin-top:0">Quién</label><select id="btPor"><option value="">Todos</option>${D.admins.map(a=>`<option value="${esc(a.email)}">${esc(a.email.split('@')[0])}${a.dueno?' (dueño)':''}</option>`).join('')}</select></div>
+  ${puede('bitacora')?sec('bitacora','📜','Bitácora','Todo lo que hicieron los admins',`<div class="row" style="align-items:end"><div><label style="margin-top:0">Quién</label><select id="btPor"><option value="">Todos</option>${D.admins.map(a=>`<option value="${esc(a.email)}">${esc(a.email.split('@')[0])}${a.dueno?' (dueño)':''}</option>`).join('')}</select></div>
     <div><label style="margin-top:0">Desde</label><input type="date" id="btDesde" value="${addD(D.hoy,-7)}"></div><div><label style="margin-top:0">Hasta</label><input type="date" id="btHasta" value="${D.hoy}"></div></div>
     <button class="btn btn-navy full" style="margin-top:10px" onclick="cargarBitacora(this)">Ver bitácora</button><div id="btLista" style="margin-top:12px"></div>`):''}
 
@@ -923,7 +924,7 @@ function vAjustes(){
     <label>Para confirmar escribe BORRAR</label><input type="text" id="rtConf" autocomplete="off" placeholder="BORRAR">
     <button class="btn btn-danger full" style="margin-top:12px" onclick="reiniciarTienda(this)">Borrar pruebas de la tienda</button>`,'sec-peligro')}`;
   pintarPush();}
-const PERMS=[['finanzas','💰 Ver finanzas e informes'],['gastos','🧾 Registrar y borrar gastos'],['ajustes','⚙️ Cambiar ajustes (tarifa, horario…)'],['bloquear','🚫 Bloquear jugadores'],['fijos','📌 Crear y aprobar horarios fijos'],['vender','🛒 Vender y cierre de caja'],['inventario','📦 Productos e inventario']];
+const PERMS=[['finanzas','💰 Ver finanzas e informes'],['gastos','🧾 Registrar y borrar gastos'],['ajustes','⚙️ Datos del negocio (tarifa, canchas…)'],['bloquear','🚫 Bloquear jugadores'],['fijos','📌 Crear y aprobar horarios fijos'],['vender','🛒 Vender y cierre de caja'],['inventario','📦 Productos e inventario'],['anuncio','📣 Publicar el anuncio'],['horario','🕔 Cambiar el horario'],['bitacora','📜 Ver la bitácora']];
 const SEC_ABIERTO=new Set();
 function sec(id,ic,tit,sub,cuerpo,cls){
   return `<details class="sec ${cls||''}" ontoggle="this.open?SEC_ABIERTO.add('${id}'):SEC_ABIERTO.delete('${id}');${id==='push'?'if(this.open)pintarPush();':''}" ${SEC_ABIERTO.has(id)?'open':''}>
@@ -949,16 +950,25 @@ function cardAdmins(){
     ${D.admins.map(fila).join('')}
     ${dueno?`<details class="adm adm-nuevo" ${tog('nuevo')}><summary class="adm-cab"><b style="flex:1;color:var(--neon)">＋ Agregar administrador</b>${flecha}</summary>
       <div class="adm-cuerpo"><label style="margin-top:0">Correo de Google</label><input type="text" id="nuevoAdm" inputmode="email" placeholder="socio@gmail.com">
-      <label>Permisos</label><div class="hchk">${PERMS.map(([k,t])=>`<label><input type="checkbox" class="pm-nuevo" data-k="${k}" ${['finanzas','gastos','bloquear','vender'].includes(k)?'checked':''}>${t}</label>`).join('')}</div>
+      <label>Permisos</label><div class="hchk">${PERMS.map(([k,t])=>`<label><input type="checkbox" class="pm-nuevo" data-k="${k}" ${['finanzas','gastos','bloquear','vender','anuncio','horario','bitacora'].includes(k)?'checked':''}>${t}</label>`).join('')}</div>
       <button class="btn btn-primary full" style="margin-top:12px" onclick="agregarAdmin()">Agregar administrador</button></div></details>`:''}
     ${!dueno?`<p class="muted" style="margin-top:10px">Tus permisos: ${PERMS.filter(([k])=>puede(k)).map(([,t])=>t).join(' · ')||'solo agenda y reservas'}</p>`:''}</div>`;}
 const leerPermisos=cls=>{const o={};document.querySelectorAll('.'+cls).forEach(i=>o[i.dataset.k]=i.checked);return o;};
 async function guardarPermisos(email,id,btn){btn.disabled=true;try{await rpc('cambiar_permisos',{p_email:email,p_permisos:leerPermisos('pm-'+id)});toast('Permisos guardados ✓');await cargar();}catch(e){toast(e.message,true);}finally{btn.disabled=false;}}
 function copiar(id){const t=$(id).textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copiado ✓')).catch(()=>toast('Mantén presionado el texto para copiarlo'));}
 async function guardarAjustesUI(btn){
+  const b=btn;b.disabled=true;
+  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value}});toast('Datos del negocio guardados ✓');await cargar();}
+  catch(e){toast(e.message,true);}finally{b.disabled=false;}}
+async function guardarAnuncioUI(btn){
+  const b=btn;b.disabled=true;
+  try{const r=await rpc('guardar_anuncio',{p:{anuncioTipo:(document.querySelector('input[name=anTipo]:checked')||{}).value||'evento',anuncioActivo:$('anOn').checked,anuncioTitulo:$('anTit').value,anuncioTexto:$('anTxt').value,anuncioFecha:$('anFecha').value,anuncioHora:$('anHora').value,anuncioBoton:$('anBtn').value,anuncioLink:$('anLink').value.trim(),anuncioPopup:$('anPop').checked},p_notificar:$('anNotif').checked});
+    toast(r&&r.notificado?(r.suscritos?'Anuncio guardado ✓ · notificación enviada a '+r.suscritos+' celular(es)':'Anuncio guardado ✓ · aún ningún jugador activó los avisos'):r&&r.espera?'Anuncio guardado ✓ · la notificación no se repitió (ya se envió una hace menos de 10 min)':($('anNotif').checked&&!$('anOn').checked?'Anuncio guardado ✓ (apagado: no se envió notificación)':'Anuncio guardado ✓'));await cargar();}
+  catch(e){toast(e.message,true);await cargar();}finally{b.disabled=false;}}
+async function guardarHorarioUI(btn){
   const hor={};for(const d of ['1','2','3','4','5','6','7','F'])hor[d]=$('hC'+d).checked?[0,0]:[Number($('hA'+d).value),Number($('hB'+d).value)];
-  const b=btn||document.querySelector('#v-ajustes .btn-primary');b.disabled=true;
-  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,anuncioTipo:(document.querySelector('input[name=anTipo]:checked')||{}).value||'evento',anuncioActivo:$('anOn').checked,anuncioTitulo:$('anTit').value,anuncioTexto:$('anTxt').value,anuncioFecha:$('anFecha').value,anuncioHora:$('anHora').value,anuncioBoton:$('anBtn').value,anuncioLink:$('anLink').value.trim(),anuncioPopup:$('anPop').checked,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
+  const b=btn;b.disabled=true;
+  try{await rpc('guardar_horario',{p:{horario:hor}});toast('Horario guardado ✓');await cargar();}
   catch(e){toast(e.message,true);}finally{b.disabled=false;}}
 async function agregarAdmin(){try{await rpc('agregar_admin',{p_email:$('nuevoAdm').value,p_permisos:leerPermisos('pm-nuevo')});ADM_ABIERTO.delete('nuevo');toast('Administrador agregado ✓');await cargar();}catch(e){toast(e.message,true);}}
 async function quitarAdmin(email,btn){if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='¿Seguro?';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Quitar';},3000);return;}

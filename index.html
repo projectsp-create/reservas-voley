@@ -256,7 +256,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const VERSION='4.7';
+const VERSION='4.7.1';
 const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],DIASL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 // Encargados de las canchas (para cambiarlos, edita esta lista)
@@ -524,7 +524,7 @@ function pushJugHTML(compacto){
   if(!PUSH_OK)return IOS&&!STANDALONE?`<div class="aviso" style="text-align:left;margin:10px 0 0;font-size:13px">🔔 ¿Quieres avisos de tus reservas? En iPhone primero <a href="#" onclick="instalar();return false">instala la app</a> y ábrela desde el ícono.</div>`:'';
   if(Notification.permission==='denied')return '';
   return `<div class="pushbox" style="margin:10px 0 0;padding:12px 14px;border-radius:14px;border:1px solid rgba(90,176,255,.45);background:rgba(90,176,255,.08);display:flex;gap:10px;align-items:center">
-    <span style="font-size:24px">🔔</span><div style="flex:1;min-width:0;font-size:13px"><b>Avísame en este celular</b><div class="muted" style="font-size:12px">Cuando confirmen tu reserva, 1 hora antes de jugar y si se libera la hora que esperas.</div></div>
+    <span style="font-size:24px">🔔</span><div style="flex:1;min-width:0;font-size:13px"><b>Avísame en este celular</b><div class="muted" style="font-size:12px">Cuando confirmen tu reserva, 1 hora antes de jugar, si se libera la hora que esperas y cuando haya torneos o promociones.</div></div>
     <button class="btn btn-primary btn-sm" onclick="activarPushJug(this)">Activar</button></div>`;}
 function pintarPushJug(){const a=$('pushJug');if(a)a.innerHTML=pushJugHTML(false);const b=$('okPush');if(b)b.innerHTML=pushJugHTML(true);}
 async function activarPushJug(b){if(b)b.disabled=true;

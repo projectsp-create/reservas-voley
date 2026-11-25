@@ -43,6 +43,17 @@
   .kpi.hl .meter{background:rgba(14,17,22,.15)}.kpi.hl .meter i{background:var(--neon-ink)}
   .kpi.or .v{color:var(--neon)}.kpi.neg .v{color:var(--bad)}
   .meter{height:6px;background:var(--card-3);border-radius:9px;margin-top:10px;overflow:hidden}.meter i{display:block;height:100%;background:var(--neon);border-radius:9px}
+  .sec-grupo{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:20px 4px 8px}
+  .sec{background:var(--card);border:1px solid var(--line);border-radius:18px;margin-bottom:8px;overflow:hidden}
+  .sec-cab{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;list-style:none;min-height:60px}
+  .sec-cab::-webkit-details-marker{display:none}
+  .sec-ic{width:38px;height:38px;border-radius:11px;background:var(--bg-2);border:1px solid var(--line-2);display:grid;place-items:center;font-size:18px;flex:none}
+  .sec-sub{display:block;font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  details[open]>.sec-cab{border-bottom:1px solid var(--line)}
+  details[open]>.sec-cab .adm-fl{transform:rotate(180deg)}
+  .sec-cuerpo{padding:14px 16px 16px}
+  .sec-acento{border-color:rgba(198,244,50,.35)}
+  .sec-peligro{border-color:rgba(255,92,92,.35)}
   .adm{border:1px solid var(--line-2);border-radius:14px;margin-top:8px;background:var(--bg-2);overflow:hidden}
   .adm-cab{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 14px;cursor:pointer;list-style:none;min-height:48px}
   .adm-cab::-webkit-details-marker{display:none}
@@ -136,12 +147,15 @@
     </nav>
   </header>
   <main class="wrap" style="padding-bottom:40px">
+    <div class="card hidden" id="pushAdm" style="display:flex;gap:12px;align-items:center;border-color:rgba(90,176,255,.45);background:linear-gradient(135deg,rgba(90,176,255,.14),rgba(90,176,255,.03))">
+      <span style="font-size:30px;flex:none">🔔</span><div style="flex:1;min-width:0"><b>Activa las notificaciones</b><div class="muted">Entérate al instante de cada reserva nueva.</div></div>
+      <button class="btn btn-primary btn-sm" onclick="activarPush(this)">Activar</button><button style="background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer" aria-label="Cerrar" onclick="ocultarPushBanner()">×</button></div>
     <div class="card hidden" id="instAdm" style="display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(198,244,50,.14),rgba(198,244,50,.04));border-color:rgba(198,244,50,.4)">
       <img src="icono-192.png" alt="" style="width:42px;height:42px;border-radius:10px;flex:none"><div style="flex:1;min-width:0"><b>📲 Instala el panel como app</b><div class="muted">A un toque desde tu pantalla de inicio.</div></div>
       <button class="btn btn-primary btn-sm" onclick="instalarPanel()">Instalar</button><button style="background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer" aria-label="Cerrar" onclick="ocultarInstAdm()">×</button></div>
     <div id="v-agenda"></div><div id="v-pend" class="hidden"></div><div id="v-prox" class="hidden"></div><div id="v-jug" class="hidden"></div>
     <div id="v-tienda" class="hidden"></div><div id="v-fin" class="hidden"></div><div id="v-ajustes" class="hidden"></div>
-    <p class="muted center" style="font-size:12px;margin:24px 0 0;color:var(--dim)" id="pieVersion">Panel · versión 4.6.3</p>
+    <p class="muted center" style="font-size:12px;margin:24px 0 0;color:var(--dim)" id="pieVersion">Panel · versión 4.7</p>
   </main>
 </section>
 
@@ -150,7 +164,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const VERSION='4.6.3';
+const VERSION='4.7';
 const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],DCORTO=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const CATEGORIAS=['Mantenimiento arena','Redes y balones','Energía / iluminación','Agua','Personal / aseo','Publicidad','Arriendo','Impuestos y permisos','Otros'];
@@ -225,7 +239,7 @@ const puede=p=>PERM.dueno||!!(PERM.permisos&&PERM.permisos[p]);
 function horasDia(cfg,f){const h=(FEST.has(f)&&cfg.horario.F)?cfg.horario.F:cfg.horario[String(iso(f))];const o=[];if(!h||!(h[1]>h[0]))return o;for(let i=h[0];i<h[1];i++)o.push(i);return o;}
 function agrupar(res){
   const m={};res.forEach(r=>{
-    if(!m[r.codigo])m[r.codigo]={codigo:r.codigo,fecha:r.fecha,cancha:r.cancha,horas:[],nombre:r.nombre,whatsapp:r.whatsapp||'',estado:r.estado,total:0,medio:r.medio||'',origen:r.origen,notas:r.notas||'',por:r.actualizado_por||'',creado:r.creado,uid:r.user_id||null,jid:r.jugador_id||null,fijo:!!r.fijo_id,rep:r.pago_reportado?(r.pago_rep_medio||'sí'):'',rec:r.recordado||null};
+    if(!m[r.codigo])m[r.codigo]={codigo:r.codigo,fecha:r.fecha,cancha:r.cancha,horas:[],nombre:r.nombre,whatsapp:r.whatsapp||'',estado:r.estado,total:0,medio:r.medio||'',origen:r.origen,notas:r.notas||'',por:r.actualizado_por||'',creado:r.creado,uid:r.user_id||null,jid:r.jugador_id||null,fijo:!!r.fijo_id,rep:r.pago_reportado?(r.pago_rep_medio||'sí'):'',rec:r.recordado||null,nota:r.nota_interna||'',nl:!!r.no_llego};
     m[r.codigo].horas.push(r.hora);m[r.codigo].total+=Number(r.valor)||0;});
   return Object.values(m).map(g=>{g.horas.sort((a,b)=>a-b);return g;});
 }
@@ -240,7 +254,7 @@ function statsSemana(l,res,gas,cfg){
 function construir(){
   const R=RAW,c=R.cfg;FEST=new Set(R.festivos||[]);PERM=R.rol||{dueno:false,permisos:{}};
   const cfg={negocio:c.negocio,direccion:c.direccion,tarifa:c.tarifa,canchas:c.canchas,whatsappAdmin:c.whatsapp_admin,diasAnticipacion:c.dias_anticipacion,maxHorasPorReserva:c.max_horas,horario:c.horario,venceMin:c.vence_pendiente_min,mostrarNombres:c.mostrar_nombres!==false,
-    anuncio:{activo:!!c.anuncio_activo,titulo:c.anuncio_titulo||'',texto:c.anuncio_texto||'',fecha:c.anuncio_fecha||'',hora:c.anuncio_hora==null?'':c.anuncio_hora,boton:c.anuncio_boton||'',link:c.anuncio_link||'',popup:!!c.anuncio_popup},pagoActivo:!!c.pago_activo,pagoNequi:c.pago_nequi||'',pagoDaviplata:c.pago_daviplata||'',pagoOtro:c.pago_otro||'',pagoTitular:c.pago_titular||'',pagoNota:c.pago_nota||''};
+    anuncio:{tipo:c.anuncio_tipo||'evento',activo:!!c.anuncio_activo,titulo:c.anuncio_titulo||'',texto:c.anuncio_texto||'',fecha:c.anuncio_fecha||'',hora:c.anuncio_hora==null?'':c.anuncio_hora,boton:c.anuncio_boton||'',link:c.anuncio_link||'',popup:!!c.anuncio_popup},pagoActivo:!!c.pago_activo,pagoNequi:c.pago_nequi||'',pagoDaviplata:c.pago_daviplata||'',pagoOtro:c.pago_otro||'',pagoTitular:c.pago_titular||'',pagoNota:c.pago_nota||''};
   const hoy=R.hoy;FECHA=FECHA||hoy;
   const res=R.reservas,gas=R.gastos,grupos=agrupar(res),lAct=lunesDe(hoy);
   const delDia=grupos.filter(g=>g.fecha===FECHA);
@@ -299,7 +313,7 @@ function vAgenda(){
   D.horasFecha.forEach(x=>{
     h+=`<tr><td class="hr">${hora(x)}</td>`;
     for(let c=1;c<=D.cfg.canchas;c++){const g=map[c+'-'+x];
-      h+=g?`<td><div class="cell ${g.estado}" onclick="modalGrupo('${g.codigo}')"><div class="n">${esc(g.nombre)}</div><div class="e">${g.estado}${g.fijo?' 📌':g.origen==='Admin'?' 🏪':''}</div></div></td>`
+      h+=g?`<td><div class="cell ${g.estado}" onclick="modalGrupo('${g.codigo}')"><div class="n">${esc(g.nombre)}</div><div class="e">${g.estado}${g.fijo?' 📌':g.origen==='Admin'?' 🏪':''}${g.nota?' 📝':''}</div></div></td>`
           :`<td><div class="cell libre" onclick="modalNueva(${c},${x})">+ Libre</div></td>`;}
     h+='</tr>';});
   h+=`</table></div><div class="legend"><span><i style="background:var(--warn)"></i>Pendiente</span><span><i style="background:var(--info)"></i>Confirmada (por cobrar)</span><span><i style="background:var(--ok)"></i>Pagada</span><span>🏪 Presencial</span><span>📌 Fijo</span></div></div>`;
@@ -311,7 +325,7 @@ function vAgenda(){
 /* ---------- Tarjetas ---------- */
 function itemGrupo(g){const d=pd(g.fecha);
   return `<div class="item"><div class="when"><div class="m">${DCORTO[d.getUTCDay()]}</div><div class="d">${d.getUTCDate()}</div><div class="m">${MESES[d.getUTCMonth()]}</div></div>
-   <div class="body"><div class="nm">${esc(g.nombre)} <span class="badge b-${g.estado}">${g.estado}</span>${g.jid&&D.bloqueados.includes(g.jid)?' <span class="badge b-Cancelada">Bloqueado</span>':''}</div>
+   <div class="body"><div class="nm">${esc(g.nombre)} <span class="badge b-${g.estado}">${g.nl?'No llegó':g.estado}</span>${g.nota?' <span title="Tiene nota interna">📝</span>':''}${g.jid&&D.bloqueados.includes(g.jid)?' <span class="badge b-Cancelada">Bloqueado</span>':''}</div>
    <div class="muted">Cancha ${g.cancha} · ${rangoH(g.horas)} · ${pesos(g.total)}${g.whatsapp?' · 📱 '+g.whatsapp:''}</div>
    ${g.estado==='Pendiente'&&D.cfg.venceMin>0?(()=>{const m=Math.max(0,Math.round(D.cfg.venceMin-(Date.now()-new Date(g.creado).getTime())/60000));return `<div class="muted" style="color:var(--warn)">⏳ Se libera sola en ${m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'} si no la confirmas</div>`;})():''}
    <div class="muted">Código ${g.codigo}${g.fijo?' · 📌 fijo':g.origen==='Admin'?' · presencial':''}${g.medio?' · '+esc(g.medio):''}${g.por&&g.por!=='cliente'?' · por '+esc(g.por.split('@')[0]):''}</div>
@@ -360,8 +374,17 @@ function modalGrupo(cod){const g=buscar(cod);if(!g)return;
   abrirModal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>${esc(g.nombre)}</h2><span class="badge b-${g.estado}">${g.estado}</span></div>
    <div class="kv"><b>Código</b><span>${g.codigo}</span><b>Día</b><span>${fLarga(g.fecha)}</span><b>Cancha</b><span>${g.cancha}</span><b>Horas</b><span>${rangoH(g.horas)}</span><b>Total</b><span>${pesos(g.total)}</span>
    <b>WhatsApp</b><span>${g.whatsapp?`<a href="https://wa.me/57${g.whatsapp}" target="_blank">${g.whatsapp}</a>`:'—'}</span><b>Origen</b><span>${g.fijo?'📌 Horario fijo':g.origen==='Web'?'Página web':'Presencial'}</span>${g.jid?`<b>Jugador</b><span><a href="#" onclick="cerrarModal();modalJugador('${g.jid}');return false">${D.bloqueados.includes(g.jid)?'🚫 Bloqueado · ':''}Ver ficha del jugador</a></span>`:''}${g.medio?`<b>Pago</b><span>${esc(g.medio)}</span>`:''}${g.notas?`<b>Notas</b><span>${esc(g.notas)}</span>`:''}${g.por?`<b>Último cambio</b><span>${esc(g.por)}</span>`:''}</div>
-   <button class="btn btn-navy full" style="margin-bottom:8px" onclick="modalHistorial('${g.codigo}')">🕓 Ver historial de modificaciones</button>
+   ${(()=>{const j=g.jid&&D.jugadoresLista.find(x=>x.id===g.jid);return j&&j.inasistencias?`<div class="aviso" style="text-align:left;margin:0 0 10px;color:var(--warn);border-color:rgba(255,194,75,.45)">⚠️ Este jugador ha faltado ${j.inasistencias} ${j.inasistencias===1?'vez':'veces'} sin avisar.</div>`:'';})()}
+   ${g.nl?'<div class="aviso" style="text-align:left;margin:0 0 10px;color:var(--bad);border-color:rgba(255,92,92,.45)">🚫 Marcada como <b>NO LLEGÓ</b>.</div>':''}
+   <label style="margin-top:0">📝 Nota interna <span style="text-transform:none;letter-spacing:0;font-weight:500">(solo la ven los admins)</span></label>
+   <div style="display:flex;gap:8px;align-items:flex-start"><textarea id="mNota" rows="2" maxlength="300" placeholder="Ej. pagó la mitad, trae su balón…" style="flex:1">${esc(g.nota)}</textarea><button class="btn btn-ghost btn-sm" style="min-height:46px" onclick="guardarNota('${g.codigo}',this)">Guardar</button></div>
+   ${['Pendiente','Confirmada'].includes(g.estado)&&!g.nl&&g.fecha<=D.hoy?`<button class="btn btn-danger full" style="margin:10px 0 0" onclick="noLlego('${g.codigo}',true,this)">🚫 No llegó</button>`:''}
+   ${g.nl?`<button class="btn btn-ghost full" style="margin:10px 0 0" onclick="noLlego('${g.codigo}',false,this)">↩️ Quitar "no llegó" (sí vino)</button>`:''}
+   <button class="btn btn-navy full" style="margin:10px 0 8px" onclick="modalHistorial('${g.codigo}')">🕓 Ver historial de modificaciones</button>
    <div style="display:grid;gap:8px">${botones(g,false)}${g.jid&&puede('bloquear')?`<button class="btn btn-ghost" onclick="bloquear('${g.codigo}',${!D.bloqueados.includes(g.jid)},this)">${D.bloqueados.includes(g.jid)?'✅ Desbloquear jugador':'🚫 Bloquear jugador (no podrá reservar en línea)'}</button>`:''}<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button></div>`);}
+async function guardarNota(cod,b){b.disabled=true;try{await rpc('guardar_nota_interna',{p_codigo:cod,p_nota:$('mNota').value});toast('Nota guardada ✓');await cargar();modalGrupo(cod);}catch(e){toast(e.message,true);b.disabled=false;}}
+async function noLlego(cod,si,b){if(si&&b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='¿Seguro? Se suma una falta al jugador';return;}b.disabled=true;
+  try{const r=await rpc('marcar_no_llego',{p_codigo:cod,p_si:si});toast(si?'Marcado: no llegó'+(r.inasistencias?' · lleva '+r.inasistencias:''):'Listo, quedó como que sí vino');await cargar();modalGrupo(cod);}catch(e){toast(e.message,true);b.disabled=false;}}
 async function modalHistorial(cod){const g=buscar(cod);
   abrirModal(`<h2>🕓 Historial</h2><p class="muted">${g?esc(g.nombre)+' · ':''}Código ${cod}</p><p class="muted center" style="padding:20px 0">Cargando…</p>`);
   let H=[];try{H=await rpc('historial_reserva',{p_codigo:cod});}catch(e){toast(e.message,true);}
@@ -514,7 +537,7 @@ function vJugLista(){
   $('jugLista').innerHTML=L.length?L.map(j=>`<div class="item" style="padding:12px 0;align-items:center;cursor:pointer" onclick="modalJugador('${j.id}')"><div class="body">
     <div class="nm">${esc(j.nombre)} ${j.bloqueado?'<span class="badge b-Cancelada">Bloqueado</span>':''} ${D.fijos.some(f=>f.jugador_id===j.id)?'<span class="badge" style="background:rgba(198,244,50,.12);color:var(--neon)">📌 Fijo</span>':''}</div>
     <div class="muted">📱 ${j.whatsapp}${j.email?' · '+esc(j.email):''}</div>
-    <div class="muted">${esc(j.origen)} · ${j.reservas} reserva${j.reservas===1?'':'s'}${j.ultima?' · última '+fCorta(j.ultima):''}</div></div><span class="muted">›</span></div>`).join(''):'<p class="muted center" style="padding:14px 0">No hay jugadores con esa búsqueda.</p>';}
+    <div class="muted">${esc(j.origen)} · ${j.reservas} reserva${j.reservas===1?'':'s'}${j.ultima?' · última '+fCorta(j.ultima):''}${j.inasistencias?` · <b style="color:var(--warn)">🚫 ${j.inasistencias} sin llegar</b>`:''}</div></div><span class="muted">›</span></div>`).join(''):'<p class="muted center" style="padding:14px 0">No hay jugadores con esa búsqueda.</p>';}
 function formJugador(j){j=j||{};const conCuenta=j.origen&&j.origen!=='Panel';
   return `<label>Nombre completo *</label><input type="text" id="jNom" maxlength="60" value="${esc(j.nombre||'')}">
    <label>WhatsApp *</label><input type="tel" id="jTel" inputmode="numeric" maxlength="13" placeholder="3101234567" value="${esc(j.whatsapp||'')}">
@@ -530,7 +553,7 @@ async function modalJugador(id){
   const j=D.jugadoresLista.find(x=>x.id===id);if(!j){toast('No encontré ese jugador',true);return;}
   const fj=D.fijos.filter(f=>f.jugador_id===id);
   abrirModal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2>${esc(j.nombre)}</h2>${j.bloqueado?'<span class="badge b-Cancelada">Bloqueado</span>':''}</div>
-   <p class="muted" style="margin:4px 0 0">${esc(j.origen)} · ${j.reservas} reservas · ${j.horas} horas jugadas</p>
+   <p class="muted" style="margin:4px 0 0">${esc(j.origen)} · ${j.reservas} reservas · ${j.horas} horas jugadas${j.inasistencias?` · <b style="color:var(--warn)">🚫 no llegó ${j.inasistencias} ${j.inasistencias===1?'vez':'veces'}</b>`:''}</p>
    <div class="row" style="margin-top:10px"><a class="btn btn-wa btn-sm" target="_blank" href="https://wa.me/57${j.whatsapp}">💬 WhatsApp</a><button class="btn btn-primary btn-sm" onclick="cerrarModal();modalNueva(1,null,'${id}')">+ Reservar para él</button></div>
    <h2 style="margin-top:18px;font-size:18px">📌 Horarios fijos</h2>
    ${fj.length?fj.map(f=>`<div class="item" style="padding:10px 0;align-items:center"><div class="body"><b>${DIAS_L[f.dia]} · ${rangoFijo(f)} · Cancha ${f.cancha}</b><div class="muted">desde ${fCorta(f.desde)}${f.hasta?' hasta '+fCorta(f.hasta):''}${f.choques.length?' · ⚠️ choque '+f.choques.map(fCorta).join(', '):''}</div></div>${puede('fijos')?`<button class="btn btn-danger btn-sm" onclick="terminarFijo('${f.id}',this)">Terminar</button>`:''}</div>`).join(''):'<p class="muted">No tiene horarios fijos.</p>'}
@@ -846,49 +869,67 @@ function vAjustes(){
     <label style="margin:0;font-weight:500;font-size:12px;display:flex;gap:4px;align-items:center"><input type="checkbox" id="hC${d}" ${cerr?'checked':''} onchange="$('hA${d}').disabled=$('hB${d}').disabled=this.checked">Cerrado</label></div>`;}
   const shareTxt=encodeURIComponent(`🏐 ¡Reserva tu cancha de vóley playa en ${C.negocio}! ${pesos(C.tarifa)} la hora. Elige tu horario aquí: ${D.urlPublica}`);
   const vBD=RAW.version||'4.2 o anterior',okV=vBD===VERSION;
+  const n=D.admins.length,A=C.anuncio,TIPOS={evento:'🏆 Evento',aviso:'📢 Aviso',promo:'🔥 Promoción'};
   $('v-ajustes').innerHTML=`
-  <div class="card"><h2>🏷️ Versión</h2><div class="kv"><b>Página</b><span>${VERSION}</span><b>Base de datos</b><span>${esc(vBD)} ${okV?'<span class="badge b-Pagada">Al día</span>':'<span class="badge b-Pendiente">Falta actualizar</span>'}</span></div>
-    ${okV?'':'<p class="muted" style="margin:0">Corre en Supabase (SQL Editor) el archivo SQL de la versión '+VERSION+' para que todo quede igual.</p>'}</div>
-  ${STANDALONE?'':`<div class="card"><h2>📲 Panel como app</h2><p class="muted" style="margin:6px 0 10px">Ten el panel a un toque en tu celular, con su propio ícono. No se descarga nada: es esta misma página.</p>
-    <button class="btn btn-primary full" onclick="instalarPanel()">Instalar el panel</button></div>`}
-  <div class="card"><h2>🔗 Links</h2>
-    <label>Página pública de reservas (compártela)</label><div class="linkbox"><span id="lPub">${esc(D.urlPublica)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lPub')">Copiar</button></div>
-    <a class="btn btn-wa full" style="margin-top:10px" target="_blank" href="https://wa.me/?text=${shareTxt}">Compartir por WhatsApp</a>
-    <label>Panel de administradores</label><div class="linkbox"><span id="lAdm">${esc(D.urlAdmin)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lAdm')">Copiar</button></div></div>
-  ${cardAdmins()}
-  <div class="card"><h2>🔑 Contraseña</h2><p class="muted" style="margin:6px 0 0">Es la contraseña para entrar <b>a este panel</b> con <b>${esc(D.yo)}</b> usando "correo y contraseña" (útil en la app del celular). <b>No cambia la contraseña de tu Gmail</b>, y cada admin crea la suya entrando con su cuenta.</p>
+  <div class="card" style="padding:14px 16px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><b style="flex:1">⚙️ Ajustes</b>
+    <span class="muted" style="font-size:12px">Versión ${VERSION} · base ${esc(vBD)}</span>${okV?'<span class="badge b-Pagada">Al día</span>':'<span class="badge b-Pendiente">Falta actualizar</span>'}</div>
+    ${okV?'':'<p class="muted" style="margin:8px 0 0">Corre en Supabase (SQL Editor) el archivo SQL de la versión '+VERSION+' para que todo quede igual.</p>'}</div>
+
+  <div class="sec-grupo">En este celular</div>
+  ${sec('push','🔔','Notificaciones',pushResumen(),`<div id="pushBox"><p class="muted">Cargando…</p></div>`)}
+  ${STANDALONE?'':sec('app','📲','Panel como app','Ícono en tu pantalla de inicio',`<p class="muted" style="margin:0 0 10px">Ten el panel a un toque en tu celular, con su propio ícono. No se descarga nada: es esta misma página.</p>
+    <button class="btn btn-primary full" onclick="instalarPanel()">Instalar el panel</button>`)}
+  ${sec('clave','🔑','Contraseña','Para entrar con correo y contraseña',`<p class="muted" style="margin:0">Es la contraseña para entrar <b>a este panel</b> con <b>${esc(D.yo)}</b> usando "correo y contraseña" (útil en la app del celular). <b>No cambia la contraseña de tu Gmail</b>, y cada admin crea la suya entrando con su cuenta.</p>
     <div class="row"><div><label>Nueva contraseña</label><input type="password" id="p1" autocomplete="new-password" placeholder="Mínimo 8 caracteres"></div><div><label>Repítela</label><input type="password" id="p2" autocomplete="new-password"></div></div>
-    <button class="btn btn-navy full" style="margin-top:12px" onclick="cambiarClave()">Guardar contraseña</button></div>
-  ${puede('ajustes')?``:`<div class="card"><p class="muted center" style="margin:0">🔒 Los ajustes del negocio (tarifa, horario…) solo los cambia quien tenga ese permiso.</p></div>`}
-  ${!puede('ajustes')?'':`<div class="card"><h2>🏖️ Negocio</h2>
-    <label>Nombre</label><input type="text" id="aNeg" value="${esc(C.negocio)}" maxlength="60">
-    <label>Dirección / referencia</label><input type="text" id="aDir" value="${esc(C.direccion)}" maxlength="100">
-    <div class="row"><div><label>Tarifa por hora</label><input type="number" id="aTar" value="${C.tarifa}" min="0" step="1000"></div><div><label>Canchas</label><input type="number" id="aCan" value="${C.canchas}" min="1" max="8"></div></div>
-    <label>WhatsApp que recibe los avisos de clientes</label><input type="tel" id="aWa" value="${esc(C.whatsappAdmin)}" placeholder="3101234567">
-    <div class="row"><div><label>Días de anticipación</label><input type="number" id="aDias" value="${C.diasAnticipacion}" min="1" max="60"></div><div><label>Máx. horas por reserva web</label><input type="number" id="aMax" value="${C.maxHorasPorReserva}" min="1" max="8"></div></div>
-    <label>Minutos para confirmar una reserva antes de que se libere sola (0 = nunca)</label><input type="number" id="aVence" value="${C.venceMin}" min="0" max="1440" step="15">
-    <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="aNombres" ${C.mostrarNombres?'checked':''} style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Mostrar el nombre abreviado del jugador (ej. "Meyer B.") en las horas ocupadas del calendario público. Cada jugador puede ocultarlo desde su cuenta.</span></label>
-    <button class="btn btn-primary full" style="margin-top:14px" onclick="guardarAjustesUI(this)">Guardar datos del negocio</button></div>
-  <div class="card">
-    <h2>🕔 Horario</h2><p class="muted" style="margin:4px 0 0">"Hasta" es la hora de cierre: la última reserva empieza una hora antes. Los festivos de Colombia se calculan solos.</p><div class="hor muted" style="font-size:12px"><span></span><span>Abre</span><span>Cierra</span><span></span></div>${hor}
-    <button class="btn btn-primary full" style="margin-top:14px" onclick="guardarAjustesUI(this)">Guardar horario</button></div>
-  <div class="card" style="border-color:rgba(198,244,50,.35)">
-    <h2>📣 Anuncio en la página</h2><p class="muted" style="margin:4px 0 0">Un aviso animado arriba de las reservas, con cuenta regresiva. Se esconde solo cuando pasa la fecha.</p>
+    <button class="btn btn-navy full" style="margin-top:12px" onclick="cambiarClave()">Guardar contraseña</button>`)}
+
+  <div class="sec-grupo">Página de reservas</div>
+  ${!puede('ajustes')?`<div class="card"><p class="muted center" style="margin:0">🔒 El anuncio, los datos del negocio y el horario solo los cambia quien tenga el permiso de Ajustes.</p></div>`:
+  sec('anuncio','📣','Anuncio en la página',A.activo?'Visible · '+esc(TIPOS[A.tipo]||'')+' · '+esc(A.titulo):'Apagado',`<p class="muted" style="margin:0">Un aviso animado arriba de las reservas. Con fecha muestra cuenta regresiva y se esconde solo cuando pasa.</p>
+    <label>Tipo</label><div class="hchk" id="anTipoBox">${Object.entries(TIPOS).map(([k,t])=>`<label><input type="radio" name="anTipo" value="${k}" ${A.tipo===k?'checked':''}>${t}</label>`).join('')}</div>
     <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="anOn" ${C.anuncio.activo?'checked':''} style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Mostrar el anuncio a los jugadores</span></label>
     <label>Título</label><input type="text" id="anTit" maxlength="60" value="${esc(C.anuncio.titulo)}">
     <label>Texto</label><textarea id="anTxt" maxlength="260" rows="3">${esc(C.anuncio.texto)}</textarea>
     <div class="row"><div><label>Fecha del evento</label><input type="date" id="anFecha" value="${C.anuncio.fecha}"></div><div><label>Hora (opcional)</label><select id="anHora"><option value="">Sin hora</option>${Array.from({length:24},(_,h)=>`<option value="${h}" ${String(C.anuncio.hora)===String(h)?'selected':''}>${hora(h)}</option>`).join('')}</select></div></div>
     <div class="row"><div><label>Texto del botón</label><input type="text" id="anBtn" maxlength="30" value="${esc(C.anuncio.boton)}" placeholder="Vacío = sin botón"></div><div><label>Link del botón (opcional)</label><input type="text" id="anLink" maxlength="200" value="${esc(C.anuncio.link)}" placeholder="Vacío = WhatsApp de los encargados"></div></div>
     <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="anPop" ${C.anuncio.popup?'checked':''} style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Mostrarlo también como ventana al entrar (una vez al día por persona)</span></label>
-    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px"><a class="btn btn-ghost" href="./" target="_blank" rel="noopener">Ver cómo queda</a><button class="btn btn-primary" onclick="guardarAjustesUI(this)">Guardar anuncio</button></div></div>`}
-  ${!PERM.dueno?'':`<div class="card" style="border-color:rgba(255,92,92,.35)"><h2>🧪 Borrar pruebas de la tienda</h2>
-    <p class="muted" style="margin:6px 0 0">Solo tú (dueño) ves esto. Borra <b>todas</b> las ventas, cuentas, entradas, conteos/mermas y cierres de caja, y deja la tienda en cero para arrancar de verdad. Las reservas de canchas y los gastos no se tocan.</p>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px"><a class="btn btn-ghost" href="./" target="_blank" rel="noopener">Ver cómo queda</a><button class="btn btn-primary" onclick="guardarAjustesUI(this)">Guardar anuncio</button></div>`,'sec-acento')+
+  sec('negocio','🏖️','Negocio',pesos(C.tarifa)+' la hora · '+C.canchas+' canchas',`
+    <label>Nombre</label><input type="text" id="aNeg" value="${esc(C.negocio)}" maxlength="60">
+    <label>Dirección / referencia</label><input type="text" id="aDir" value="${esc(C.direccion)}" maxlength="100">
+    <div class="row"><div><label>Tarifa por hora</label><input type="number" id="aTar" value="${C.tarifa}" min="0" step="1000"></div><div><label>Canchas</label><input type="number" id="aCan" value="${C.canchas}" min="1" max="8"></div></div>
+    <label>WhatsApp que recibe los avisos de clientes</label><input type="tel" id="aWa" value="${esc(C.whatsappAdmin)}" placeholder="3101234567">
+    <div class="row"><div><label>Días de anticipación</label><input type="number" id="aDias" value="${C.diasAnticipacion}" min="1" max="60"></div><div><label>Máx. horas por reserva web</label><input type="number" id="aMax" value="${C.maxHorasPorReserva}" min="1" max="8"></div></div>
+    <label>Minutos para confirmar una reserva antes de que se libere sola (0 = nunca)</label><input type="number" id="aVence" value="${C.venceMin}" min="0" max="1440" step="15">
+    <button class="btn btn-primary full" style="margin-top:14px" onclick="guardarAjustesUI(this)">Guardar datos del negocio</button>`)+
+  sec('horario','🕔','Horario','Apertura y cierre de cada día',`<p class="muted" style="margin:4px 0 0">"Hasta" es la hora de cierre: la última reserva empieza una hora antes. Los festivos de Colombia se calculan solos.</p><div class="hor muted" style="font-size:12px"><span></span><span>Abre</span><span>Cierra</span><span></span></div>${hor}
+    <button class="btn btn-primary full" style="margin-top:14px" onclick="guardarAjustesUI(this)">Guardar horario</button>`)}
+  ${sec('links','🔗','Links y compartir','Página pública y panel',`
+    <label style="margin-top:0">Página pública de reservas (compártela)</label><div class="linkbox"><span id="lPub">${esc(D.urlPublica)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lPub')">Copiar</button></div>
+    <a class="btn btn-wa full" style="margin-top:10px" target="_blank" href="https://wa.me/?text=${shareTxt}">Compartir por WhatsApp</a>
+    <label>Panel de administradores</label><div class="linkbox"><span id="lAdm">${esc(D.urlAdmin)}</span><button class="btn btn-ghost btn-sm" onclick="copiar('lAdm')">Copiar</button></div>`)}
+
+  <div class="sec-grupo">Equipo</div>
+  ${sec('admins','👥','Administradores',n+(n===1?' persona':' personas')+(PERM.dueno?' · permisos':''),cardAdmins())}
+  ${PERM.dueno?sec('bitacora','📜','Bitácora','Todo lo que hicieron los admins',`<div class="row" style="align-items:end"><div><label style="margin-top:0">Quién</label><select id="btPor"><option value="">Todos</option>${D.admins.map(a=>`<option value="${esc(a.email)}">${esc(a.email.split('@')[0])}${a.dueno?' (dueño)':''}</option>`).join('')}</select></div>
+    <div><label style="margin-top:0">Desde</label><input type="date" id="btDesde" value="${addD(D.hoy,-7)}"></div><div><label style="margin-top:0">Hasta</label><input type="date" id="btHasta" value="${D.hoy}"></div></div>
+    <button class="btn btn-navy full" style="margin-top:10px" onclick="cargarBitacora(this)">Ver bitácora</button><div id="btLista" style="margin-top:12px"></div>`):''}
+
+  ${puede('finanzas')||PERM.dueno?'<div class="sec-grupo">Mantenimiento</div>':''}
+  ${!puede('finanzas')?'':sec('semanas','🧹','Cierre semanal','Informes y limpieza de datos',`<p class="muted">Cada lunes se cierra la semana anterior: se genera el informe descargable (dura 4 semanas) y se borran los datos de las reservas presenciales. Las reservas de jugadores con cuenta quedan en su historial personal.</p>
+    <button class="btn btn-ghost full" onclick="cerrarSem(this)">Cerrar semanas pasadas ahora</button>`)}
+  ${!PERM.dueno?'':sec('pruebas','🧪','Borrar pruebas de la tienda','Solo el dueño',`    <p class="muted" style="margin:6px 0 0">Solo tú (dueño) ves esto. Borra <b>todas</b> las ventas, cuentas, entradas, conteos/mermas y cierres de caja, y deja la tienda en cero para arrancar de verdad. Las reservas de canchas y los gastos no se tocan.</p>
     <label class="check" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="rtProd" style="width:20px;height:20px;accent-color:var(--neon);flex:none"> <span>Borrar también los productos (si no, quedan creados con stock en 0 y les cargas la mercancía real con "+ Entrada")</span></label>
     <label>Para confirmar escribe BORRAR</label><input type="text" id="rtConf" autocomplete="off" placeholder="BORRAR">
-    <button class="btn btn-danger full" style="margin-top:12px" onclick="reiniciarTienda(this)">Borrar pruebas de la tienda</button></div>`}
-  ${!puede('finanzas')?'':`<div class="card"><h2>🧹 Privacidad</h2><p class="muted">Cada lunes se cierra la semana anterior: se genera el informe descargable (dura 4 semanas) y se borran los datos de las reservas presenciales. Las reservas de jugadores con cuenta quedan en su historial personal.</p>
-    <button class="btn btn-ghost full" onclick="cerrarSem(this)">Cerrar semanas pasadas ahora</button></div>`}`;}
+    <button class="btn btn-danger full" style="margin-top:12px" onclick="reiniciarTienda(this)">Borrar pruebas de la tienda</button>`,'sec-peligro')}`;
+  pintarPush();}
 const PERMS=[['finanzas','💰 Ver finanzas e informes'],['gastos','🧾 Registrar y borrar gastos'],['ajustes','⚙️ Cambiar ajustes (tarifa, horario…)'],['bloquear','🚫 Bloquear jugadores'],['fijos','📌 Crear y aprobar horarios fijos'],['vender','🛒 Vender y cierre de caja'],['inventario','📦 Productos e inventario']];
+const SEC_ABIERTO=new Set();
+function sec(id,ic,tit,sub,cuerpo,cls){
+  return `<details class="sec ${cls||''}" ontoggle="this.open?SEC_ABIERTO.add('${id}'):SEC_ABIERTO.delete('${id}');${id==='push'?'if(this.open)pintarPush();':''}" ${SEC_ABIERTO.has(id)?'open':''}>
+   <summary class="sec-cab"><span class="sec-ic">${ic}</span><span style="flex:1;min-width:0"><b>${tit}</b><span class="sec-sub">${sub}</span></span>
+   <svg class="adm-fl" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+   <div class="sec-cuerpo">${cuerpo}</div></details>`;}
 const ADM_ABIERTO=new Set();
 function cardAdmins(){
   const dueno=PERM.dueno;
@@ -903,8 +944,8 @@ function cardAdmins(){
     return `<details class="adm" ${tog(id)}><summary class="adm-cab">${cab}<span class="muted adm-n">${n} de ${PERMS.length} permisos</span>${flecha}</summary>
       <div class="adm-cuerpo"><div class="hchk">${PERMS.map(([k,t])=>`<label><input type="checkbox" class="pm-${id}" data-k="${k}" ${a.permisos&&a.permisos[k]?'checked':''}>${t}</label>`).join('')}</div>
       <div class="row" style="margin-top:10px"><button class="btn btn-navy btn-sm" onclick="guardarPermisos('${esc(a.email)}','${id}',this)">Guardar permisos</button><button class="btn btn-danger btn-sm" onclick="quitarAdmin('${esc(a.email)}',this)">Quitar</button></div></div></details>`;};
-  return `<div class="card"><h2>👥 Administradores</h2>
-    <p class="muted" style="margin:6px 0 10px">${dueno?'Eres el dueño: solo tú agregas, quitas y das permisos. Toca un administrador para ver o cambiar sus permisos. Todos pueden ver la agenda, confirmar, cobrar y registrar reservas presenciales.':'Solo el dueño puede agregar, quitar o cambiar permisos de los administradores.'}</p>
+  return `<div>
+    <p class="muted" style="margin:0 0 6px">${dueno?'Eres el dueño: solo tú agregas, quitas y das permisos. Toca un administrador para ver o cambiar sus permisos. Todos pueden ver la agenda, confirmar, cobrar y registrar reservas presenciales.':'Solo el dueño puede agregar, quitar o cambiar permisos de los administradores.'}</p>
     ${D.admins.map(fila).join('')}
     ${dueno?`<details class="adm adm-nuevo" ${tog('nuevo')}><summary class="adm-cab"><b style="flex:1;color:var(--neon)">＋ Agregar administrador</b>${flecha}</summary>
       <div class="adm-cuerpo"><label style="margin-top:0">Correo de Google</label><input type="text" id="nuevoAdm" inputmode="email" placeholder="socio@gmail.com">
@@ -917,7 +958,7 @@ function copiar(id){const t=$(id).textContent;(navigator.clipboard?navigator.cli
 async function guardarAjustesUI(btn){
   const hor={};for(const d of ['1','2','3','4','5','6','7','F'])hor[d]=$('hC'+d).checked?[0,0]:[Number($('hA'+d).value),Number($('hB'+d).value)];
   const b=btn||document.querySelector('#v-ajustes .btn-primary');b.disabled=true;
-  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,mostrarNombres:$('aNombres').checked,anuncioActivo:$('anOn').checked,anuncioTitulo:$('anTit').value,anuncioTexto:$('anTxt').value,anuncioFecha:$('anFecha').value,anuncioHora:$('anHora').value,anuncioBoton:$('anBtn').value,anuncioLink:$('anLink').value.trim(),anuncioPopup:$('anPop').checked,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
+  try{await rpc('guardar_ajustes',{p:{negocio:$('aNeg').value,direccion:$('aDir').value,tarifa:$('aTar').value,canchas:$('aCan').value,whatsappAdmin:$('aWa').value,diasAnticipacion:$('aDias').value,maxHorasPorReserva:$('aMax').value,vencePendienteMin:$('aVence').value,anuncioTipo:(document.querySelector('input[name=anTipo]:checked')||{}).value||'evento',anuncioActivo:$('anOn').checked,anuncioTitulo:$('anTit').value,anuncioTexto:$('anTxt').value,anuncioFecha:$('anFecha').value,anuncioHora:$('anHora').value,anuncioBoton:$('anBtn').value,anuncioLink:$('anLink').value.trim(),anuncioPopup:$('anPop').checked,horario:hor}});toast('Ajustes guardados ✓');await cargar();}
   catch(e){toast(e.message,true);}finally{b.disabled=false;}}
 async function agregarAdmin(){try{await rpc('agregar_admin',{p_email:$('nuevoAdm').value,p_permisos:leerPermisos('pm-nuevo')});ADM_ABIERTO.delete('nuevo');toast('Administrador agregado ✓');await cargar();}catch(e){toast(e.message,true);}}
 async function quitarAdmin(email,btn){if(btn.dataset.ok!=='1'){btn.dataset.ok='1';btn.textContent='¿Seguro?';setTimeout(()=>{btn.dataset.ok='';btn.textContent='Quitar';},3000);return;}
@@ -932,13 +973,57 @@ async function reiniciarTienda(b){b.disabled=true;
     toast(`Tienda en cero ✓ (${r.ventas} ventas, ${r.movimientos} movimientos, ${r.cierres} cierres borrados)`);await cargar();}
   catch(e){toast(e.message,true);b.disabled=false;}}
 
+/* ---------- Notificaciones (v4.7) ---------- */
+const PUSH_OK=('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
+let PUSH_SUB=null;
+function b64aU8(b){const p='='.repeat((4-b.length%4)%4),r=atob((b+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...r].map(c=>c.charCodeAt(0)));}
+async function pushSub(){if(!PUSH_OK)return null;try{const reg=await navigator.serviceWorker.ready;PUSH_SUB=await reg.pushManager.getSubscription();}catch(e){PUSH_SUB=null;}return PUSH_SUB;}
+function pushActivo(){let f=false;try{f=localStorage.getItem('vp_push_admin')==='1';}catch(e){}return PUSH_OK&&Notification.permission==='granted'&&f;}
+function pushResumen(){return !PUSH_OK?(IOS_A&&!STANDALONE?'Instala el panel como app para activarlas':'Este navegador no las permite'):pushActivo()?'✅ Activadas en este celular':'Desactivadas en este celular';}
+async function pintarPush(){const box=$('pushBox');if(!box)return;
+  if(!PUSH_OK){box.innerHTML=IOS_A&&!STANDALONE?`<p style="margin:0">En iPhone las notificaciones solo funcionan con el panel <b>instalado como app</b>: Compartir ⬆️ → "Agregar a inicio", y ábrelo desde el ícono.</p><button class="btn btn-primary full" style="margin-top:12px" onclick="instalarPanel()">Ver cómo instalarlo</button>`
+    :'<p class="muted" style="margin:0">Este navegador no permite notificaciones. Prueba con Chrome (Android) o con la app instalada (iPhone).</p>';return;}
+  await pushSub();const on=pushActivo()&&!!PUSH_SUB,neg=Notification.permission==='denied';
+  box.innerHTML=`<p style="margin:0">Te avisa en este celular, aunque el panel esté cerrado, cuando:</p>
+    <ul class="muted" style="margin:8px 0 0;padding-left:18px;line-height:1.7"><li>entra una <b>reserva nueva</b> por confirmar</li><li>un jugador <b>cancela</b> su reserva</li></ul>
+    ${neg?'<div class="aviso" style="text-align:left;margin-top:12px;color:var(--warn)">Bloqueaste las notificaciones para esta página. Actívalas en los ajustes del navegador (candado 🔒 junto a la dirección → Notificaciones → Permitir) y vuelve aquí.</div>':''}
+    <div style="display:grid;gap:8px;margin-top:14px">${on?`<div class="aviso" style="text-align:left;margin:0;color:var(--ok)">✅ Activadas en este celular</div>
+      <button class="btn btn-navy" onclick="probarPush(this)">Enviar una prueba a los admins</button><button class="btn btn-ghost" onclick="desactivarPush(this)">Desactivar en este celular</button>`
+      :`<button class="btn btn-primary" ${neg?'disabled':''} onclick="activarPush(this)">🔔 Activar en este celular</button>`}</div>
+    <p class="muted" style="margin:10px 0 0;font-size:12px">Cada admin las activa en su propio celular. Si cambias de celular, actívalas de nuevo.</p>`;}
+async function activarPush(b){const key=RAW.cfg&&RAW.cfg.vapid_publica;if(!key){toast('Falta configurar las notificaciones (corre el SQL de la 4.7)',true);return;}
+  if(b)b.disabled=true;
+  try{const p=await Notification.requestPermission();if(p!=='granted'){toast('No diste el permiso, así que no te pueden llegar',true);pintarPush();return;}
+    const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64aU8(key)});
+    const j=sub.toJSON();await rpc('guardar_suscripcion',{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth,p_admin:true});
+    try{localStorage.setItem('vp_push_admin','1');}catch(e){}toast('🔔 Notificaciones activadas');pintarInstAdm();pintarPush();
+    const r=document.querySelector('.sec-cab .sec-sub');}catch(e){toast(e.message||'No se pudieron activar',true);if(b)b.disabled=false;}}
+async function desactivarPush(b){b.disabled=true;try{await pushSub();if(PUSH_SUB)await rpc('quitar_suscripcion',{p_endpoint:PUSH_SUB.endpoint,p_admin:true});
+  try{localStorage.removeItem('vp_push_admin');}catch(e){}toast('Notificaciones desactivadas en este celular');pintarPush();}catch(e){toast(e.message,true);b.disabled=false;}}
+async function probarPush(b){b.disabled=true;try{const r=await rpc('probar_push');toast('Prueba enviada a '+r.celulares+' celular(es) de admins');}catch(e){toast(e.message,true);}setTimeout(()=>b.disabled=false,4000);}
+function ocultarPushBanner(){try{localStorage.setItem('vp_push_no',Date.now()+7*864e5);}catch(e){}pintarInstAdm();}
+
+/* ---------- Bitácora (v4.7) ---------- */
+async function cargarBitacora(b){b.disabled=true;$('btLista').innerHTML='<p class="muted center">Cargando…</p>';
+  try{const r=await rpc('bitacora',{p_desde:$('btDesde').value||null,p_hasta:$('btHasta').value||null,p_por:$('btPor').value||null});
+    const I=r.items||[],dias={};I.forEach(x=>{const d=new Date(x.creado).toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});(dias[d]=dias[d]||[]).push(x);});
+    const COL={Reservas:'var(--info)',Tienda:'var(--neon)',Inventario:'var(--warn)',Gastos:'var(--bad)',Caja:'var(--ok)'};
+    $('btLista').innerHTML=I.length?Object.entries(dias).map(([d,L])=>`<div class="dayhdr" style="text-transform:capitalize">${d}</div>${L.map(x=>`<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)">
+      <span class="muted" style="font-size:12px;width:58px;flex:none">${new Date(x.creado).toLocaleTimeString('es-CO',{hour:'numeric',minute:'2-digit'})}</span>
+      <div style="min-width:0;flex:1"><div><b>${esc(x.por.split('@')[0])}</b> · ${esc(x.accion)} <span style="font-size:10px;font-weight:800;color:${COL[x.area]||'var(--muted)'};border:1px solid currentColor;border-radius:6px;padding:1px 5px;margin-left:2px">${esc(x.area).toUpperCase()}</span></div>
+      <div class="muted" style="font-size:12px;word-break:break-word">${esc(x.detalle)}</div></div></div>`).join('')}`).join('')+(I.length>=400?'<p class="muted" style="font-size:12px">Se muestran los 400 más recientes; acorta las fechas para ver más.</p>':'')
+      :'<p class="muted center" style="padding:10px 0">No hay movimientos de admins en esas fechas.</p>';}
+  catch(e){$('btLista').innerHTML='';toast(e.message,true);}b.disabled=false;}
+
 /* ---------- App instalable ---------- */
 let PROMPT=null;const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const IOS_A=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();PROMPT=e;pintarInstAdm();});
-function pintarInstAdm(){let no=false;try{no=Number(localStorage.getItem('vp_instadm_no')||0)>Date.now();}catch(e){}
-  const b=$('instAdm');if(b)b.classList.toggle('hidden',STANDALONE||no||!(PROMPT||IOS_A));}
+function pintarInstAdm(){let no=false,noP=false;try{no=Number(localStorage.getItem('vp_instadm_no')||0)>Date.now();noP=Number(localStorage.getItem('vp_push_no')||0)>Date.now();}catch(e){}
+  const b=$('instAdm');if(b)b.classList.toggle('hidden',STANDALONE||no||!(PROMPT||IOS_A));
+  const p=$('pushAdm');if(p)p.classList.toggle('hidden',noP||!PUSH_OK||pushActivo()||!(RAW.cfg&&RAW.cfg.vapid_publica)||Notification.permission==='denied');}
 function ocultarInstAdm(){try{localStorage.setItem('vp_instadm_no',Date.now()+14*864e5);}catch(e){}pintarInstAdm();}
 window.addEventListener('appinstalled',()=>toast('¡Panel instalado! Búscalo en tu pantalla de inicio'));
 async function instalarPanel(){

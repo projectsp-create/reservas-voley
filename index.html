@@ -76,6 +76,12 @@
   /* ---- Anuncio animado (v4.6.3) ---- */
   .anu{position:relative;border-radius:22px;padding:2px;margin-bottom:16px;background:linear-gradient(120deg,#C6F432,#3DDC84,#5AB0FF,#C6F432,#FFC24B,#C6F432);background-size:300% 300%;animation:anuBorde 6s linear infinite;box-shadow:0 10px 40px -12px rgba(198,244,50,.45)}
   @keyframes anuBorde{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+  .anu-aviso{background:linear-gradient(120deg,#5AB0FF,#9ED0FF,#3D8FDB,#5AB0FF,#C6F432,#5AB0FF);background-size:300% 300%;box-shadow:0 10px 40px -12px rgba(90,176,255,.5)}
+  .anu-aviso .anu-tag{background:#5AB0FF;color:#06223B}.anu-aviso .anu-fecha{color:#9ED0FF}.anu-aviso .anu-btn{background:#5AB0FF;color:#06223B}
+  .anu-aviso .anu-tit{background-image:linear-gradient(90deg,#fff 0%,#fff 40%,#9ED0FF 50%,#fff 60%,#fff 100%)}
+  .anu-promo{background:linear-gradient(120deg,#FF8A3D,#FFC24B,#FF5C5C,#FF8A3D,#FFC24B,#FF8A3D);background-size:300% 300%;box-shadow:0 10px 40px -12px rgba(255,138,61,.55)}
+  .anu-promo .anu-tag{background:#FF8A3D;color:#2B1200}.anu-promo .anu-fecha{color:#FFC24B}.anu-promo .anu-btn{background:#FF8A3D;color:#2B1200}
+  .anu-promo .anu-tit{background-image:linear-gradient(90deg,#fff 0%,#fff 40%,#FFC24B 50%,#fff 60%,#fff 100%)}
   .anu-in{position:relative;overflow:hidden;border-radius:20px;padding:20px 18px 18px;background:radial-gradient(120% 90% at 100% 0%,rgba(198,244,50,.18),transparent 55%),radial-gradient(90% 80% at 0% 100%,rgba(90,176,255,.14),transparent 60%),#11161D}
   .anu-in:after{content:"";position:absolute;top:-60%;left:-40%;width:40%;height:220%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);transform:rotate(18deg);animation:anuBrillo 4.5s ease-in-out infinite}
   @keyframes anuBrillo{0%{left:-50%}60%,100%{left:130%}}
@@ -104,7 +110,7 @@
   .inst{display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(198,244,50,.14),rgba(198,244,50,.04));border:1px solid rgba(198,244,50,.4)}
   .inst img{width:44px;height:44px;border-radius:11px;flex:none}
   .inst .x{background:transparent;border:0;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 6px}
-  .slot.ocupado.fut{cursor:pointer}.slot.ocupado.esp{border-color:var(--warn)}.slot.ocupado.esp .s{color:var(--warn)}
+  .slot.ocupado.fut{cursor:pointer}.slot.ocupado.mia{border:1.5px solid var(--neon);border-style:solid}.slot.ocupado.mia .s{color:var(--neon);font-weight:800}.slot.ocupado.mia .t{text-decoration:none}.slot.ocupado.esp{border-color:var(--warn)}.slot.ocupado.esp .s{color:var(--warn)}
   .pasos-ios{counter-reset:p;list-style:none;padding:0;margin:14px 0}.pasos-ios li{counter-increment:p;display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
   .pasos-ios li:before{content:counter(p);width:28px;height:28px;border-radius:8px;background:var(--neon);color:var(--neon-ink);display:grid;place-items:center;font-weight:800;flex:none}
   .stat span{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600}
@@ -190,7 +196,7 @@
       <p class="muted" style="margin:6px 0 4px">Para confirmar tu reserva, consultar disponibilidad o cualquier información de las canchas, habla con nuestros encargados:</p>
       <div id="contactos"></div></div>
     <p class="muted center" style="margin:22px 0 6px" id="horTxt"></p>
-    <p class="muted center" style="margin:0 0 90px;font-size:12px"><a href="privacidad.html" style="color:var(--muted)">Política de tratamiento de datos</a> · <span style="color:var(--dim)">Versión 4.6.3</span><span id="lnkInst" class="hidden"> · <a href="#" style="color:var(--muted)" onclick="instalar();return false">📲 Instalar app</a></span></p>
+    <p class="muted center" style="margin:0 0 90px;font-size:12px"><a href="privacidad.html" style="color:var(--muted)">Política de tratamiento de datos</a> · <span style="color:var(--dim)">Versión 4.7</span><span id="lnkInst" class="hidden"> · <a href="#" style="color:var(--muted)" onclick="instalar();return false">📲 Instalar app</a></span></p>
   </section>
 
   <!-- MIS RESERVAS -->
@@ -200,6 +206,7 @@
       <p class="muted" id="misQuien" style="margin:6px 0 0"></p>
       <div class="stat" id="misStats"></div>
       <div id="misFijos"></div>
+      <div id="pushJug"></div>
       <div id="misProx"></div>
       <div id="misEspera"></div>
     </div>
@@ -217,7 +224,7 @@
       <label for="eTel">WhatsApp</label><input type="tel" id="eTel" inputmode="numeric" maxlength="13">
       <label for="eDir">Dirección</label><input type="text" id="eDir" maxlength="120">
       <label class="check hidden" id="eAceptaBox"><input type="checkbox" id="eAcepta"> <span>Autorizo el tratamiento de mis datos (nombre, correo, WhatsApp y dirección) para gestionar mis reservas y mi historial (mi nombre abreviado puede verse en el calendario; puedo ocultarlo en "Mis datos"), conforme a la Ley 1581 de 2012 y la <a href="privacidad.html" target="_blank" style="color:var(--neon)">política de tratamiento de datos</a>.</span></label>
-      <label class="check" id="eMostrarBox"><input type="checkbox" id="eMostrar" onchange="cambiarPrivacidad(this)"> <span>Mostrar mi nombre abreviado (ej. "Laura G.") en el calendario público cuando tenga una cancha reservada.</span></label>
+      <label class="check hidden" id="eMostrarBox" style="display:none"><input type="checkbox" id="eMostrar" onchange="cambiarPrivacidad(this)"> <span>Mostrar mi nombre abreviado (ej. "Laura G.") en el calendario público cuando tenga una cancha reservada.</span></label>
       <button class="btn btn-navy full" style="margin-top:14px" id="btnEditar" onclick="editarPerfil()">Guardar cambios</button>
       <button class="btn btn-ghost full" style="margin-top:10px" onclick="salir()">Cerrar sesión</button>
       <button class="btn btn-danger full" style="margin-top:10px" onclick="borrarCuenta(this)">Eliminar mi cuenta y mis datos</button>
@@ -234,6 +241,7 @@
       <div class="kv" id="okDet" style="text-align:left;max-width:340px;margin:14px auto"></div>
       <p class="muted" id="okVence">Te confirmaremos por WhatsApp. Si quieres agilizarlo, avísanos:</p>
       <div id="okWa" style="display:grid;gap:8px"></div>
+      <div id="okPush"></div>
       <button class="btn btn-ghost full" style="margin-top:10px" onclick="ver('mis')">Ver mis reservas</button>
       <button class="btn btn-ghost full" style="margin-top:10px;border:0" onclick="ver('reserva')">Hacer otra reserva</button>
     </div>
@@ -248,7 +256,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const VERSION='4.6.3';
+const VERSION='4.7';
 const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],DIASL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 // Encargados de las canchas (para cambiarlos, edita esta lista)
@@ -258,7 +266,7 @@ function pintarContactos(){const fmt=t=>t.slice(0,3)+' '+t.slice(3,6)+' '+t.slic
     <div style="flex:1;min-width:0"><b>${c.nombre}</b><div class="muted">${fmt(c.tel)}</div></div>
     <a class="btn btn-wa btn-sm" target="_blank" rel="noopener" href="https://wa.me/57${c.tel}?text=${encodeURIComponent('Hola '+c.nombre.split(' ')[0]+' 👋, te escribo por las canchas de vóley playa.')}">💬 WhatsApp</a>
     <a class="btn btn-ghost btn-sm" href="tel:+57${c.tel}">📞 Llamar</a></div>`).join('');}
-const S={info:null,cal:null,fecha:null,cancha:1,sel:[],sesion:null,perfil:null,esperas:new Set(),mis:{}};
+const S={info:null,cal:null,fecha:null,cancha:1,sel:[],sesion:null,perfil:null,esperas:new Set(),mias:new Set(),mis:{}};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pesos=n=>'$'+Math.round(n||0).toLocaleString('es-CO');
@@ -301,10 +309,10 @@ function pintarSlots(){
   let h='<div class="slots">';
   D.horas.forEach(x=>{const st=D.slots[S.cancha+'-'+x],sel=S.sel.includes(x);
     const q=(D.quien||{})[S.cancha+'-'+x];
-    const enEsp=st==='ocupado'&&S.esperas.has(S.fecha+'|'+S.cancha+'-'+x);
-    const sub=st==='libre'?pesos(S.info.tarifa):(st==='ocupado'?(enEsp?'⏳ En lista de espera':(q?(q.f?'📌 ':'')+esc(q.n):'Ocupado')):'Ya pasó');
+    const k=S.fecha+'|'+S.cancha+'-'+x,mia=st==='ocupado'&&S.mias.has(k),enEsp=st==='ocupado'&&!mia&&S.esperas.has(k);
+    const sub=st==='libre'?pesos(S.info.tarifa):(st==='ocupado'?(mia?'✓ Tu reserva':enEsp?'⏳ En lista de espera':'Ocupado'):'Ya pasó');
     if(st!=='libre'&&sel)S.sel=S.sel.filter(y=>y!==x);
-    h+=`<button class="slot ${st} ${st==='ocupado'?'fut':''} ${enEsp?'esp':''} ${sel&&st==='libre'?'sel':''}" ${st==='libre'?`onclick="toggle(${x})"`:st==='ocupado'?`onclick="espera(${x})"`:'disabled'}><div class="t">${hora(x)}</div><div class="s">${sub}</div></button>`;});
+    h+=`<button class="slot ${st} ${st==='ocupado'?'fut':''} ${enEsp?'esp':''} ${mia?'mia':''} ${sel&&st==='libre'?'sel':''}" ${st==='libre'?`onclick="toggle(${x})"`:mia?`onclick="ver('mis')"`:st==='ocupado'?`onclick="espera(${x})"`:'disabled'}><div class="t">${hora(x)}</div><div class="s">${sub}</div></button>`;});
   $('slots').innerHTML=h+'</div>';actualizarBarra();}
 function toggle(x){const i=S.sel.indexOf(x);
   if(i>=0)S.sel.splice(i,1);else{if(S.sel.length>=S.info.maxHoras){toast('Máximo '+S.info.maxHoras+' horas por reserva');return;}S.sel.push(x);}
@@ -413,12 +421,12 @@ async function cargarPerfil(){
   if(CARGANDO_PERFIL)return CARGANDO_PERFIL;
   CARGANDO_PERFIL=(async()=>{
     const {data}=await sb.auth.getSession();S.sesion=data&&data.session||null;S.perfil=null;S.sugerido=null;
-    if(S.sesion){try{const p=await rpc('mi_perfil');S.perfil=p.perfil;S.sugerido=p.sugerido;S.esperas=new Set(p.esperas||[]);
+    if(S.sesion){try{const p=await rpc('mi_perfil');S.perfil=p.perfil;S.sugerido=p.sugerido;S.esperas=new Set(p.esperas||[]);S.mias=new Set(p.mias||[]);
       // Cuenta nueva con correo: los datos del registro llegan en la cuenta y el perfil se crea solo
       const md=S.sesion.user.user_metadata||{};
       if(!S.perfil&&md.acepta&&md.nombre&&md.whatsapp){const r=await rpc('guardar_perfil',{p_nombre:md.nombre,p_whatsapp:md.whatsapp,p_acepta:true,p_direccion:md.direccion||''});S.perfil=r.perfil;toast('¡Cuenta confirmada! Ya puedes reservar 🏐');}
     }catch(e){toast(e.message,true);}}
-    if(!S.sesion)S.esperas=new Set();
+    if(!S.sesion){S.esperas=new Set();S.mias=new Set();}
     pintarUser();pintarPaso3();if(S.cal)pintarSlots();
   })();
   try{await CARGANDO_PERFIL;}finally{CARGANDO_PERFIL=null;}
@@ -437,7 +445,7 @@ async function reservar(){
   catch(e){toast(e.message,true);if(/reserv|disponible/.test(e.message)){S.sel=[];refrescar();}}
   finally{b.disabled=false;b.textContent='Confirmar reserva';}}
 function exito(r){
-  S.sel=[];ver('ok');$('okCod').textContent=r.codigo;
+  S.sel=[];ver('ok');$('okCod').textContent=r.codigo;r.horas.forEach(h=>S.mias.add(r.fecha+'|'+r.cancha+'-'+h));pintarPushJug();
   const hs=r.horas.map(x=>hora(x)+' – '+hora(x+1)).join(', ');
   $('okDet').innerHTML=`<b>Día</b><span>${fLarga(r.fecha)}</span><b>Cancha</b><span>${r.cancha}</span><b>Horas</b><span>${hs}</span><b>Total</b><span>${pesos(r.total)}</span><b>Estado</b><span><span class="badge b-Pendiente">Pendiente</span></span>`;
   if(S.info.venceMin>0){const m=S.info.venceMin;$('okVence').textContent=`Tu hora queda apartada ${m>=60?(m/60)+(m===60?' hora':' horas'):m+' minutos'} mientras la confirmamos por WhatsApp. Avísanos para agilizarlo:`;}
@@ -472,16 +480,21 @@ function anuObjetivo(A){return A.fecha?new Date(A.fecha+'T'+String(A.hora??0).pa
 function anuFechaTxt(A){if(!A.fecha)return '';const d=new Date(A.fecha+'T12:00:00-05:00');
   let t=d.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});t=t.charAt(0).toUpperCase()+t.slice(1);
   if(A.hora!=null)t+=' · '+((A.hora%12)||12)+':00 '+(A.hora>=12?'p. m.':'a. m.');return '📅 '+t;}
-function anuHTML(A,enModal){const obj=anuObjetivo(A);
-  return `<div class="anu"><div class="anu-in">
+const ANU_TIPOS={evento:{tag:'🏆 PRÓXIMO EVENTO',cls:'',ic:'copa'},aviso:{tag:'📢 AVISO IMPORTANTE',cls:'anu-aviso',ic:'mega'},promo:{tag:'🔥 PROMOCIÓN',cls:'anu-promo',ic:'fuego'}};
+function anuIcono(t,st){
+  if(t==='mega')return `<svg class="anu-copa" viewBox="0 0 64 64" aria-hidden="true" style="${st}"><path d="M10 26h8l26-14v40L18 38h-8z" fill="#5AB0FF"/><path d="M18 38l4 14h7l-3-14" fill="#3D8FDB"/><path d="M50 22c4 3 4 15 0 18M55 17c7 6 7 23 0 29" fill="none" stroke="#5AB0FF" stroke-width="3.5" stroke-linecap="round"/></svg>`;
+  if(t==='fuego')return `<svg class="anu-copa" viewBox="0 0 64 64" aria-hidden="true" style="${st}"><path d="M32 4c4 12 18 18 18 34a18 18 0 0 1-36 0c0-9 5-14 9-19 1 6 4 9 7 10-3-9-1-18 2-25z" fill="#FF8A3D"/><path d="M32 30c2 6 9 9 9 17a9 9 0 0 1-18 0c0-5 4-8 5-12 1 3 2 4 4 5-1-4-1-7 0-10z" fill="#FFC24B"/></svg>`;
+  return `<svg class="anu-copa" viewBox="0 0 64 64" aria-hidden="true" style="${st}"><path d="M20 8h24v14a12 12 0 0 1-24 0z" fill="#C6F432"/><path d="M20 12H10a10 10 0 0 0 11 12M44 12h10a10 10 0 0 1-11 12" fill="none" stroke="#C6F432" stroke-width="4" stroke-linecap="round"/><path d="M28 34h8v10h-8z" fill="#9BD11A"/><rect x="20" y="44" width="24" height="7" rx="2" fill="#C6F432"/><path d="M27 15l3 3 7-7" fill="none" stroke="#0E1116" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;}
+function anuHTML(A,enModal){const obj=anuObjetivo(A),T=ANU_TIPOS[A.tipo]||ANU_TIPOS.evento;
+  return `<div class="anu ${T.cls}"><div class="anu-in">
     ${enModal?'':'<button class="anu-x" aria-label="Ocultar anuncio" onclick="ocultarAnuncio()">×</button>'}
     <span class="anu-bola" style="width:46px;height:46px;left:-12px;bottom:18px" aria-hidden="true"></span><span class="anu-bola" style="width:26px;height:26px;right:90px;top:60px;animation-delay:-3s" aria-hidden="true"></span>
-    <svg class="anu-copa" viewBox="0 0 64 64" aria-hidden="true" style="${enModal?'':'top:44px'}"><path d="M20 8h24v14a12 12 0 0 1-24 0z" fill="#C6F432"/><path d="M20 12H10a10 10 0 0 0 11 12M44 12h10a10 10 0 0 1-11 12" fill="none" stroke="#C6F432" stroke-width="4" stroke-linecap="round"/><path d="M28 34h8v10h-8z" fill="#9BD11A"/><rect x="20" y="44" width="24" height="7" rx="2" fill="#C6F432"/><path d="M27 15l3 3 7-7" fill="none" stroke="#0E1116" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span class="anu-tag">🏆 PRÓXIMO EVENTO</span>
+    ${anuIcono(T.ic,enModal?'':'top:44px')}
+    <span class="anu-tag">${T.tag}</span>
     <div class="anu-tit">${esc(A.titulo)}</div>
-    <div class="anu-fecha">${A.fecha?anuFechaTxt(A):'📅 Fecha por confirmar'}</div>
+    ${A.fecha||A.tipo==='evento'||!A.tipo?`<div class="anu-fecha">${A.fecha?anuFechaTxt(A):'📅 Fecha por confirmar'}</div>`:''}
     ${A.texto?`<p class="anu-txt">${esc(A.texto)}</p>`:''}
-    ${obj?`<div class="anu-cnt" data-cnt="1">${['Días','Horas','Min','Seg'].map((l,i)=>`<div><b data-u="${i}">–</b><span>${l.toUpperCase()}</span></div>`).join('')}</div><div class="anu-hoy hidden" data-hoy="1">¡ES HOY! 🔥</div>`:''}
+    ${obj?`<div class="anu-cnt" data-cnt="1">${['Días','Horas','Min','Seg'].map((l,i)=>`<div><b data-u="${i}">–</b><span>${l.toUpperCase()}</span></div>`).join('')}</div><div class="anu-hoy hidden" data-hoy="1">${A.tipo==='aviso'?'¡ES HOY!':'¡ES HOY! 🔥'}</div>`:''}
     ${A.boton?(A.link?`<a class="anu-btn" href="${esc(A.link)}" target="_blank" rel="noopener">${esc(A.boton)} →</a>`:`<button class="anu-btn" onclick="anuInscribir()">${esc(A.boton)} →</button>`):''}
   </div></div>`;}
 function anuTick(){const A=S.info&&S.info.anuncio;if(!A)return;const obj=anuObjetivo(A);if(!obj)return;
@@ -496,10 +509,33 @@ function pintarAnuncio(){const A=S.info&&S.info.anuncio,box=$('anuncio');clearIn
   if(A.popup){let ya='';try{ya=localStorage.getItem('vp_anu_popup');}catch(e){}const hoy=new Date().toDateString();
     if(ya!==hoy){try{localStorage.setItem('vp_anu_popup',hoy);}catch(e){}setTimeout(()=>{if($('modal').innerHTML)return;abrirModal(anuHTML(A,true)+'<button class="btn btn-ghost full" style="margin-top:4px" onclick="cerrarModal()">Ahora no</button>');anuTick();},900);}}}
 function ocultarAnuncio(){try{localStorage.setItem('vp_anu_oculto',new Date().toDateString());}catch(e){}$('anuncio').innerHTML='';clearInterval(ANU_T);toast('Anuncio oculto por hoy');}
-function anuInscribir(){const A=S.info.anuncio,msg=`Hola 👋, quiero información para inscribir mi equipo en ${A.titulo} 🏐`;
+function anuInscribir(){const A=S.info.anuncio,msg=A.tipo==='promo'?`Hola 👋, quiero aprovechar la promoción "${A.titulo}" 🏐`:A.tipo==='aviso'?`Hola 👋, tengo una pregunta sobre el aviso "${A.titulo}"`:`Hola 👋, quiero información para inscribir mi equipo en ${A.titulo} 🏐`;
   abrirModal(`<h2>${esc(A.titulo)}</h2><p class="muted">Escríbele a uno de nuestros encargados y te cuenta todo: valor, reglamento y cupos.</p>
    <div style="display:grid;gap:8px;margin-top:12px">${CONTACTOS.map(c=>`<a class="btn btn-wa full" target="_blank" rel="noopener" href="https://wa.me/57${c.tel}?text=${encodeURIComponent(msg)}">💬 ${c.nombre}</a>`).join('')}
    <button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button></div>`);}
+
+/* ---------- Notificaciones (v4.7) ---------- */
+const PUSH_OK=('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
+function b64aU8(b){const p='='.repeat((4-b.length%4)%4),r=atob((b+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...r].map(c=>c.charCodeAt(0)));}
+function pushJugActivo(){let f=false;try{f=localStorage.getItem('vp_push_jug')==='1';}catch(e){}return PUSH_OK&&Notification.permission==='granted'&&f;}
+function pushJugHTML(compacto){
+  if(!S.info||!S.info.vapid||!S.sesion||!S.perfil)return '';
+  if(pushJugActivo())return compacto?'':`<div class="aviso" style="text-align:left;margin:10px 0 0;font-size:13px">🔔 Avisos activados en este celular <a href="#" style="color:var(--muted);margin-left:6px" onclick="desactivarPushJug();return false">Desactivar</a></div>`;
+  if(!PUSH_OK)return IOS&&!STANDALONE?`<div class="aviso" style="text-align:left;margin:10px 0 0;font-size:13px">🔔 ¿Quieres avisos de tus reservas? En iPhone primero <a href="#" onclick="instalar();return false">instala la app</a> y ábrela desde el ícono.</div>`:'';
+  if(Notification.permission==='denied')return '';
+  return `<div class="pushbox" style="margin:10px 0 0;padding:12px 14px;border-radius:14px;border:1px solid rgba(90,176,255,.45);background:rgba(90,176,255,.08);display:flex;gap:10px;align-items:center">
+    <span style="font-size:24px">🔔</span><div style="flex:1;min-width:0;font-size:13px"><b>Avísame en este celular</b><div class="muted" style="font-size:12px">Cuando confirmen tu reserva, 1 hora antes de jugar y si se libera la hora que esperas.</div></div>
+    <button class="btn btn-primary btn-sm" onclick="activarPushJug(this)">Activar</button></div>`;}
+function pintarPushJug(){const a=$('pushJug');if(a)a.innerHTML=pushJugHTML(false);const b=$('okPush');if(b)b.innerHTML=pushJugHTML(true);}
+async function activarPushJug(b){if(b)b.disabled=true;
+  try{const p=await Notification.requestPermission();if(p!=='granted'){toast('Sin el permiso no te pueden llegar los avisos',true);pintarPushJug();return;}
+    const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64aU8(S.info.vapid)});
+    const j=sub.toJSON();await rpc('guardar_suscripcion',{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth,p_admin:false});
+    try{localStorage.setItem('vp_push_jug','1');}catch(e){}toast('🔔 ¡Listo! Te avisaremos en este celular');pintarPushJug();}
+  catch(e){toast(e.message||'No se pudieron activar los avisos',true);if(b)b.disabled=false;}}
+async function desactivarPushJug(){try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();
+  if(sub){await rpc('quitar_suscripcion',{p_endpoint:sub.endpoint,p_admin:false});}try{localStorage.removeItem('vp_push_jug');}catch(e){}toast('Avisos desactivados');pintarPushJug();}catch(e){toast(e.message,true);}}
 
 /* ---------- App instalable ---------- */
 let PROMPT=null;const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
@@ -525,7 +561,7 @@ async function cargarMis(mantenerAviso){
   if(!S.sesion){ver('reserva');loginGoogle();return;}
   $('misProx').innerHTML='<div class="empty"><span class="spinner"></span></div>';$('misHist').innerHTML='';
   $('misQuien').textContent=(S.perfil?S.perfil.nombre+' · ':'')+S.sesion.user.email;
-  const sinP=!S.perfil;$('eSinPerfil').classList.toggle('hidden',!sinP);$('eAceptaBox').classList.toggle('hidden',!sinP);$('eMostrarBox').classList.toggle('hidden',sinP);
+  const sinP=!S.perfil;$('eSinPerfil').classList.toggle('hidden',!sinP);$('eAceptaBox').classList.toggle('hidden',!sinP);
   $('btnEditar').textContent=sinP?'Guardar mis datos':'Guardar cambios';
   if(S.perfil){$('eNombre').value=S.perfil.nombre;$('eTel').value=S.perfil.whatsapp;$('eDir').value=S.perfil.direccion||'';$('eMostrar').checked=S.perfil.mostrar_nombre!==false;}
   else{const md=S.sesion.user.user_metadata||{},sg=S.sugerido||{};if(!$('eNombre').value)$('eNombre').value=sg.nombre||md.nombre||md.full_name||md.name||'';if(!$('eTel').value)$('eTel').value=sg.whatsapp||md.whatsapp||'';if(!$('eDir').value)$('eDir').value=sg.direccion||md.direccion||'';}
@@ -533,6 +569,7 @@ async function cargarMis(mantenerAviso){
     const M=await rpc('mis_reservas'),hoy=M.hoy,ahora=M.ahora;
     const futura=g=>g.fecha>hoy||(g.fecha===hoy&&g.horas[g.horas.length-1]>=ahora);
     const prox=M.reservas.filter(g=>futura(g)&&['Pendiente','Confirmada','Pagada'].includes(g.estado)).reverse();
+    S.mias=new Set(prox.flatMap(g=>g.horas.map(h=>g.fecha+'|'+g.cancha+'-'+h)));pintarPushJug();
     const hist=M.reservas.filter(g=>!prox.includes(g));
     const jugadas=M.reservas.filter(g=>!futura(g)&&['Confirmada','Pagada'].includes(g.estado));
     const DL=['','lunes','martes','miércoles','jueves','viernes','sábado','domingo'];
@@ -566,9 +603,9 @@ function durSol(){const h=S.info.horario[$('sDia').value]||[0,0],x=Number($('sHo
 async function solicitarFijo(b){b.disabled=true;
   try{await rpc('solicitar_fijo',{p_dia:Number($('sDia').value),p_hora:Number($('sHora').value),p_horas:Number($('sHoras').value),p_cancha:Number($('sCan').value),p_notas:$('sNotas').value});
     toast('Solicitud enviada ✓ Te avisaremos por WhatsApp');$('sNotas').value='';
-    if(S.info.whatsappAdmin){const d=DSEM[$('sDia').value],msg=`Hola 👋, soy ${S.perfil?S.perfil.nombre:''}. Acabo de pedir horario fijo en ${S.info.negocio}: todos los ${d.toLowerCase()} a las ${hora(Number($('sHora').value))}, cancha ${$('sCan').value}. ¿Me lo apruebas?`;
-      $('misSol').insertAdjacentHTML('afterbegin',`<a class="btn btn-wa full" style="margin-top:10px" target="_blank" href="https://wa.me/${S.info.whatsappAdmin}?text=${encodeURIComponent(msg)}">💬 Avisar por WhatsApp</a>`);}
-    cargarMis(true);}
+    const d=DSEM[$('sDia').value],msg=`Hola 👋, soy ${S.perfil?S.perfil.nombre:''}. Acabo de pedir horario fijo en ${S.info.negocio}: todos los ${d.toLowerCase()} a las ${hora(Number($('sHora').value))}, cancha ${$('sCan').value}. ¿Me lo apruebas?`;
+    await cargarMis(true);
+    $('misSol').insertAdjacentHTML('afterbegin',`<div style="display:grid;gap:8px;margin-top:10px"><p class="muted" style="margin:0">Avísale a uno de los encargados para que lo apruebe:</p>${CONTACTOS.map(c=>`<a class="btn btn-wa full" target="_blank" rel="noopener" href="https://wa.me/57${c.tel}?text=${encodeURIComponent(msg)}">💬 Avisar a ${c.nombre.split(' ')[0]}</a>`).join('')}</div>`);}
   catch(e){toast(e.message,true);}finally{b.disabled=false;}}
 async function cancelarSol(id,b){if(b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='¿Seguro?';return;}
   try{await rpc('cancelar_mi_solicitud',{p_id:id});toast('Solicitud cancelada');cargarMis();}catch(e){toast(e.message,true);}}
